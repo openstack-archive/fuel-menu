@@ -6,6 +6,7 @@ Name: %{name}
 Summary: Console utility for pre-configuration of Fuel server
 Version: %{version}
 Release: %{release}
+Source0: %{name}-%{version}.tar.gz
 License: Apache
 Group: Development/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
@@ -32,16 +33,16 @@ Summary: Console utility for pre-configuration of Fuel server
 %setup -cq -n %{name}-%{version}
 
 %build
-cd %{_builddir}/%{name}-%{version}/fuelmenu && python setup.py build
+cd %{_builddir}/%{name}-%{version} && python setup.py build
 
 %install
-cd %{_builddir}/%{name}-%{version}/fuelmenu && python setup.py install --single-version-externally-managed -O1 --root=$RPM_BUILD_ROOT --record=%{_builddir}/%{name}-%{version}/fuelmenu/INSTALLED_FILES
+cd %{_builddir}/%{name}-%{version} && python setup.py install --single-version-externally-managed -O1 --root=$RPM_BUILD_ROOT --record=%{_builddir}/%{name}-%{version}/INSTALLED_FILES
 install -d -m 755 %{buildroot}/etc/fuel
-install -m 600 %{_builddir}/%{name}-%{version}/fuelmenu/fuelmenu/settings.yaml %{buildroot}/etc/fuel/astute.yaml
+install -m 600 %{_builddir}/%{name}-%{version}/fuelmenu/settings.yaml %{buildroot}/etc/fuel/astute.yaml
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
-%files -f %{_builddir}/%{name}-%{version}/fuelmenu/INSTALLED_FILES
+%files -f %{_builddir}/%{name}-%{version}/INSTALLED_FILES
 %defattr(-,root,root)
 %config(noreplace) /etc/fuel/astute.yaml
