@@ -140,23 +140,7 @@ class fueluser(urwid.WidgetWrap):
         self.cancel(None)
 
     def load(self):
-        # Read in yaml
-        defaultsettings = Settings().read(self.parent.defaultsettingsfile)
-        oldsettings = defaultsettings
-        oldsettings.update(Settings().read(self.parent.settingsfile))
-
-        oldsettings = Settings().read(self.parent.settingsfile)
-        for setting in self.defaults.keys():
-            try:
-                if "/" in setting:
-                    part1, part2 = setting.split("/")
-                    self.defaults[setting]["value"] = oldsettings[part1][part2]
-                else:
-                    self.defaults[setting]["value"] = oldsettings[setting]
-            except Exception:
-                log.warning("No setting named %s found." % setting)
-                continue
-        return oldsettings
+        return ModuleHelper.load(self, ignoredparams=['CONFIRM_PASSWORD'])
 
     def cancel(self, button):
         ModuleHelper.cancel(self, button)
@@ -167,3 +151,4 @@ class fueluser(urwid.WidgetWrap):
     def screenUI(self):
         return ModuleHelper.screenUI(self, self.header_content, self.fields,
                                      self.defaults)
+
