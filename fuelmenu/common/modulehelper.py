@@ -16,6 +16,7 @@
 
 import fuelmenu.common.urwidwrapper as widget
 from fuelmenu.settings import Settings
+from fuelmenu.utils import dict_merge
 import logging
 import netifaces
 import re
@@ -32,13 +33,15 @@ blank = urwid.Divider()
 class ModuleHelper(object):
 
     @classmethod
-    def load(cls, modobj):
+    def load(cls, modobj, ignoredparams=None):
         #Read in yaml
         defaultsettings = Settings().read(modobj.parent.defaultsettingsfile)
-        oldsettings = defaultsettings.copy()
-        oldsettings.update(Settings().read(modobj.parent.settingsfile))
+        usersettings = Settings().read(modobj.parent.settingsfile)
+        oldsettings = dict_merge(defaultsettings, usersettings)
         for setting in modobj.defaults.keys():
             if "label" in setting:
+                continue
+            elif ignoredparams and setting in ignoredparams:
                 continue
             elif "/" in setting:
                 part1, part2 = setting.split("/")
