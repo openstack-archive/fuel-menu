@@ -13,7 +13,10 @@
 # under the License.
 
 from copy import deepcopy
-import ordereddict
+try:
+    from collections import OrderedDict
+except Exception:
+    from ordereddict import OrderedDict
 
 
 def dict_merge(a, b):
@@ -32,14 +35,14 @@ def dict_merge(a, b):
     :param b: any value
     :returns: resulting value of b merged into a, with b taking precedence
     """
-    if not isinstance(a, (dict, ordereddict.OrderedDict)):
+    if not isinstance(a, (dict, OrderedDict)):
         raise TypeError('First parameter is not a dict')
 
     result = deepcopy(a)
     try:
         for k, v in b.iteritems():
             if k in result and isinstance(result[k],
-                                          (dict, ordereddict.OrderedDict)):
+                                          (dict, OrderedDict)):
                 result[k] = dict_merge(result[k], v)
             else:
                 result[k] = deepcopy(v)
