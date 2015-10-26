@@ -14,7 +14,18 @@
 #    under the License.
 
 import setuptools
+import sys
 
+
+requirements = [
+    'netaddr>=0.7.5',
+    'PyYAML>=3.10',
+    'netifaces>=0.5',
+    'urwid>=1.1.1',
+]
+
+if sys.version_info[0:2] == (2, 6):
+    requirements.append('OrderedDict>=1.1')
 
 setuptools.setup(
     name="fuelmenu",
@@ -35,13 +46,7 @@ setuptools.setup(
         "Topic :: Internet :: Proxy Servers",
         "Topic :: Software Development :: Testing"
     ],
-    install_requires=[
-        'netaddr>=0.7.5',
-        'OrderedDict>=1.1',
-        'PyYAML>=3.10',
-        'netifaces>=0.5',
-        'urwid>=1.1.1',
-    ],
+    install_requires=requirements,
     include_package_data=True,
     packages=setuptools.find_packages(),
     entry_points={
