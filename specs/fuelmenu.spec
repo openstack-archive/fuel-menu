@@ -5,7 +5,7 @@
 Name: %{name}
 Summary: Console utility for pre-configuration of Fuel server
 Version: %{version}
-Release: %{release}
+Release: %{release}~mos8.1
 Source0: %{name}-%{version}.tar.gz
 License: Apache
 Group: Development/Libraries
