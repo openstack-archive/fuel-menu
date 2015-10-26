@@ -175,32 +175,7 @@ class ntpsetup(urwid.WidgetWrap):
         return ModuleHelper.get_default_gateway_linux()
 
     def load(self):
-        #Read in yaml
-        defaultsettings = Settings().read(self.parent.defaultsettingsfile)
-        oldsettings = defaultsettings
-        oldsettings.update(Settings().read(self.parent.settingsfile))
-
-        oldsettings = Settings().read(self.parent.settingsfile)
-        for setting in self.defaults.keys():
-            try:
-                if setting == "ntpenabled":
-                    rb_group = \
-                        self.edits[self.fields.index("ntpenabled")].rb_group
-                    if oldsettings[setting]["value"] == "Yes":
-                        rb_group[0].set_state(True)
-                        rb_group[1].set_state(False)
-                    else:
-                        rb_group[0].set_state(False)
-                        rb_group[1].set_state(True)
-                elif "/" in setting:
-                    part1, part2 = setting.split("/")
-                    self.defaults[setting]["value"] = oldsettings[part1][part2]
-                else:
-                    self.defaults[setting]["value"] = oldsettings[setting]
-            except Exception:
-                log.warning("No setting named %s found." % setting)
-                continue
-        return oldsettings
+        return ModuleHelper.load(self, ignoredparams=['ntpenabled'])
 
     def save(self, responses):
         ## Generic settings start ##
