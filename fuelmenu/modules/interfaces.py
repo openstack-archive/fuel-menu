@@ -146,7 +146,7 @@ class interfaces(urwid.WidgetWrap):
                     numactiveifaces += 1
             if numactiveifaces < 2 and \
                     self.netsettings[self.activeiface]['addr'] != "":
-                #Block user because puppet l23network fails if all intefaces
+                #Block user because puppet l23network fails if all interfaces
                 #are disabled.
                 errors.append("Cannot disable all interfaces.")
         elif responses["bootproto"] == "dhcp":
@@ -169,29 +169,11 @@ class interfaces(urwid.WidgetWrap):
                 self.log.warning("dhcp_checker failed to check on %s"
                                  % self.activeiface)
                 dhcp_server_data = []
-                responses["dhcp_nowait"] = False
 
             if len(dhcp_server_data) < 1:
-                self.log.debug("No DHCP servers found. Warning user about "
-                               "dhcp_nowait.")
-                #Build dialog elements
-                dhcp_info = []
-                dhcp_info.append(urwid.Padding(
-                                 urwid.Text(("header", "!!! WARNING !!!")),
-                                 "center"))
-                dhcp_info.append(
-                    widget.TextLabel(
-                        "Unable to detect DHCP server " +
-                        "on interface %s." % (self.activeiface) +
-                        "\nDHCP will be set up in the background, " +
-                        "but may not receive an IP address. You may " +
-                        "want to check your DHCP connection manually " +
-                        "using the Shell Login menu to the left."))
-                dialog.display_dialog(self, urwid.Pile(dhcp_info),
-                                      "DHCP Servers Found on %s"
-                                      % self.activeiface)
-                self.parent.refreshScreen()
-                responses["dhcp_nowait"] = True
+                self.log.debug("No DHCP servers found. Cannot enable DHCP")
+                self.errors.append("No DHCP servers found. Cannot enable DHCP")
+
         #Check ipaddr, netmask, gateway only if static
         elif responses["bootproto"] == "none":
             try:
@@ -274,11 +256,7 @@ class interfaces(urwid.WidgetWrap):
                       "gateway": ""}
         elif responses["bootproto"] == "dhcp":
             self.unset_gateway()
-            if "dhcp_nowait" in responses.keys():
-                params = {"ipaddr": "dhcp",
-                          "dhcp_nowait": responses["dhcp_nowait"]}
-            else:
-                params = {"ipaddr": "dhcp"}
+            params = {"ipaddr": "dhcp"}
         else:
             cidr = network.netmaskToCidr(responses["netmask"])
             params = {"ipaddr": "{0}/{1}".format(responses["ipaddr"], cidr),
