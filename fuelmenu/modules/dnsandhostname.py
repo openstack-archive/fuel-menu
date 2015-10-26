@@ -266,15 +266,9 @@ is accessible"}
         # Precedence of DNS information:
         # Class defaults, fuelmenu default YAML, astute.yaml, uname,
         # /etc/resolv.conf
+        oldsettings = ModuleHelper.load(self, ignoredparams=['TEST_DNS'])
 
-        #Read in yaml
-        defaultsettings = Settings().read(self.parent.defaultsettingsfile)
-        oldsettings = defaultsettings
-        oldsettings.update(Settings().read(self.parent.settingsfile))
-
-        oldsettings = Settings().read(self.parent.settingsfile)
-
-        #Read hostname if it's already set
+        #Read hostname from uname
         try:
             hostname, sep, domain = os.uname()[1].partition('.')
             oldsettings["HOSTNAME"] = hostname
