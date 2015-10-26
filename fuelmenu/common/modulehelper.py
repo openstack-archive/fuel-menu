@@ -15,6 +15,7 @@
 #    under the License.
 
 import fuelmenu.common.urwidwrapper as widget
+from fuelmenu.common.utils import dict_merge
 from fuelmenu.settings import Settings
 import logging
 import netifaces
@@ -32,22 +33,29 @@ blank = urwid.Divider()
 class ModuleHelper(object):
 
     @classmethod
-    def load(cls, modobj):
+    def load(cls, modobj, ignoredparams=None):
+        """Returns settings found in settings files that are found in class
+
+        :param cls: ModuleHelper object
+        :param modobj: object from calling class
+        :param ignoredparams: list of parameters to skip lookup from settings
+        :returns: OrderedDict of settings for calling class
+        """
+
         #Read in yaml
         defaultsettings = Settings().read(modobj.parent.defaultsettingsfile)
-        oldsettings = defaultsettings.copy()
-        oldsettings.update(Settings().read(modobj.parent.settingsfile))
+        usersettings = Settings().read(modobj.parent.settingsfile)
+        oldsettings = dict_merge(defaultsettings, usersettings)
         for setting in modobj.defaults.keys():
             if "label" in setting:
+                continue
+            elif ignoredparams and setting in ignoredparams:
                 continue
             elif "/" in setting:
                 part1, part2 = setting.split("/")
                 modobj.defaults[setting]["value"] = oldsettings[part1][part2]
             else:
                 modobj.defaults[setting]["value"] = oldsettings[setting]
-        if modobj.netsettings and oldsettings["ADMIN_NETWORK"]["interface"] \
-                in modobj.netsettings.keys():
-            modobj.activeiface = oldsettings["ADMIN_NETWORK"]["interface"]
         return oldsettings
 
     @classmethod
