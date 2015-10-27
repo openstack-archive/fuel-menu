@@ -15,7 +15,7 @@
 import collections
 import logging
 
-from ordereddict import OrderedDict
+from collections import OrderedDict
 import yaml
 
 

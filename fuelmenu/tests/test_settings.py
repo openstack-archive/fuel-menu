@@ -15,7 +15,7 @@
 #    under the License.
 
 import mock
-import ordereddict
+from collections import OrderedDict
 
 from fuelmenu import settings
 
@@ -38,11 +38,11 @@ sample:
             }
         ]
     }
-    assert isinstance(data, ordereddict.OrderedDict)
+    assert isinstance(data, OrderedDict)
 
 
 @mock.patch('fuelmenu.settings.file', side_effect=Exception('Error'))
 def test_read_settings_with_error(_):
     data = settings.Settings().read('some_path')
     assert data == {}
-    assert isinstance(data, ordereddict.OrderedDict)
+    assert isinstance(data, OrderedDict)
