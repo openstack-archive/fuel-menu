@@ -13,11 +13,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-try:
-    from collections import OrderedDict
-except Exception:
-    # python 2.6 or earlier use backport
-    from ordereddict import OrderedDict
+from collections import OrderedDict
 from fuelmenu.common.modulehelper import ModuleHelper
 from fuelmenu.common import pwgen
 from fuelmenu.settings import Settings
