@@ -15,7 +15,12 @@
 import collections
 import logging
 
-from ordereddict import OrderedDict
+try:
+    from collections import OrderedDict
+except Exception:
+    # python 2.6 or earlier use backport
+    from ordereddict import OrderedDict
+
 import yaml
 
 
