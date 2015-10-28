@@ -22,9 +22,11 @@ Requires: python-netaddr
 Requires: python-netifaces
 Requires: python-urwid >= 1.1.0
 Requires: PyYAML
-Requires: python-ordereddict
 Requires: screen
 Requires: python-six
+%if 0%{?rhel} == 6
+Requires: python-ordereddict
+%endif
 
 %description
 Summary: Console utility for pre-configuration of Fuel server

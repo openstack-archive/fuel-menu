@@ -14,8 +14,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+try:
+    from collections import OrderedDict
+except Exception:
+    # python 2.6 or earlier use backport
+    from ordereddict import OrderedDict
 import mock
-import ordereddict
 
 from fuelmenu import settings
 
@@ -38,11 +42,11 @@ sample:
             }
         ]
     }
-    assert isinstance(data, ordereddict.OrderedDict)
+    assert isinstance(data, OrderedDict)
 
 
 @mock.patch('fuelmenu.settings.file', side_effect=Exception('Error'))
 def test_read_settings_with_error(_):
     data = settings.Settings().read('some_path')
     assert data == {}
-    assert isinstance(data, ordereddict.OrderedDict)
+    assert isinstance(data, OrderedDict)
