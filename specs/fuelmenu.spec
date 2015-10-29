@@ -15,7 +15,7 @@ BuildArch: noarch
 Vendor: Matthew Mosesohn <mmosesohn@mirantis.com>
 BuildRequires:  python-setuptools
 Requires: bind-utils
-Requires: nailgun-net-check
+Requires: network-checker
 Requires: ntp
 Requires: python-setuptools
 Requires: python-netaddr
