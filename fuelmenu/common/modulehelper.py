@@ -28,6 +28,8 @@ import urwid.web_display
 log = logging.getLogger('fuelmenu.modulehelper')
 blank = urwid.Divider()
 
+BLANK_KEY = "blank"
+
 
 class ModuleHelper(object):
 
@@ -67,7 +69,7 @@ class ModuleHelper(object):
     @classmethod
     def cancel(self, cls, button=None):
         for index, fieldname in enumerate(cls.fields):
-            if fieldname != "blank" and "label" not in fieldname:
+            if fieldname != BLANK_KEY and "label" not in fieldname:
                 try:
                     cls.edits[index].set_edit_text(cls.defaults[fieldname][
                         'value'])
@@ -91,8 +93,17 @@ class ModuleHelper(object):
         toolbar = modobj.parent.footer
         for key in fields:
             #Example: key = hostname, label = Hostname, value = fuel-pm
-            if key == "blank":
+            if key == BLANK_KEY:
                 edits.append(blank)
+            elif defaults[key]["value"] == "checkbox":
+                callback = defaults[key].get("callback", None)
+                enabled = bool(defaults[key].get("enabled"))
+                edits.append(urwid.CheckBox(
+                    defaults[key]["label"],
+                    state=enabled,
+                    on_state_change=callback
+                ))
+
             elif defaults[key]["value"] == "radio":
                 label = widget.TextLabel(defaults[key]["label"])
                 if "choices" in defaults[key]:
