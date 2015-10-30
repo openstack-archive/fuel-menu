@@ -58,6 +58,13 @@ def ChoicesGroup(choices, default_value=None, fn=None):
     return wrapped_choices
 
 
+def CheckBox(label, state=False, callback=None):
+    """Returns an Urwid CheckBox object."""
+    return urwid.Checkbox(label,
+                          state=state,
+                          on_state_change=callback)
+
+
 def TextLabel(text):
     """Returns an Urwid text object."""
     return urwid.Text(text)

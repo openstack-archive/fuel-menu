@@ -13,6 +13,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from fuelmenu.common.modulehelper import BLANK_KEY
 from fuelmenu.common.modulehelper import ModuleHelper
 from fuelmenu.settings import Settings
 import logging
@@ -26,8 +27,14 @@ blank = urwid.Divider()
 
 VERSION_YAML_FILE = '/etc/nailgun/version.yaml'
 FUEL_BOOTSTRAP_IMAGE_CONF = '/etc/fuel-bootstrap-image.conf'
-BOOTSTRAP_FLAVOR_KEY = 'BOOTSTRAP/flavor'
 MOS_REPO_DFLT = 'http://mirror.fuel-infra.org/mos-repos/ubuntu/{mos_version}'
+
+BOOTSTRAP_FLAVOR_KEY = 'BOOTSTRAP/flavor'
+BOOTSTRAP_MIRROR_DISTRO_KEY = "BOOTSTRAP/MIRROR_DISTRO"
+BOOTSTRAP_MIRROR_MOS_KEY = "BOOTSTRAP/MIRROR_MOS"
+BOOTSTRAP_HTTP_PROXY_KEY = "BOOTSTRAP/HTTP_PROXY"
+BOOTSTRAP_EXTRA_DEB_REPOS_KEY = "BOOTSTRAP/EXTRA_DEB_REPOS"
+BOOTSTRAP_SKIP_BUILD_KEY = "BOOTSTRAP/SKIP_DEFAULT_IMG_BUILD"
 
 
 class bootstrapimg(urwid.WidgetWrap):
@@ -44,36 +51,43 @@ class bootstrapimg(urwid.WidgetWrap):
 
         # UI Text
         self.header_content = ["Bootstrap image configuration"]
-        fields = (
-            'flavor',
-            'MIRROR_DISTRO',
-            'MIRROR_MOS',
-            'HTTP_PROXY',
-            'EXTRA_DEB_REPOS')
-        self.fields = ['BOOTSTRAP/{0}'.format(var) for var in fields]
+        self.fields = (
+            BOOTSTRAP_SKIP_BUILD_KEY,
+            BLANK_KEY,
+            BOOTSTRAP_FLAVOR_KEY,
+            BOOTSTRAP_MIRROR_DISTRO_KEY,
+            BOOTSTRAP_MIRROR_MOS_KEY,
+            BOOTSTRAP_HTTP_PROXY_KEY,
+            BOOTSTRAP_EXTRA_DEB_REPOS_KEY)
+
         # TODO(asheplyakov):
         # switch to the new MOS APT repo structure when it's ready
         mos_repo_dflt = MOS_REPO_DFLT.format(mos_version=self.mos_version)
+
         self.defaults = {
+            BOOTSTRAP_SKIP_BUILD_KEY: {
+                "label": "Skip building bootstrap image",
+                "tooltip": "",
+                "value": "checkbox"},
             BOOTSTRAP_FLAVOR_KEY: {
                 "label": "Flavor",
                 "tooltip": "",
                 "value": "radio",
                 "choices": ["CentOS", "Ubuntu (EXPERIMENTAL)"]},
-            "BOOTSTRAP/MIRROR_DISTRO": {
+            BOOTSTRAP_MIRROR_DISTRO_KEY: {
                 "label": "Ubuntu mirror",
                 "tooltip": "Ubuntu APT repo URL",
                 "value": "http://archive.ubuntu.com/ubuntu"},
-            "BOOTSTRAP/MIRROR_MOS": {
+            BOOTSTRAP_MIRROR_MOS_KEY: {
                 "label": "MOS mirror",
                 "tooltip": ("MOS APT repo URL (can use file:// protocol, will"
                             "use local mirror in such case"),
                 "value": mos_repo_dflt},
-            "BOOTSTRAP/HTTP_PROXY": {
+            BOOTSTRAP_HTTP_PROXY_KEY: {
                 "label": "HTTP proxy",
                 "tooltip": "Use this proxy when building the bootstrap image",
                 "value": ""},
-            "BOOTSTRAP/EXTRA_DEB_REPOS": {
+            BOOTSTRAP_EXTRA_DEB_REPOS_KEY: {
                 "label": "Extra APT repositories",
                 "tooltip": "Additional repositories for bootstrap image",
                 "value": ""}
@@ -104,12 +118,14 @@ class bootstrapimg(urwid.WidgetWrap):
     def responses(self):
         ret = dict()
         for index, fieldname in enumerate(self.fields):
-            if fieldname == 'blank':
+            if fieldname == BLANK_KEY:
                 pass
             elif fieldname == BOOTSTRAP_FLAVOR_KEY:
                 rb_group = self.edits[index].rb_group
                 flavor = 'centos' if rb_group[0].state else 'ubuntu'
                 ret[fieldname] = flavor
+            elif fieldname == BOOTSTRAP_SKIP_BUILD_KEY:
+                ret[fieldname] = self.edits[index].get_state()
             else:
                 ret[fieldname] = self.edits[index].get_edit_text()
         return ret
@@ -135,9 +151,9 @@ class bootstrapimg(urwid.WidgetWrap):
     def check_apt_repos(self, responses):
         errors = []
         # APT repo URL must not be empty
-        distro_repo_base = responses['BOOTSTRAP/MIRROR_DISTRO'].strip()
-        mos_repo_base = responses['BOOTSTRAP/MIRROR_MOS'].strip()
-        http_proxy = responses['BOOTSTRAP/HTTP_PROXY'].strip()
+        distro_repo_base = responses[BOOTSTRAP_MIRROR_DISTRO_KEY].strip()
+        mos_repo_base = responses[BOOTSTRAP_MIRROR_MOS_KEY].strip()
+        http_proxy = responses[BOOTSTRAP_HTTP_PROXY_KEY].strip()
 
         if len(distro_repo_base) == 0:
             errors.append("Ubuntu mirror URL must not be empty.")
@@ -162,7 +178,12 @@ class bootstrapimg(urwid.WidgetWrap):
 
         with open(FUEL_BOOTSTRAP_IMAGE_CONF, "w") as fbiconf:
             for var in self.fields:
-                scope, name = var.split('/')
+                if var == BLANK_KEY:
+                    continue
+                name = var
+                if "/" in name:
+                    _, name = name.split('/')
+
                 fbiconf.write('{0}="{1}"\n'.format(name, responses.get(var)))
             fbiconf.write('MOS_VERSION="{0}"'.format(self.mos_version))
         self.save(responses)
@@ -200,6 +221,9 @@ class bootstrapimg(urwid.WidgetWrap):
                     section, key = BOOTSTRAP_FLAVOR_KEY.split('/')
                     flavor = oldsettings[section][key]
                     self._set_bootstrap_flavor(flavor)
+                elif BOOTSTRAP_SKIP_BUILD_KEY == setting:
+                    self.defaults[setting]["value"] = "checkbox"
+                    self.defaults[setting]["enabled"] = oldsettings[setting]
                 elif "/" in setting:
                     part1, part2 = setting.split("/")
                     self.defaults[setting]["value"] = oldsettings[part1][part2]
@@ -233,7 +257,7 @@ class bootstrapimg(urwid.WidgetWrap):
         self.oldsettings = newsettings
         # Update self.defaults
         for index, fieldname in enumerate(self.fields):
-            if fieldname != "blank":
+            if fieldname != BLANK_KEY:
                 log.info("resetting %s", fieldname)
                 if fieldname not in self.defaults.keys():
                     log.error("no such field: %s, valid are %s",
