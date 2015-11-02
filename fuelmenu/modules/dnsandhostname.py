@@ -389,8 +389,6 @@ is accessible"}
     def get_default_gateway_linux(self):
         return ModuleHelper.get_default_gateway_linux()
 
-    def radioSelect(self, current, state, user_data=None):
-        pass
 
     def refresh(self):
         pass

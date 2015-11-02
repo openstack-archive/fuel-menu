@@ -18,6 +18,7 @@ import dhcp_checker.utils
 from fuelmenu.common import dialog
 from fuelmenu.common.errors import BadIPException
 from fuelmenu.common.modulehelper import ModuleHelper
+from fuelmenu.common.modulehelper import WidgetType
 from fuelmenu.common import network
 from fuelmenu.common import timeout
 import fuelmenu.common.urwidwrapper as widget
@@ -78,7 +79,7 @@ to advertise via DHCP to nodes",
                                                "value": "10.0.0.2"},
                 "dynamic_label": {"label": "DHCP pool for node discovery:",
                                   "tooltip": "",
-                                  "value": "label"},
+                                  "type": WidgetType.LABEL},
             }
 
         self.extdhcp = True
@@ -259,24 +260,24 @@ interface first.")
                     errors.append("Duplicate host found with IP {0}.".format(
                         mgmt_if_ipaddr))
 
-        # Extra checks for post-deployment changes
-        if ModuleHelper.get_deployment_mode() == "post":
-            # Admin interface cannot change
-            if mgmt_if_ipaddr != \
-                    self.oldsettings["ADMIN_NETWORK"]["interface"]:
-                errors.append("Cannot change admin interface after deployment")
-            # PXE network range must contain previous PXE network range
-            old_range = network.range(
-                self.oldsettings["ADMIN_NETWORK"]["dhcp_pool_start"],
-                self.oldsettings["ADMIN_NETWORK"]["dhcp_pool_end"])
-            new_range = network.range(
-                responses["ADMIN_NETWORK/dhcp_pool_start"],
-                responses["ADMIN_NETWORK/dhcp_pool_end"])
-            if old_range[0] not in new_range:
-                errors.append("DHCP range must contain previous values.")
-            if old_range[-1] not in new_range:
-                errors.append("DHCP range can only be increased after "
-                              "deployment.")
+        # # Extra checks for post-deployment changes
+        # if ModuleHelper.get_deployment_mode() == "post":
+        #     # Admin interface cannot change
+        #     if mgmt_if_ipaddr != \
+        #             self.oldsettings["ADMIN_NETWORK"]["interface"]:
+        #         errors.append("Cannot change admin interface after deployment")
+        #     # PXE network range must contain previous PXE network range
+        #     old_range = network.range(
+        #         self.oldsettings["ADMIN_NETWORK"]["dhcp_pool_start"],
+        #         self.oldsettings["ADMIN_NETWORK"]["dhcp_pool_end"])
+        #     new_range = network.range(
+        #         responses["ADMIN_NETWORK/dhcp_pool_start"],
+        #         responses["ADMIN_NETWORK/dhcp_pool_end"])
+        #     if old_range[0] not in new_range:
+        #         errors.append("DHCP range must contain previous values.")
+        #     if old_range[-1] not in new_range:
+        #         errors.append("DHCP range can only be increased after "
+        #                       "deployment.")
 
         if len(errors) > 0:
             self.parent.footer.set_text("Error: %s" % (errors[0]))
