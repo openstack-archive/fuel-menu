@@ -15,6 +15,7 @@
 
 from fuelmenu.common import dialog
 from fuelmenu.common.modulehelper import ModuleHelper
+from fuelmenu.common.modulehelper import WidgetType
 import fuelmenu.common.urwidwrapper as widget
 from fuelmenu.settings import Settings
 import logging
@@ -47,7 +48,8 @@ class ntpsetup(urwid.WidgetWrap):
             {
                 "ntpenabled": {"label": "Enable NTP:",
                                "tooltip": "",
-                               "value": "radio"},
+                               "type": WidgetType.RADIO,
+                               "callback": self.radioSelect},
                 "NTP1": {"label": "NTP Server 1:",
                          "tooltip": "NTP Server for time synchronization",
                          "value": "time.nist.gov"},

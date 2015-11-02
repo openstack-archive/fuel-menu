@@ -13,8 +13,17 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import os
+
 import setuptools
 
+
+def find_requires():
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    requirements = []
+    with open('{0}/requirements.txt'.format(dir_path), 'r') as reqs:
+        requirements = reqs.readlines()
+    return requirements
 
 setuptools.setup(
     name="fuelmenu",
@@ -35,13 +44,7 @@ setuptools.setup(
         "Topic :: Internet :: Proxy Servers",
         "Topic :: Software Development :: Testing"
     ],
-    install_requires=[
-        'netaddr>=0.7.5',
-        'OrderedDict>=1.1',
-        'PyYAML>=3.10',
-        'netifaces>=0.5',
-        'urwid>=1.1.1',
-    ],
+    install_requires=find_requires(),
     include_package_data=True,
     packages=setuptools.find_packages(),
     entry_points={

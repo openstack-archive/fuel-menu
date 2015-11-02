@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-#    Copyright 2013 Mirantis, Inc.
+# Copyright 2013 Mirantis, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -13,6 +13,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+from enum import Enum
 
 import fuelmenu.common.urwidwrapper as widget
 from fuelmenu.settings import Settings
@@ -25,17 +26,24 @@ import subprocess
 import urwid
 import urwid.raw_display
 import urwid.web_display
+
 log = logging.getLogger('fuelmenu.modulehelper')
 blank = urwid.Divider()
 
 BLANK_KEY = "blank"
 
 
-class ModuleHelper(object):
+class WidgetType(Enum):
+    TEXT_FIELD = 1  # default value. may be skipped
+    LABEL = 2
+    RADIO = 3
+    CHECKBOX = 4
 
+
+class ModuleHelper(object):
     @classmethod
     def load(cls, modobj):
-        #Read in yaml
+        # Read in yaml
         defaultsettings = Settings().read(modobj.parent.defaultsettingsfile)
         oldsettings = defaultsettings.copy()
         oldsettings.update(Settings().read(modobj.parent.settingsfile))
@@ -59,7 +67,7 @@ class ModuleHelper(object):
             if "/" in setting:
                 part1, part2 = setting.split("/")
                 if part1 not in newsettings:
-                    #We may not touch all settings, so copy oldsettings first
+                    # We may not touch all settings, so copy oldsettings first
                     newsettings[part1] = modobj.oldsettings[part1]
                 newsettings[part1][part2] = responses[setting]
             else:
@@ -67,21 +75,74 @@ class ModuleHelper(object):
         return newsettings
 
     @classmethod
-    def cancel(self, cls, button=None):
-        for index, fieldname in enumerate(cls.fields):
+    def cancel(cls, modobj, button=None):
+        for index, fieldname in enumerate(modobj.fields):
             if fieldname != BLANK_KEY and "label" not in fieldname:
                 try:
-                    cls.edits[index].set_edit_text(cls.defaults[fieldname][
-                        'value'])
+                    modobj.edits[index].set_edit_text(
+                        modobj.defaults[fieldname][
+                            'value'])
                 except AttributeError:
                     log.warning("Field %s unable to reset text" % fieldname)
+
+    @classmethod
+    def _create_checkbox_widget(cls, default_data):
+        callback = default_data.get("callback", None)
+        enabled = bool(default_data.get("value"))
+        return widget.CheckBox(
+            default_data["label"],
+            state=enabled,
+            callback=callback
+        )
+
+    @classmethod
+    def _create_radiobutton_widget(cls, default_data):
+        label = widget.TextLabel(default_data["label"])
+        callback = default_data.get("callback", None)
+
+        choices_list = default_data.get("choices", [])
+        if not choices_list:
+            choices_list = ["Yes", "No"]
+        choices = widget.ChoicesGroup(choices_list,
+                                      default_value=choices_list[0],
+                                      fn=callback)
+        columns = widget.Columns([('weight', 2, label),
+                                  ('weight', 3, choices)])
+        # Attach choices rb_group so we can use it later
+        columns.rb_group = choices.rb_group
+        return columns
+
+    @classmethod
+    def _create_widget(cls, key, defaults, toolbar):
+        if key == BLANK_KEY:
+            return blank
+
+        default_data = defaults[key]
+        field_type = default_data.get('type', WidgetType.TEXT_FIELD)
+
+        if field_type == WidgetType.CHECKBOX:
+            return cls._create_checkbox_widget(default_data)
+
+        if field_type == WidgetType.RADIO:
+            return cls._create_radiobutton_widget(default_data)
+
+        if field_type == WidgetType.LABEL:
+            return widget.TextLabel(default_data["label"])
+
+        if field_type == WidgetType.TEXT_FIELD:
+            ispassword = "PASSWORD" in key.upper()
+            caption = default_data["label"]
+            default = default_data["value"]
+            tooltip = default_data["tooltip"]
+            return widget.TextField(key, caption, 23, default, tooltip,
+                                    toolbar, ispassword=ispassword)
 
     @classmethod
     def screenUI(cls, modobj, headertext, fields, defaults,
                  showallbuttons=False, buttons_visible=True):
 
         log.debug("Preparing screen UI for %s" % modobj.name)
-        #Define text labels, text fields, and buttons first
+        # Define text labels, text fields, and buttons first
         header_content = []
         for text in headertext:
             if isinstance(text, str):
@@ -92,42 +153,7 @@ class ModuleHelper(object):
         edits = []
         toolbar = modobj.parent.footer
         for key in fields:
-            #Example: key = hostname, label = Hostname, value = fuel-pm
-            if key == BLANK_KEY:
-                edits.append(blank)
-            elif defaults[key]["value"] == "checkbox":
-                callback = defaults[key].get("callback", None)
-                enabled = bool(defaults[key].get("enabled"))
-                edits.append(widget.CheckBox(
-                    defaults[key]["label"],
-                    state=enabled,
-                    callback=callback
-                ))
-
-            elif defaults[key]["value"] == "radio":
-                label = widget.TextLabel(defaults[key]["label"])
-                if "choices" in defaults[key]:
-                    choices_list = defaults[key]["choices"]
-                else:
-                    choices_list = ["Yes", "No"]
-                choices = widget.ChoicesGroup(choices_list,
-                                              default_value="Yes",
-                                              fn=modobj.radioSelect)
-                columns = widget.Columns([('weight', 2, label),
-                                         ('weight', 3, choices)])
-                #Attach choices rb_group so we can use it later
-                columns.rb_group = choices.rb_group
-                edits.append(columns)
-            elif defaults[key]["value"] == "label":
-                edits.append(widget.TextLabel(defaults[key]["label"]))
-            else:
-                ispassword = "PASSWORD" in key.upper()
-                caption = defaults[key]["label"]
-                default = defaults[key]["value"]
-                tooltip = defaults[key]["tooltip"]
-                edits.append(
-                    widget.TextField(key, caption, 23, default, tooltip,
-                                     toolbar, ispassword=ispassword))
+            edits.append(cls._create_widget(key, defaults, toolbar))
 
         listbox_content = []
         listbox_content.extend(header_content)
@@ -135,23 +161,24 @@ class ModuleHelper(object):
         listbox_content.extend(edits)
         listbox_content.append(blank)
 
-        #Wrap buttons into Columns so it doesn't expand and look ugly
+        # Wrap buttons into Columns so it doesn't expand and look ugly
         if buttons_visible:
-            #Button to check
+            # Button to check
             button_check = widget.Button("Check", modobj.check)
-            #Button to revert to previously saved settings
+            # Button to revert to previously saved settings
             button_cancel = widget.Button("Cancel", modobj.cancel)
-            #Button to apply (and check again)
+            # Button to apply (and check again)
             button_apply = widget.Button("Apply", modobj.apply)
 
             if modobj.parent.globalsave and showallbuttons is False:
                 check_col = widget.Columns([button_check])
             else:
                 check_col = widget.Columns([button_check, button_cancel,
-                                           button_apply, ('weight', 2, blank)])
+                                            button_apply,
+                                            ('weight', 2, blank)])
             listbox_content.append(check_col)
 
-        #Add everything into a ListBox and return it
+        # Add everything into a ListBox and return it
         listwalker = widget.TabbedListWalker(listbox_content)
         screen = urwid.ListBox(listwalker)
         modobj.edits = edits
@@ -165,18 +192,18 @@ class ModuleHelper(object):
         re_ifaces = re.compile(r"lo|vir|vbox|docker|veth")
         for iface in netifaces.interfaces():
             if re_ifaces.search(iface):
-                    continue
+                continue
             try:
                 modobj.netsettings.update({iface: netifaces.ifaddresses(iface)[
                     netifaces.AF_INET][0]})
                 modobj.netsettings[iface]["onboot"] = "Yes"
             except (TypeError, KeyError):
                 modobj.netsettings.update({iface: {"addr": "", "netmask": "",
-                                          "onboot": "no"}})
+                                                   "onboot": "no"}})
             modobj.netsettings[iface]['mac'] = netifaces.ifaddresses(iface)[
                 netifaces.AF_LINK][0]['addr']
 
-            #Set link state
+            # Set link state
             try:
                 with open("/sys/class/net/%s/operstate" % iface) as f:
                     content = f.readlines()
@@ -184,15 +211,15 @@ class ModuleHelper(object):
             except IOError:
                 log.warning("Unable to read operstate file for %s" % iface)
                 modobj.netsettings[iface]["link"] = "unknown"
-            #Change unknown link state to up if interface has an IP
+            # Change unknown link state to up if interface has an IP
             if modobj.netsettings[iface]["link"] == "unknown":
                 if modobj.netsettings[iface]["addr"] != "":
                     modobj.netsettings[iface]["link"] = "up"
 
-            #Read bootproto from /etc/sysconfig/network-scripts/ifcfg-DEV
+            # Read bootproto from /etc/sysconfig/network-scripts/ifcfg-DEV
             modobj.netsettings[iface]['bootproto'] = "none"
             try:
-                with open("/etc/sysconfig/network-scripts/ifcfg-%s" % iface)\
+                with open("/etc/sysconfig/network-scripts/ifcfg-%s" % iface) \
                         as fh:
                     for line in fh:
                         if re.match("^BOOTPROTO=", line):
@@ -200,7 +227,7 @@ class ModuleHelper(object):
                                 line.split('=')[1].strip()
                             break
             except Exception:
-                #Check for dhclient process running for this interface
+                # Check for dhclient process running for this interface
                 if modobj.getDHCP(iface):
                     modobj.netsettings[iface]['bootproto'] = "dhcp"
                 else:
@@ -212,9 +239,9 @@ class ModuleHelper(object):
         """Returns True if the interface has a dhclient process running."""
         noout = open('/dev/null', 'w')
         dhclient_running = subprocess.call(["pgrep", "-f", "dhclient.*%s" %
-                                           (iface)], stdout=noout,
+                                            iface], stdout=noout,
                                            stderr=noout)
-        return (dhclient_running == 0)
+        return dhclient_running == 0
 
     @classmethod
     def get_default_gateway_linux(cls):
