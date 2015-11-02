@@ -33,6 +33,7 @@ BOOTSTRAP_FLAVOR_KEY = 'BOOTSTRAP/flavor'
 BOOTSTRAP_MIRROR_DISTRO_KEY = "BOOTSTRAP/MIRROR_DISTRO"
 BOOTSTRAP_MIRROR_MOS_KEY = "BOOTSTRAP/MIRROR_MOS"
 BOOTSTRAP_HTTP_PROXY_KEY = "BOOTSTRAP/HTTP_PROXY"
+BOOTSTRAP_HTTPS_PROXY_KEY = "BOOTSTRAP/HTTPS_PROXY"
 BOOTSTRAP_EXTRA_DEB_REPOS_KEY = "BOOTSTRAP/EXTRA_DEB_REPOS"
 SKIP_BS_BUILD_KEY = "SKIP_BS_BUILD"
 
@@ -58,6 +59,7 @@ class bootstrapimg(urwid.WidgetWrap):
             BOOTSTRAP_MIRROR_DISTRO_KEY,
             BOOTSTRAP_MIRROR_MOS_KEY,
             BOOTSTRAP_HTTP_PROXY_KEY,
+            BOOTSTRAP_HTTPS_PROXY_KEY,
             BOOTSTRAP_EXTRA_DEB_REPOS_KEY)
 
         # TODO(asheplyakov):
@@ -85,6 +87,10 @@ class bootstrapimg(urwid.WidgetWrap):
                 "value": mos_repo_dflt},
             BOOTSTRAP_HTTP_PROXY_KEY: {
                 "label": "HTTP proxy",
+                "tooltip": "Use this proxy when building the bootstrap image",
+                "value": ""},
+            BOOTSTRAP_HTTPS_PROXY_KEY: {
+                "label": "HTTPS proxy",
                 "tooltip": "Use this proxy when building the bootstrap image",
                 "value": ""},
             BOOTSTRAP_EXTRA_DEB_REPOS_KEY: {
@@ -154,17 +160,23 @@ class bootstrapimg(urwid.WidgetWrap):
         distro_repo_base = responses[BOOTSTRAP_MIRROR_DISTRO_KEY].strip()
         mos_repo_base = responses[BOOTSTRAP_MIRROR_MOS_KEY].strip()
         http_proxy = responses[BOOTSTRAP_HTTP_PROXY_KEY].strip()
+        https_proxy = responses[BOOTSTRAP_HTTPS_PROXY_KEY].strip()
+
+        proxies = {
+            'http': http_proxy,
+            'https': https_proxy
+        }
 
         if len(distro_repo_base) == 0:
             errors.append("Ubuntu mirror URL must not be empty.")
 
-        if not self.checkDistroRepo(distro_repo_base, http_proxy):
+        if not self.checkDistroRepo(distro_repo_base, proxies):
             errors.append("Ubuntu repository is not accessible.")
 
         if len(mos_repo_base) == 0:
             errors.append("MOS repo URL must not be empty.")
 
-        if not self.checkMOSRepo(mos_repo_base, http_proxy):
+        if not self.checkMOSRepo(mos_repo_base, proxies):
             errors.append("MOS repository is not accessible.")
 
         return errors
@@ -269,26 +281,26 @@ class bootstrapimg(urwid.WidgetWrap):
                     continue
                 self.defaults[fieldname]['value'] = newsettings[fieldname]
 
-    def check_url(self, url, http_proxy):
+    def check_url(self, url, proxies):
         try:
-            return urlck.check_urls([url], proxies={'http': http_proxy})
+            return urlck.check_urls([url], proxies=proxies)
         except url_errors.UrlNotAvailable:
             return False
 
-    def checkDistroRepo(self, base_url, http_proxy):
+    def checkDistroRepo(self, base_url, proxies):
         release_url = '{base_url}/dists/{distro_release}/Release'.format(
             base_url=base_url, distro_release=self.distro_release)
-        available = self.check_url(release_url, http_proxy)
+        available = self.check_url(release_url, proxies)
         # TODO(asheplyakov):
         # check if it's possible to debootstrap with this repo
         return available
 
-    def checkMOSRepo(self, base_url, http_proxy):
+    def checkMOSRepo(self, base_url, proxies):
         # deb {repo_base_url}/mos/ubuntu mos{mos_version} main
         codename = 'mos{0}'.format(self.mos_version)
         release_url = '{base_url}/dists/{codename}/Release'.format(
             base_url=base_url, codename=codename)
-        available = self.check_url(release_url, http_proxy)
+        available = self.check_url(release_url, proxies)
         return available
 
     def radioSelect(self, current, state, user_data=None):
