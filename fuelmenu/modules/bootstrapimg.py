@@ -15,6 +15,7 @@
 
 from fuelmenu.common.modulehelper import BLANK_KEY
 from fuelmenu.common.modulehelper import ModuleHelper
+from fuelmenu.common.modulehelper import WidgetType
 from fuelmenu.settings import Settings
 import logging
 import url_access_checker.api as urlck
@@ -70,11 +71,11 @@ class bootstrapimg(urwid.WidgetWrap):
             SKIP_BS_BUILD_KEY: {
                 "label": "Skip building bootstrap image",
                 "tooltip": "",
-                "value": "checkbox"},
+                "type": WidgetType.CHECKBOX},
             BOOTSTRAP_FLAVOR_KEY: {
                 "label": "Flavor",
                 "tooltip": "",
-                "value": "radio",
+                "type": WidgetType.RADIO,
                 "choices": ["CentOS", "Ubuntu (EXPERIMENTAL)"]},
             BOOTSTRAP_MIRROR_DISTRO_KEY: {
                 "label": "Ubuntu mirror",
@@ -233,9 +234,6 @@ class bootstrapimg(urwid.WidgetWrap):
                     section, key = BOOTSTRAP_FLAVOR_KEY.split('/')
                     flavor = oldsettings[section][key]
                     self._set_bootstrap_flavor(flavor)
-                elif SKIP_BS_BUILD_KEY == setting:
-                    self.defaults[setting]["value"] = "checkbox"
-                    self.defaults[setting]["enabled"] = oldsettings[setting]
                 elif "/" in setting:
                     part1, part2 = setting.split("/")
                     self.defaults[setting]["value"] = oldsettings[part1][part2]
@@ -302,9 +300,6 @@ class bootstrapimg(urwid.WidgetWrap):
             base_url=base_url, codename=codename)
         available = self.check_url(release_url, proxies)
         return available
-
-    def radioSelect(self, current, state, user_data=None):
-        pass
 
     def refresh(self):
         pass
