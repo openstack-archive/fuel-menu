@@ -18,6 +18,7 @@ import dhcp_checker.utils
 from fuelmenu.common.errors import BadIPException
 from fuelmenu.common.errors import NetworkException
 from fuelmenu.common.modulehelper import ModuleHelper
+from fuelmenu.common.modulehelper import WidgetType
 from fuelmenu.common import network
 from fuelmenu.common import puppet
 from fuelmenu.common import replace
@@ -74,11 +75,13 @@ class interfaces(urwid.WidgetWrap):
                            "value": "locked"},
                 "onboot": {"label": "Enable interface:",
                            "tooltip": "",
-                           "value": "radio"},
+                           "type": WidgetType.RADIO,
+                           "callback": self.radioSelect},
                 "bootproto": {"label": "Configuration via DHCP:",
                               "tooltip": "",
-                              "value": "radio",
-                              "choices": ["Static", "DHCP"]},
+                              "type": WidgetType.RADIO,
+                              "choices": ["Static", "DHCP"],
+                              "callback": self.radioSelect},
                 "ipaddr": {"label": "IP address:",
                            "tooltip": "Manual IP address (example \
 192.168.1.2)",
