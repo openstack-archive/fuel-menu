@@ -18,6 +18,7 @@ import dhcp_checker.utils
 from fuelmenu.common import dialog
 from fuelmenu.common.errors import BadIPException
 from fuelmenu.common.modulehelper import ModuleHelper
+from fuelmenu.common.modulehelper import WidgetType
 from fuelmenu.common import network
 from fuelmenu.common import timeout
 import fuelmenu.common.urwidwrapper as widget
@@ -78,7 +79,7 @@ to advertise via DHCP to nodes",
                                                "value": "10.0.0.2"},
                 "dynamic_label": {"label": "DHCP pool for node discovery:",
                                   "tooltip": "",
-                                  "value": "label"},
+                                  "type": WidgetType.LABEL},
             }
 
         self.extdhcp = True
