@@ -302,19 +302,7 @@ interface first.")
         self.setNetworkDetails()
 
     def load(self):
-        #Read in yaml
-        defaultsettings = Settings().read(self.parent.defaultsettingsfile)
-        oldsettings = defaultsettings.copy()
-        oldsettings.update(Settings().read(self.parent.settingsfile))
-        log.debug("Old settings %s" % oldsettings)
-        for setting in self.defaults.keys():
-            if "label" in setting:
-                continue
-            elif "/" in setting:
-                part1, part2 = setting.split("/")
-                self.defaults[setting]["value"] = oldsettings[part1][part2]
-            else:
-                self.defaults[setting]["value"] = oldsettings[setting]
+        oldsettings = ModuleHelper.load(self)
         if oldsettings["ADMIN_NETWORK"]["interface"] \
                 in self.netsettings.keys():
             self.activeiface = oldsettings["ADMIN_NETWORK"]["interface"]

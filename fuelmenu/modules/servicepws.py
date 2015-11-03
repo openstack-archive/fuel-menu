@@ -144,23 +144,7 @@ class servicepws(urwid.WidgetWrap):
         self.save(responses)
 
     def load(self):
-        #Read in yaml
-        defaultsettings = Settings().read(self.parent.defaultsettingsfile)
-        oldsettings = defaultsettings
-        oldsettings.update(Settings().read(self.parent.settingsfile))
-
-        oldsettings = Settings().read(self.parent.settingsfile)
-        for setting in self.defaults.keys():
-            try:
-                if "/" in setting:
-                    part1, part2 = setting.split("/")
-                    self.defaults[setting]["value"] = oldsettings[part1][part2]
-                else:
-                    self.defaults[setting]["value"] = oldsettings[setting]
-            except Exception:
-                log.warning("No setting named %s found." % setting)
-                continue
-        return oldsettings
+        return ModuleHelper.load(self)
 
     def save(self, responses):
         ## Generic settings start ##
