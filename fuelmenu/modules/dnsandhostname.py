@@ -168,6 +168,10 @@ is accessible"}
                     errors.append("Host IPs cannot be in upstream DNS.")
                     break
 
+            if len(upstream_nameservers) > 3:
+                errors.append(
+                    "Unable to specify more than 3 External DNS addresses.")
+
             #ensure test DNS name isn't empty
             if len(responses["TEST_DNS"]) == 0:
                 errors.append("Test DNS must not be empty.")
