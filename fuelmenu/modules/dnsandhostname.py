@@ -157,6 +157,10 @@ is accessible"}
                 errors.append(
                     "External DNS must contain only IP addresses and commas.")
 
+            if len(responses["DNS_UPSTREAM"].split(",")) > 3:
+                errors.append(
+                    "Unable to specify more than 3 External DNS addresses.")
+
             admin_ip = self.netsettings[self.parent.managediface]['addr']
             if admin_ip in responses["DNS_UPSTREAM"]:
                 errors.append("Admin interface IP cannot be in upstream "
