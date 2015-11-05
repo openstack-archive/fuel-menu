@@ -65,6 +65,16 @@ def CheckBox(label, state=False, callback=None):
                           on_state_change=callback)
 
 
+def MultiChoiceGroup(choices, defaults, fn=None, height=10):
+    """Multiple choice list"""
+    grp = []
+    for item in choices:
+        is_set = defaults.get(item, {'value': False})['value']
+        chbox = urwid.CheckBox(item, is_set, on_state_change=fn, user_data=item)
+        grp.append(urwid.AttrMap(chbox, 'buttn', 'buttnf'))
+    return urwid.BoxAdapter(urwid.ListBox(urwid.SimpleListWalker(grp)), height)
+
+
 def TextLabel(text):
     """Returns an Urwid text object."""
     return urwid.Text(text)
