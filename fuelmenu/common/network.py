@@ -66,7 +66,7 @@ def getNetwork(ip, netmask, additionalip=None):
 def range(startip, endip):
     #Return a list of IPs between startip and endip
     try:
-        return set(netaddr.iter_iprange(startip, endip))
+        return list(set(netaddr.iter_iprange(startip, endip)))
     except netaddr.AddrFormatError:
         raise BadIPException("Invalid IP address(es) specified.")
 
