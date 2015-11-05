@@ -60,7 +60,7 @@ def ChoicesGroup(choices, default_value=None, fn=None):
 
 def CheckBox(label, state=False, callback=None):
     """Returns an Urwid CheckBox object."""
-    return urwid.Checkbox(label,
+    return urwid.CheckBox(label,
                           state=state,
                           on_state_change=callback)
 
