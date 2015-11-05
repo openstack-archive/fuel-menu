@@ -341,9 +341,15 @@ def setup():
 
 
 def save_only(iface, settingsfile='/etc/fuel/astute.yaml'):
+    from common.modulehelper.ModuleHelper import get_deployment_mode
     import common.network as network
     from common import pwgen
     import netifaces
+
+    if get_deployment_mode() == "post":
+        print("Not updating settings when invoked during post-deployment.\n"
+              "Run fuelmenu manually to make changes.")
+        sys.exit(0)
 
     #Calculate and set Static/DHCP pool fields
     #Max IPs = net size - 2 (master node + bcast)
