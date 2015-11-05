@@ -16,8 +16,8 @@
 from common import dialog
 from common import timeout
 from common import urwidwrapper as widget
-import dhcp_checker.api
-import dhcp_checker.utils
+#import dhcp_checker.api
+#import dhcp_checker.utils
 import logging
 import operator
 from optparse import OptionParser
@@ -32,7 +32,7 @@ import urwid.raw_display
 import urwid.web_display
 
 # set up logging
-logging.basicConfig(filename='/var/log/fuelmenu.log',
+logging.basicConfig(filename='fuelmenu.log',
                     format="%(asctime)s %(levelname)s %(message)s",
                     level=logging.DEBUG)
 log = logging.getLogger('fuelmenu.loader')
