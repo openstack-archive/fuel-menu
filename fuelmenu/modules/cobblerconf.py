@@ -21,6 +21,7 @@ from fuelmenu.common.modulehelper import ModuleHelper
 from fuelmenu.common import network
 from fuelmenu.common import timeout
 import fuelmenu.common.urwidwrapper as widget
+from fuelmenu.common import utils
 from fuelmenu.settings import Settings
 import logging
 import netaddr
@@ -260,7 +261,7 @@ interface first.")
                         mgmt_if_ipaddr))
 
         # Extra checks for post-deployment changes
-        if ModuleHelper.get_deployment_mode() == "post":
+        if utils.get_deployment_mode() == "post":
             # Admin interface cannot change
             if mgmt_if_ipaddr != \
                     self.oldsettings["ADMIN_NETWORK"]["interface"]:

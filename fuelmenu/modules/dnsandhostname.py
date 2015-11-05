@@ -17,6 +17,7 @@ from fuelmenu.common import dialog
 from fuelmenu.common.modulehelper import ModuleHelper
 from fuelmenu.common import replace
 import fuelmenu.common.urwidwrapper as widget
+from fuelmenu.common import utils
 from fuelmenu.settings import Settings
 import logging
 import netaddr
@@ -253,7 +254,7 @@ is accessible"}
             with open(filename, 'w') as f:
                 f.write("search {0}\n".format(responses['DNS_SEARCH']))
                 f.write("domain {0}\n".format(responses['DNS_DOMAIN']))
-                if ModuleHelper.get_deployment_mode() == "post":
+                if utils.get_deployment_mode() == "post":
                     f.write("nameserver {0}\n".format(managediface_ip))
                 for upstream_dns in responses['DNS_UPSTREAM'].split(','):
                     f.write("nameserver {0}\n".format(upstream_dns))
