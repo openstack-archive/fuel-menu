@@ -116,14 +116,8 @@ class FuelSetup(object):
                 log.error("%s" % e)
         self.setChildScreen(name=choice)
 
-    def setChildScreen(self, name=None):
-        if name is None:
-            self.child = self.children[0]
-        else:
-            self.child = self.children[int(self.choices.index(name))]
-        if not self.child.screen:
-            self.child.screen = self.child.screenUI()
-        self.childpage = self.child.screen
+    def draw_child_screen(self, child_screen):
+        self.childpage = child_screen
         self.childfill = urwid.Filler(self.childpage, 'top', 40)
         self.childbox = urwid.BoxAdapter(self.childfill, 40)
         self.cols = urwid.Columns(
@@ -139,31 +133,25 @@ class FuelSetup(object):
         self.child.refresh()
         self.listwalker[:] = [self.cols]
 
+    def setChildScreen(self, name=None):
+        if name is None:
+            self.child = self.children[0]
+        else:
+            self.child = self.children[int(self.choices.index(name))]
+        if not self.child.screen:
+            self.child.screen = self.child.screenUI()
+        self.draw_child_screen(self.child.screen)
+
     def refreshScreen(self):
         size = self.screen.get_cols_rows()
         self.screen.draw_screen(size, self.frame.render(size))
 
     def refreshChildScreen(self, name):
         child = self.children[int(self.choices.index(name))]
-        #Refresh child listwalker
-        child.listwalker[:] = child.listbox_content
 
-        #reassign childpage top level objects
-        self.childpage = urwid.ListBox(child.listwalker)
-        self.childfill = urwid.Filler(self.childpage, 'middle', 22)
-        self.childbox = urwid.BoxAdapter(self.childfill, 22)
-        self.cols = urwid.Columns(
-            [
-                ('fixed', 20, urwid.Pile([
-                    urwid.AttrMap(self.menubox, 'bright'),
-                    urwid.Divider(" ")])),
-                ('weight', 3, urwid.Pile([
-                    urwid.Divider(" "),
-                    self.childbox,
-                    urwid.Divider(" ")]))
-            ], 1)
-        #Refresh top level listwalker
-        #self.listwalker[:] = [self.cols]
+        child.screen = child.screenUI()
+
+        self.draw_child_screen(child.screen)
 
     def getVersion(self, versionfile):
         try:
