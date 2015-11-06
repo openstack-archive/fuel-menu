@@ -22,6 +22,6 @@ BOOTSTRAP:
   DISTRO_RELEASE: "trusty"
   MIRROR_MOS: "http://mirror.fuel-infra.org/mos-repos/ubuntu/8.0"
   HTTP_PROXY: ""
-  EXTRA_APT_REPOS: ""
+  HTTPS_PROXY: ""
   flavor: "centos"
 PRODUCTION: docker
