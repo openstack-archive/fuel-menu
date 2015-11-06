@@ -38,6 +38,8 @@ class WidgetType(object):
     LABEL = 2
     RADIO = 3
     CHECKBOX = 4
+    LIST = 5
+    BUTTON = 6
 
 
 class ModuleHelper(object):
@@ -120,11 +122,52 @@ class ModuleHelper(object):
         return columns
 
     @classmethod
-    def _create_widget(cls, key, defaults, toolbar):
+    def _create_button_widget(cls, default_data):
+        button = widget.Button(default_data.get('label', ''),
+                               default_data.get('callback'))
+        return widget.Columns([button])
+
+    @classmethod
+    def _create_list_widget(cls, default_data, toolbar):
+
+        label = default_data.get("label")
+
+        objects = []
+
+        if label:
+            objects.append(urwid.Text(label))
+
+        elements = default_data.get("value", [])
+        scheme = default_data.get("value_scheme", {})
+        object_len = 0
+
+        for e in elements:
+            object_fields = []
+            for key in sorted(scheme.keys()):
+                data = scheme[key]
+                data["value"] = e.get(key, "")
+                object_fields.append(cls._create_widget(key, data, toolbar))
+            object_fields.append(blank)
+            if not object_len:
+                object_len = len(object_fields)
+            objects.append(
+                urwid.BoxAdapter(
+                    widget.WalkerStoredListBox(
+                        widget.SimpleListWalker(object_fields)),
+                    object_len))
+
+        box_size = ((len(objects) - 1) *    # objects w/o label;
+                    object_len +            # len of each object;
+                    1)                      # label;
+        return urwid.BoxAdapter(
+            widget.WalkerStoredListBox(widget.SimpleListWalker(objects)),
+            box_size)
+
+    @classmethod
+    def _create_widget(cls, key, default_data, toolbar):
         if key == BLANK_KEY:
             return blank
 
-        default_data = defaults[key]
         field_type = default_data.get('type', WidgetType.TEXT_FIELD)
 
         if field_type == WidgetType.CHECKBOX:
@@ -135,6 +178,12 @@ class ModuleHelper(object):
 
         if field_type == WidgetType.LABEL:
             return widget.TextLabel(default_data["label"])
+
+        if field_type == WidgetType.LIST:
+            return cls._create_list_widget(default_data, toolbar)
+
+        if field_type == WidgetType.BUTTON:
+            return cls._create_button_widget(default_data)
 
         if field_type == WidgetType.TEXT_FIELD:
             ispassword = "PASSWORD" in key.upper()
@@ -160,7 +209,9 @@ class ModuleHelper(object):
         edits = []
         toolbar = modobj.parent.footer
         for key in fields:
-            edits.append(cls._create_widget(key, defaults, toolbar))
+            edits.append(cls._create_widget(key,
+                                            defaults.get(key, {}),
+                                            toolbar))
 
         listbox_content = []
         listbox_content.extend(header_content)
