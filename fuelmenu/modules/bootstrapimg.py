@@ -25,12 +25,13 @@ import urwid.web_display
 log = logging.getLogger('fuelmenu.mirrors')
 blank = urwid.Divider()
 
-VERSION_YAML_FILE = '/etc/nailgun/version.yaml'
+FUEL_RELEASE_FILE = '/etc/fuel_release'
 FUEL_BOOTSTRAP_IMAGE_CONF = '/etc/fuel-bootstrap-image.conf'
 MOS_REPO_DFLT = 'http://mirror.fuel-infra.org/mos-repos/ubuntu/{mos_version}'
 
 BOOTSTRAP_FLAVOR_KEY = 'BOOTSTRAP/flavor'
 BOOTSTRAP_MIRROR_DISTRO_KEY = "BOOTSTRAP/MIRROR_DISTRO"
+BOOTSTRAP_MIRROR_DISTRO_RELEASE_KEY = "BOOTSTRAP/MIRROR_DISTRO_RELEASE"
 BOOTSTRAP_MIRROR_MOS_KEY = "BOOTSTRAP/MIRROR_MOS"
 BOOTSTRAP_HTTP_PROXY_KEY = "BOOTSTRAP/HTTP_PROXY"
 BOOTSTRAP_HTTPS_PROXY_KEY = "BOOTSTRAP/HTTPS_PROXY"
@@ -46,7 +47,6 @@ class bootstrapimg(urwid.WidgetWrap):
         self.deployment = "pre"
         self.parent = parent
         self.distro = 'ubuntu'
-        self._distro_release = None
         self._mos_version = None
         self._bootstrap_flavor = None
 
@@ -57,6 +57,7 @@ class bootstrapimg(urwid.WidgetWrap):
             BLANK_KEY,
             BOOTSTRAP_FLAVOR_KEY,
             BOOTSTRAP_MIRROR_DISTRO_KEY,
+            BOOTSTRAP_MIRROR_DISTRO_RELEASE_KEY,
             BOOTSTRAP_MIRROR_MOS_KEY,
             BOOTSTRAP_HTTP_PROXY_KEY,
             BOOTSTRAP_HTTPS_PROXY_KEY,
@@ -80,6 +81,10 @@ class bootstrapimg(urwid.WidgetWrap):
                 "label": "Ubuntu mirror",
                 "tooltip": "Ubuntu APT repo URL",
                 "value": "http://archive.ubuntu.com/ubuntu"},
+            BOOTSTRAP_MIRROR_DISTRO_RELEASE_KEY: {
+                "label": "Ubuntu release",
+                "tooltip": "Ubuntu release, e.g. trusty, vivid, etc.",
+                "value": "trusty"},
             BOOTSTRAP_MIRROR_MOS_KEY: {
                 "label": "MOS mirror",
                 "tooltip": ("MOS APT repo URL (can use file:// protocol, will"
@@ -102,11 +107,8 @@ class bootstrapimg(urwid.WidgetWrap):
         self.screen = None
 
     def _read_version_info(self):
-        settings = Settings()
-        dat = settings.read(VERSION_YAML_FILE)
-        version_info = dat['VERSION']
-        self._mos_version = version_info['release']
-        self._distro_release = version_info.get('ubuntu_release', 'trusty')
+        with open(FUEL_RELEASE_FILE) as f:
+            self._mos_version = f.read().strip()
 
     @property
     def mos_version(self):
@@ -158,6 +160,8 @@ class bootstrapimg(urwid.WidgetWrap):
         errors = []
         # APT repo URL must not be empty
         distro_repo_base = responses[BOOTSTRAP_MIRROR_DISTRO_KEY].strip()
+        distro_repo_release = \
+            responses[BOOTSTRAP_MIRROR_DISTRO_RELEASE_KEY].strip()
         mos_repo_base = responses[BOOTSTRAP_MIRROR_MOS_KEY].strip()
         http_proxy = responses[BOOTSTRAP_HTTP_PROXY_KEY].strip()
         https_proxy = responses[BOOTSTRAP_HTTPS_PROXY_KEY].strip()
@@ -170,7 +174,11 @@ class bootstrapimg(urwid.WidgetWrap):
         if len(distro_repo_base) == 0:
             errors.append("Ubuntu mirror URL must not be empty.")
 
-        if not self.checkDistroRepo(distro_repo_base, proxies):
+        if len(distro_repo_release) == 0:
+            errors.append("Ubuntu release must not be empty.")
+
+        if not self.checkDistroRepo(distro_repo_base,
+                                    distro_repo_release, proxies):
             errors.append("Ubuntu repository is not accessible.")
 
         if len(mos_repo_base) == 0:
@@ -287,9 +295,9 @@ class bootstrapimg(urwid.WidgetWrap):
         except url_errors.UrlNotAvailable:
             return False
 
-    def checkDistroRepo(self, base_url, proxies):
+    def checkDistroRepo(self, base_url, distro_release, proxies):
         release_url = '{base_url}/dists/{distro_release}/Release'.format(
-            base_url=base_url, distro_release=self.distro_release)
+            base_url=base_url, distro_release=distro_release)
         available = self.check_url(release_url, proxies)
         # TODO(asheplyakov):
         # check if it's possible to debootstrap with this repo
