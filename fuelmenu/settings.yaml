@@ -19,6 +19,7 @@ FUEL_ACCESS:
   password: "admin"
 BOOTSTRAP:
   MIRROR_DISTRO: "http://archive.ubuntu.com/ubuntu"
+  MIRROR_DISTRO_RELEASE: "trusty"
   MIRROR_MOS: "http://mirror.fuel-infra.org/mos-repos/ubuntu/8.0"
   HTTP_PROXY: ""
   EXTRA_APT_REPOS: ""
