@@ -171,7 +171,7 @@ class interfaces(urwid.WidgetWrap):
 
             if len(dhcp_server_data) < 1:
                 self.log.debug("No DHCP servers found. Cannot enable DHCP")
-                self.errors.append("No DHCP servers found. Cannot enable DHCP")
+                errors.append("No DHCP servers found. Cannot enable DHCP")
 
         #Check ipaddr, netmask, gateway only if static
         elif responses["bootproto"] == "none":
