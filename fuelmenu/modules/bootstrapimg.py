@@ -25,7 +25,8 @@ import urwid.web_display
 log = logging.getLogger('fuelmenu.mirrors')
 blank = urwid.Divider()
 
-VERSION_YAML_FILE = '/etc/nailgun/version.yaml'
+FUEL_RELEASE_FILE = '/etc/fuel_release'
+UBUNTU_RELEASE = 'trusty'
 FUEL_BOOTSTRAP_IMAGE_CONF = '/etc/fuel-bootstrap-image.conf'
 MOS_REPO_DFLT = 'http://mirror.fuel-infra.org/mos-repos/ubuntu/{mos_version}'
 
@@ -102,11 +103,9 @@ class bootstrapimg(urwid.WidgetWrap):
         self.screen = None
 
     def _read_version_info(self):
-        settings = Settings()
-        dat = settings.read(VERSION_YAML_FILE)
-        version_info = dat['VERSION']
-        self._mos_version = version_info['release']
-        self._distro_release = version_info.get('ubuntu_release', 'trusty')
+        with open(FUEL_RELEASE_FILE) as f:
+            self._mos_version = f.read().strip()
+        self._distro_release = UBUNTU_RELEASE
 
     @property
     def mos_version(self):
