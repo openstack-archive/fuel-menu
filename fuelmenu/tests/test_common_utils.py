@@ -15,6 +15,10 @@
 #    under the License.
 
 from fuelmenu.common import utils
+
+import mock
+from mock import patch
+import subprocess
 import unittest
 
 
@@ -51,3 +55,27 @@ class TestUtils(unittest.TestCase):
         b = {'b': 2, 'a': 'notval'}
         data = utils.dict_merge(a, b)
         self.assertEqual({'a': 'notval', 'b': 2}, data)
+
+    def make_process_mock(self, return_code=0, retval=('stdout', 'stderr')):
+        process_mock = mock.Mock(
+            communicate=mock.Mock(return_value=retval))
+        process_mock.stdout = ['Stdout line 1', 'Stdout line 2']
+        process_mock.returncode = return_code
+
+        return process_mock
+
+    def test_get_deployment_mode_pre(self):
+        process_mock = self.make_process_mock(return_code=0)
+        with patch.object(subprocess, 'Popen', return_value=process_mock):
+            mode = utils.get_deployment_mode()
+            process_mock.communicate.assert_called_once_with()
+            self.assertEqual('pre', mode)
+
+    def test_get_deployment_mode_post(self):
+        output = 'fuel-core-8.0-rabbitmq'
+        process_mock = self.make_process_mock(return_code=0,
+                                              retval=(output, ''))
+        with patch.object(subprocess, 'Popen', return_value=process_mock):
+            mode = utils.get_deployment_mode()
+            process_mock.communicate.assert_called_once_with()
+            self.assertEqual('post', mode)

@@ -13,7 +13,11 @@
 # under the License.
 
 from copy import deepcopy
+import logging
 import ordereddict
+import subprocess
+
+log = logging.getLogger('fuelmenu.common.utils')
 
 
 def dict_merge(a, b):
@@ -47,3 +51,21 @@ def dict_merge(a, b):
         #Non-iterable objects should be just returned
         return b
     return result
+
+
+def get_deployment_mode():
+    """Report if any fuel containers are already created."""
+    command = ['docker', 'ps', '-a']
+    try:
+        process = subprocess.Popen(command, stdout=subprocess.PIPE,
+                                   stdin=subprocess.PIPE,
+                                   stderr=subprocess.PIPE)
+        output, errout = process.communicate()
+        if "fuel" in output.lower():
+            return "post"
+        else:
+            return "pre"
+    except OSError:
+        log.warning('Unable to check deployment mode via docker. Assuming'
+                    ' pre-deployment stage.')
+        return "pre"
