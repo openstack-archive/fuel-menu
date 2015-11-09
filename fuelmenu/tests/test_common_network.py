@@ -17,6 +17,7 @@
 from fuelmenu.common import network
 
 import mock
+import netifaces
 import unittest
 
 
@@ -43,3 +44,17 @@ class TestUtils(unittest.TestCase):
         data = network.getPhysicalIfaces()
         netifaces_mock.interfaces.assert_called_once_with()
         self.assertEqual(['eth0'], data)
+
+    @mock.patch('fuelmenu.common.network.netifaces')
+    def test_list_host_IP_addresses(self, netifaces_mock):
+        all_ifaces = ['eth0', 'lo', 'veth0']
+        netifaces_mock.AF_INET = netifaces.AF_INET
+        netifaces_mock.interfaces.return_value = all_ifaces
+        netifaces_mock.ifaddresses.side_effect = [
+            {netifaces.AF_INET: [{'addr': '10.20.0.2'}]},
+            {netifaces.AF_INET: [{'addr': '127.0.0.1'}]},
+            {netifaces.AF_INET: [{'addr': '192.168.122.1'}]},
+        ]
+        data = network.listHostIPAddresses()
+        netifaces_mock.interfaces.assert_called_once_with()
+        self.assertEqual(['10.20.0.2', '127.0.0.1', '192.168.122.1'], data)

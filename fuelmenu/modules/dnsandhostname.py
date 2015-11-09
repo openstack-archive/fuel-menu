@@ -15,6 +15,7 @@
 
 from fuelmenu.common import dialog
 from fuelmenu.common.modulehelper import ModuleHelper
+from fuelmenu.common import network
 from fuelmenu.common import replace
 import fuelmenu.common.urwidwrapper as widget
 from fuelmenu.common import utils
@@ -158,10 +159,11 @@ is accessible"}
                 errors.append(
                     "External DNS must contain only IP addresses and commas.")
 
-            admin_ip = self.netsettings[self.parent.managediface]['addr']
-            if admin_ip in responses["DNS_UPSTREAM"]:
-                errors.append("Admin interface IP cannot be in upstream "
-                              "nameservers.")
+            # Ensure local IPs are not in upstream list
+            host_ips = network.listHostIPAddresses()
+            for nameserver in responses["DNS_UPSTREAM"].split(" "):
+                if nameserver in host_ips:
+                    errors.append("Host IPs cannot be in upstream DNS.")
 
             #ensure test DNS name isn't empty
             if len(responses["TEST_DNS"]) == 0:
@@ -324,13 +326,11 @@ is accessible"}
         except EnvironmentError:
             log.warn("Unable to open /etc/resolv.conf")
 
-        # Always remove admin interface IP from nameserver list
-        admin_ip = self.netsettings[self.parent.managediface]["addr"]
-        if admin_ip in nameservers:
-            try:
-                nameservers.remove(admin_ip)
-            except ValueError:
-                pass
+        # Always remove local IPs from nameserver list
+        host_ips = network.listHostIPAddresses()
+        for nameserver in nameservers:
+            if nameserver in host_ips:
+                nameservers.remove(nameserver)
 
         return searches, domain, ",".join(nameservers)
 
