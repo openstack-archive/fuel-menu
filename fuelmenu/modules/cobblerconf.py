@@ -394,7 +394,7 @@ interface first.")
         #If DHCP pool start and matches activeiface network, don't update
         #This means if you change your pool values, go to another page, then
         #go back, it will not reset your changes. But what is more likely is
-        #you will change the network settings for interface eth0 and then come
+        #you will change the network settings for admin interface and then come
         #back to this page to update your DHCP settings. If the inSameSubnet
         #test fails, just recalculate and set new values.
         for index, key in enumerate(self.fields):

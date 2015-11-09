@@ -16,6 +16,8 @@ from fuelmenu.common.errors import BadIPException
 from fuelmenu.common.errors import NetworkException
 
 import netaddr
+import netifaces
+import re
 import subprocess
 
 
@@ -61,6 +63,16 @@ def getNetwork(ip, netmask, additionalip=None):
         return ipn_list
     except netaddr.AddrFormatError:
         return False
+
+
+def getPhysicalIfaces():
+    """Returns a sorted list of physical interfaces."""
+    ifaces = []
+    re_ifaces = re.compile(r"lo|vir|vbox|docker|veth")
+    for iface in sorted(netifaces.interfaces()):
+        if not re_ifaces.search(iface):
+            ifaces.append(iface)
+    return ifaces
 
 
 def range(startip, endip):
