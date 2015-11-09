@@ -159,7 +159,8 @@ is accessible"}
                     "External DNS must contain only IP addresses and commas.")
 
             admin_ip = self.netsettings[self.parent.managediface]['addr']
-            if admin_ip in responses["DNS_UPSTREAM"]:
+            if netaddr.valid_ipv4(admin_ip) and \
+                    admin_ip in responses["DNS_UPSTREAM"]:
                 errors.append("Admin interface IP cannot be in upstream "
                               "nameservers.")
 
@@ -326,7 +327,7 @@ is accessible"}
 
         # Always remove admin interface IP from nameserver list
         admin_ip = self.netsettings[self.parent.managediface]["addr"]
-        if admin_ip in nameservers:
+        if netaddr.valid_ipv4(admin_ip) and admin_ip in nameservers:
             try:
                 nameservers.remove(admin_ip)
             except ValueError:
