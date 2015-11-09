@@ -15,6 +15,7 @@
 
 from fuelmenu.common import dialog
 from fuelmenu.common.modulehelper import ModuleHelper
+from fuelmenu.common import network
 from fuelmenu.common import replace
 import fuelmenu.common.urwidwrapper as widget
 from fuelmenu.common import utils
@@ -152,44 +153,43 @@ is accessible"}
                 self, widget.TextLabel(msg), "Empty DNS Warning")
 
         else:
+            upstream_nameservers = responses["DNS_UPSTREAM"].split(',')
+
             #external DNS must contain only numbers, periods, and commas
             #Needs more serious ip address checking
             if re.match('[^0-9.,]', responses["DNS_UPSTREAM"]):
                 errors.append(
                     "External DNS must contain only IP addresses and commas.")
 
-            admin_ip = self.netsettings[self.parent.managediface]['addr']
-            if admin_ip in responses["DNS_UPSTREAM"]:
-                errors.append("Admin interface IP cannot be in upstream "
-                              "nameservers.")
+            # Ensure local IPs are not in upstream list
+            host_ips = network.list_host_ip_addresses()
+            for nameserver in upstream_nameservers:
+                if nameserver in host_ips:
+                    errors.append("Host IPs cannot be in upstream DNS.")
+                    break
 
             #ensure test DNS name isn't empty
             if len(responses["TEST_DNS"]) == 0:
                 errors.append("Test DNS must not be empty.")
             #Validate first IP address
-            try:
-                if netaddr.valid_ipv4(responses["DNS_UPSTREAM"].split(",")[0]):
-                    DNS_UPSTREAM = responses["DNS_UPSTREAM"].split(",")[0]
-                else:
-                    errors.append("Not a valid IP address for External DNS: %s"
-                                  % responses["DNS_UPSTREAM"])
+            for nameserver in upstream_nameservers:
+                if not netaddr.valid_ipv4(nameserver):
+                    errors.append("Not a valid IP address for DNS server:"
+                                  " {0}".format(nameserver))
 
-                #Try to resolve with first address
-                if not self.checkDNS(DNS_UPSTREAM):
-                    #Warn user that DNS resolution failed, but continue
-                    msg = "Unable to resolve %s.\n\n" % responses['TEST_DNS']\
-                          + "Possible causes for DNS failure include:\n"\
-                          + "* Invalid DNS server\n"\
-                          + "* Invalid gateway\n"\
-                          + "* Other networking issue\n\n"\
-                          + "Fuel Setup can save this configuration, but "\
-                          + "you may want to correct your settings."
-                    dialog.display_dialog(self, widget.TextLabel(msg),
-                                          "DNS Failure Warning")
-                    self.parent.refreshScreen()
-            except Exception:
-                errors.append("Not a valid IP address for External DNS: %s"
-                              % responses["DNS_UPSTREAM"])
+            #Try to resolve with first address
+            if not self.checkDNS(upstream_nameservers[0]):
+                #Warn user that DNS resolution failed, but continue
+                msg = "Unable to resolve %s.\n\n" % responses['TEST_DNS']\
+                      + "Possible causes for DNS failure include:\n"\
+                      + "* Invalid DNS server\n"\
+                      + "* Invalid gateway\n"\
+                      + "* Other networking issue\n\n"\
+                      + "Fuel Setup can save this configuration, but "\
+                      + "you may want to correct your settings."
+                dialog.display_dialog(self, widget.TextLabel(msg),
+                                      "DNS Failure Warning")
+                self.parent.refreshScreen()
 
         if len(errors) > 0:
             self.parent.footer.set_text("Error: %s" % (errors[0]))
@@ -324,13 +324,11 @@ is accessible"}
         except EnvironmentError:
             log.warn("Unable to open /etc/resolv.conf")
 
-        # Always remove admin interface IP from nameserver list
-        admin_ip = self.netsettings[self.parent.managediface]["addr"]
-        if admin_ip in nameservers:
-            try:
-                nameservers.remove(admin_ip)
-            except ValueError:
-                pass
+        # Always remove local IPs from nameserver list
+        host_ips = network.listHostIPAddresses()
+        for nameserver in nameservers:
+            if nameserver in host_ips:
+                nameservers.remove(nameserver)
 
         return searches, domain, ",".join(nameservers)
 
