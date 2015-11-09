@@ -84,6 +84,25 @@ def is_physical(iface):
         os.path.realpath('/sys/class/net/{0}'.format(iface))
 
 
+def listHostIPAddresses(interfaces="all"):
+    """Returns a list of IP addresses for optionally specified interfaces."""
+    if interfaces == "all":
+        interfaces = netifaces.interfaces()
+
+    ips = []
+    for iface in interfaces:
+        try:
+            ip = netifaces.ifaddresses(iface)[netifaces.AF_INET][0]['addr']
+            ips.append(ip)
+        except KeyError:
+            # Skip if interface has no IP
+            continue
+        except ValueError:
+            raise NetworkException("Invalid specified interface: "
+                                   "{0}".format(iface))
+    return ips
+
+
 def range(startip, endip):
     #Return a list of IPs between startip and endip
     try:
