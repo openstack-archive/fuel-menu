@@ -16,6 +16,8 @@ from fuelmenu.common.errors import BadIPException
 from fuelmenu.common.errors import NetworkException
 
 import netaddr
+import netifaces
+import os
 import subprocess
 
 
@@ -61,6 +63,28 @@ def getNetwork(ip, netmask, additionalip=None):
         return ipn_list
     except netaddr.AddrFormatError:
         return False
+
+
+def getPhysicalIfaces():
+    """Returns a sorted list of physical interfaces."""
+    ifaces = []
+    for iface in sorted(netifaces.interfaces()):
+        if isPhysical(iface):
+            ifaces.append(iface)
+    return ifaces
+
+
+def isPhysical(iface):
+    """Returns true if virtual is not in the iface's linked path."""
+    # A virtual interface has a symlink in /sys/class/net pointing to
+    # a subdirectory of /sys/devices/virtual
+    # $ cd /sys/class/net
+    # $ readlink lo
+    # ../../devices/virtual/net/lo
+    # $ readlink enp2s0f0
+    # ../../devices/pci0000:00/0000:00:1c.0/0000:02:00.0/net/enp2s0f0
+    return 'virtual' not in \
+        os.path.realpath('/sys/class/net/{0}'.format(iface))
 
 
 def range(startip, endip):
