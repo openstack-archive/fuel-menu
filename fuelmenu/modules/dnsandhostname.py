@@ -103,6 +103,13 @@ is accessible"}
         """Validate that all fields have valid values through sanity checks."""
         self.parent.footer.set_text("Checking data...")
         self.parent.refreshScreen()
+
+        log.debug("dnsandhostname.Netsettings: {0}"
+                  .format(self.netsettings))
+        self.getNetwork()
+        log.debug("Populated dnsandhostname.Netsettings: {0}"
+                  .format(self.netsettings))
+
         #Get field information
         responses = dict()
 
