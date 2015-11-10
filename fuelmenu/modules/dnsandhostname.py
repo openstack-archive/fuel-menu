@@ -160,6 +160,7 @@ is accessible"}
 
             admin_ip = self.netsettings[self.parent.managediface]['addr']
             if admin_ip in responses["DNS_UPSTREAM"]:
+                import pdb; pdb.set_trace()
                 errors.append("Admin interface IP cannot be in upstream "
                               "nameservers.")
 
