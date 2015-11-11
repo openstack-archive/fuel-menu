@@ -25,3 +25,6 @@ BOOTSTRAP:
   EXTRA_APT_REPOS: ""
   flavor: "centos"
 PRODUCTION: docker
+FEATURE_GROUPS:
+  - experimental
+  - advanced
