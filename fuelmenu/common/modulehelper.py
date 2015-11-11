@@ -28,9 +28,13 @@ import urwid.raw_display
 import urwid.web_display
 
 log = logging.getLogger('fuelmenu.modulehelper')
-blank = urwid.Divider()
+
+# magic. calculated as 80 (standard terminal width) - 20 (menu size)
+MAX_WIDTH = 60
 
 BLANK_KEY = "blank"
+
+blank = urwid.Divider()
 
 
 class WidgetType(object):
@@ -38,6 +42,8 @@ class WidgetType(object):
     LABEL = 2
     RADIO = 3
     CHECKBOX = 4
+    LIST = 5
+    BUTTON = 6
 
 
 class ModuleHelper(object):
@@ -51,7 +57,7 @@ class ModuleHelper(object):
         :returns: OrderedDict of settings for calling class
         """
 
-        #Read in yaml
+        # Read in yaml
         defaultsettings = Settings().read(modobj.parent.defaultsettingsfile)
         usersettings = Settings().read(modobj.parent.settingsfile)
         oldsettings = dict_merge(defaultsettings, usersettings)
@@ -120,11 +126,55 @@ class ModuleHelper(object):
         return columns
 
     @classmethod
-    def _create_widget(cls, key, defaults, toolbar):
+    def _create_button_widget(cls, default_data):
+        button = widget.Button(default_data.get('label', ''),
+                               default_data.get('callback'))
+        return widget.Columns([button])
+
+    @classmethod
+    def _create_list_widget(cls, default_data, toolbar):
+
+        label = default_data.get("label")
+
+        objects = []
+        box_size = 0
+
+        if label:
+            label = urwid.Text(label)
+            objects.append(label)
+            box_size += label.rows((MAX_WIDTH,))
+
+        elements = default_data.get("value", [])
+        scheme = default_data.get("value_scheme", {})
+
+        for e in elements:
+            object_size = 0
+            object_fields = []
+            for key in sorted(scheme.keys()):
+                data = scheme[key]
+                data["value"] = e.get(key, "")
+                new_widget = cls._create_widget(key, data, toolbar)
+                object_fields.append(new_widget)
+                object_size += new_widget.rows((MAX_WIDTH,))
+            object_fields.append(blank)
+            object_size += blank.rows((MAX_WIDTH,))
+
+            objects.append(
+                urwid.BoxAdapter(
+                    widget.WalkerStoredListBox(
+                        widget.SimpleListWalker(object_fields)),
+                    object_size))
+            box_size += object_size
+
+        return urwid.BoxAdapter(
+            widget.WalkerStoredListBox(widget.SimpleListWalker(objects)),
+            box_size)
+
+    @classmethod
+    def _create_widget(cls, key, default_data, toolbar):
         if key == BLANK_KEY:
             return blank
 
-        default_data = defaults[key]
         field_type = default_data.get('type', WidgetType.TEXT_FIELD)
 
         if field_type == WidgetType.CHECKBOX:
@@ -136,13 +186,21 @@ class ModuleHelper(object):
         if field_type == WidgetType.LABEL:
             return widget.TextLabel(default_data["label"])
 
+        if field_type == WidgetType.LIST:
+            return cls._create_list_widget(default_data, toolbar)
+
+        if field_type == WidgetType.BUTTON:
+            return cls._create_button_widget(default_data)
+
         if field_type == WidgetType.TEXT_FIELD:
             ispassword = "PASSWORD" in key.upper()
             caption = default_data["label"]
             default = default_data["value"]
             tooltip = default_data["tooltip"]
-            return widget.TextField(key, caption, 23, default, tooltip,
-                                    toolbar, ispassword=ispassword)
+            return widget.TextField(key, caption, width=23,
+                                    default_value=default,
+                                    tooltip=tooltip, toolbar=toolbar,
+                                    ispassword=ispassword)
 
     @classmethod
     def screenUI(cls, modobj, headertext, fields, defaults,
@@ -160,7 +218,9 @@ class ModuleHelper(object):
         edits = []
         toolbar = modobj.parent.footer
         for key in fields:
-            edits.append(cls._create_widget(key, defaults, toolbar))
+            edits.append(cls._create_widget(key,
+                                            defaults.get(key, {}),
+                                            toolbar))
 
         listbox_content = []
         listbox_content.extend(header_content)

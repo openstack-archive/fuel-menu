@@ -28,10 +28,11 @@ def TextField(keyword, label, width, default_value=None, tooltip=None,
         mask = None
     if not tooltip:
         edit_obj = urwid.Edit(('important', label.ljust(width)), default_value,
-                              mask=mask)
+                              mask=mask, wrap='clip')
     else:
         edit_obj = TextWithTip(('important', label.ljust(width)),
-                               default_value, tooltip, toolbar, mask=mask)
+                               default_value, tooltip, toolbar,
+                               mask=mask, wrap='clip')
     wrapped_obj = urwid.AttrWrap(edit_obj, 'editbx', 'editfc')
     if disabled:
         wrapped_obj = urwid.WidgetDisable(urwid.AttrWrap(edit_obj,
@@ -79,10 +80,22 @@ def Columns(objects):
                          left=0, right=0, min_width=61)
 
 
-def Button(text, fn):
+def Button(text, callback=None):
     """Returns a wrapped Button with reverse focus attribute."""
-    button = urwid.Button(text, fn)
+    button = urwid.Button(text, on_press=callback)
     return urwid.AttrMap(button, None, focus_map='reversed')
+
+
+def SimpleListWalker(contents):
+    """Returns an Urwid SimpleListWalker object."""
+    return urwid.SimpleListWalker(contents)
+
+
+class WalkerStoredListBox(urwid.ListBox):
+    def __init__(self, list_walker):
+        super(WalkerStoredListBox, self).__init__(list_walker)
+
+        self.list_walker = list_walker
 
 
 class TabbedGridFlow(urwid.GridFlow):
@@ -189,9 +202,9 @@ class TabbedColumns(urwid.Columns):
 
 class TextWithTip(urwid.Edit):
     def __init__(self, label, default_value=None, tooltip=None, toolbar=None,
-                 mask=None):
+                 mask=None, wrap='space'):
         urwid.Edit.__init__(self, caption=label, edit_text=default_value,
-                            mask=mask)
+                            mask=mask, wrap=wrap)
         self.tip = tooltip
         self.toolbar = toolbar
 
