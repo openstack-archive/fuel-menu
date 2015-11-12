@@ -75,7 +75,7 @@ class feature_groups(urwid.WidgetWrap):
         self.parent.footer.set_text("Checking data...")
         self.parent.refreshScreen()
         self.parent.footer.set_text("No errors found.")
-        return self.responses()
+        return self.responses
 
     def apply(self, args):
         responses = self.check(args)
