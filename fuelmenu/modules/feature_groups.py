@@ -48,17 +48,17 @@ class feature_groups(urwid.WidgetWrap):
             "FEATURE_GROUPS/experimental": {
                 "label": "Experimental features",
                 "tooltip": "(not thoroughly tested)",
-                "value": WidgetType.CHECKBOX,
+                "type": WidgetType.CHECKBOX,
             },
             "FEATURE_GROUPS/advanced": {
                 "label": "Advanced features",
                 "tooltip": "",
-                "value": WidgetType.CHECKBOX,
+                "type": WidgetType.CHECKBOX,
             },
             "FEATURE_GROUPS/mirantis": {
                 "label": "Mirantis features",
                 "tooltip": "",
-                "value": WidgetType.CHECKBOX,
+                "type": WidgetType.CHECKBOX,
             }
         }
         self.oldsettings = self.load()
@@ -94,7 +94,7 @@ class feature_groups(urwid.WidgetWrap):
         for setting in self.defaults:
             try:
                 part1, part2 = setting.split("/")
-                self.defaults[setting]["enabled"] = part2 in oldsettings[part1]
+                self.defaults[setting]["value"] = part2 in oldsettings[part1]
             except Exception as e:
                 log.warning("unexpected error: %s", e.message)
         return oldsettings
@@ -115,7 +115,7 @@ class feature_groups(urwid.WidgetWrap):
         self.oldsettings = newsettings
         for setting in self.defaults:
             part1, part2 = setting.split("/")
-            self.defaults[setting]["enabled"] = part2 in newsettings[part1]
+            self.defaults[setting]["value"] = part2 in newsettings[part1]
 
     def cancel(self, button):
         ModuleHelper.cancel(self, button)
