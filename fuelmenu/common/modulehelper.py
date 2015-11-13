@@ -14,6 +14,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from fuelmenu.common import network
 import fuelmenu.common.urwidwrapper as widget
 from fuelmenu.common.utils import dict_merge
 from fuelmenu.settings import Settings
@@ -256,10 +257,7 @@ class ModuleHelper(object):
     @classmethod
     def getNetwork(cls, modobj):
         """Returns addr, broadcast, netmask for each network interface."""
-        re_ifaces = re.compile(r"lo|vir|vbox|docker|veth")
-        for iface in netifaces.interfaces():
-            if re_ifaces.search(iface):
-                continue
+        for iface in network.get_physical_ifaces():
             try:
                 modobj.netsettings.update({iface: netifaces.ifaddresses(iface)[
                     netifaces.AF_INET][0]})

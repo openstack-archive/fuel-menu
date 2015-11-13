@@ -14,6 +14,7 @@
 # under the License.
 
 from common import dialog
+from common import network
 from common import timeout
 from common import urwidwrapper as widget
 import dhcp_checker.api
@@ -85,7 +86,7 @@ class FuelSetup(object):
         self.defaultsettingsfile = os.path.join(os.path.dirname(__file__),
                                                 "settings.yaml")
         self.settingsfile = "/etc/fuel/astute.yaml"
-        self.managediface = "eth0"
+        self.managediface = network.get_physical_ifaces()[0]
         #Set to true to move all settings to end
         self.globalsave = True
         self.version = self.getVersion("/etc/fuel/version.yaml")
@@ -454,13 +455,19 @@ def main(*args, **kwargs):
     if urwid.VERSION < (1, 1, 0):
         print("This program requires urwid 1.1.0 or greater.")
 
+    try:
+        default_iface = network.get_physical_ifaces()[0]
+    except IndexError:
+        print("Unable to detect any network interfaces. Could not start")
+        sys.exit(1)
+
     parser = OptionParser()
     parser.add_option("-s", "--save-only", dest="save_only",
                       action="store_true",
                       help="Save default values and exit.")
 
     parser.add_option("-i", "--iface", dest="iface", metavar="IFACE",
-                      default="eth0", help="Set IFACE as primary.")
+                      default=default_iface, help="Set IFACE as primary.")
 
     options, args = parser.parse_args()
 
