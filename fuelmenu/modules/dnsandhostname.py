@@ -325,7 +325,7 @@ is accessible"}
             log.warn("Unable to open /etc/resolv.conf")
 
         # Always remove local IPs from nameserver list
-        host_ips = network.listHostIPAddresses()
+        host_ips = network.list_host_ip_addresses()
         for nameserver in nameservers:
             if nameserver in host_ips:
                 nameservers.remove(nameserver)
