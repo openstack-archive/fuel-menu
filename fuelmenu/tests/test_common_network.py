@@ -14,9 +14,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from fuelmenu.common import errors
 from fuelmenu.common import network
 
 import mock
+import netifaces
 import unittest
 
 
@@ -49,3 +51,39 @@ class TestUtils(unittest.TestCase):
         data = network.get_physical_ifaces()
         netifaces_mock.interfaces.assert_called_once_with()
         self.assertEqual(['eth0'], data)
+
+    @mock.patch('fuelmenu.common.network.netifaces')
+    def test_list_host_ip_addresses(self, netifaces_mock):
+        all_ifaces = ['eth0', 'lo', 'veth0']
+        netifaces_mock.AF_INET = netifaces.AF_INET
+        netifaces_mock.interfaces.return_value = all_ifaces
+        netifaces_mock.ifaddresses.side_effect = [
+            {netifaces.AF_INET: [{'addr': '10.20.0.2'}]},
+            {netifaces.AF_INET: [{'addr': '127.0.0.1'}]},
+            {netifaces.AF_INET: [{'addr': '192.168.122.1'}]},
+        ]
+        data = network.list_host_ip_addresses()
+        netifaces_mock.interfaces.assert_called_once_with()
+        self.assertEqual(['10.20.0.2', '127.0.0.1', '192.168.122.1'], data)
+
+    @mock.patch('fuelmenu.common.network.netifaces')
+    def test_list_host_ip_addresses_ignore_no_ip(self, netifaces_mock):
+        all_ifaces = ['eth0']
+        netifaces_mock.AF_INET = netifaces.AF_INET
+        netifaces_mock.interfaces.return_value = all_ifaces
+        netifaces_mock.ifaddresses.return_value = []
+        data = network.list_host_ip_addresses()
+        netifaces_mock.interfaces.assert_called_once_with()
+        self.assertEqual([], data)
+
+    @mock.patch('fuelmenu.common.network.netifaces')
+    def test_list_host_ip_addresses_raises_for_bad_iface(self, netifaces_mock):
+        all_ifaces = ['eth0']
+        bad_iface = "nonexistent"
+        netifaces_mock.AF_INET = netifaces.AF_INET
+        netifaces_mock.interfaces.return_value = all_ifaces
+        netifaces_mock.ifaddresses.side_effect = ValueError(
+            "You must specify a valid interface name.")
+        self.assertRaises(errors.NetworkException,
+                          network.list_host_ip_addresses,
+                          bad_iface)
