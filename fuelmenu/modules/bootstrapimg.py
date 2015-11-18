@@ -266,10 +266,13 @@ class bootstrapimg(urwid.WidgetWrap):
                 if var == BLANK_KEY:
                     continue
                 name = var
+                val = responses.get(var)
+                if var == BOOTSTRAP_EXTRA_DEB_REPOS_KEY:
+                    # EXTRA_DEB_REPOS is a pipe separated list of APT URLs
+                    val = '|'.join(val)
                 if "/" in name:
                     _, name = name.split('/')
-
-                fbiconf.write('{0}="{1}"\n'.format(name, responses.get(var)))
+                fbiconf.write('{0}="{1}"\n'.format(name, val))
             fbiconf.write('MOS_VERSION="{0}"'.format(self.mos_version))
         self.save(responses)
         return True
