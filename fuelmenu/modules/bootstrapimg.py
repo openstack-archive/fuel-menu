@@ -455,14 +455,12 @@ class bootstrapimg(urwid.WidgetWrap):
 
     def add_repo(self, data=None):
 
-        responses = self.responses
-        defaults = copy.copy(self.defaults)
-        self._update_defaults(defaults,
-                              self._make_settings_from_responses(responses))
-        defaults[BOOTSTRAP_EXTRA_DEB_REPOS_KEY]['value'].append(
+        defaults = self._get_fresh_defaults()
+        extra_repo_list = defaults[BOOTSTRAP_EXTRA_DEB_REPOS_KEY]['value']
+        extra_repo_list.append(
             dict((k, "") for k in self.extra_repo_value_scheme))
-        self.screen = self._generate_screen_by_defaults(defaults)
-        self.parent.draw_child_screen(self.screen)
+        button_position = self._calculate_field_position(ADD_REPO_BUTTON_KEY)
+        self._redraw_screen(defaults, button_position)
 
     def _update_defaults(self, defaults, new_settings):
         for setting in defaults:
@@ -576,6 +574,34 @@ class bootstrapimg(urwid.WidgetWrap):
         # set the radiobutton state (ModuleHelper handles only yes/no choice)
         self._ui_set_bootstrap_flavor()
         return screen
+
+    def _get_fresh_defaults(self):
+        defaults = copy.copy(self.defaults)
+        self._update_defaults(defaults,
+                              self._make_settings_from_responses(
+                                  self.responses))
+        return defaults
+
+    def _redraw_screen(self, defaults=None, focus_position=None):
+        if not defaults:
+            defaults = self.defaults
+        self.screen = self._generate_screen_by_defaults(defaults)
+        if focus_position:
+            self.walker.set_focus(focus_position)
+        self.parent.draw_child_screen(self.screen, focus_on_child=True)
+
+    def _calculate_field_position(self, field_name):
+        return self._calculate_edits_offset() + self.fields.index(field_name)
+
+    def _calculate_edits_offset(self):
+        """Returns position of first widget from self.edits"""
+        first_edit = self.edits[0] if self.edits else None
+        result = 0
+        for widget in self.walker.lst:
+            if widget == first_edit:
+                break
+            result += 1
+        return result
 
     def screenUI(self):
         return self._generate_screen_by_defaults(self.defaults)
