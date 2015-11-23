@@ -117,7 +117,7 @@ class FuelSetup(object):
                 log.error("%s" % e)
         self.setChildScreen(name=choice)
 
-    def draw_child_screen(self, child_screen):
+    def draw_child_screen(self, child_screen, focus_on_child=False):
         self.childpage = child_screen
         self.childfill = urwid.Filler(self.childpage, 'top', 40)
         self.childbox = urwid.BoxAdapter(self.childfill, 40)
@@ -131,6 +131,8 @@ class FuelSetup(object):
                     self.childbox,
                     urwid.Divider(" ")]))
             ], 1)
+        if focus_on_child:
+            self.cols.focus_position = 1  # focus on childbox
         self.child.refresh()
         self.listwalker[:] = [self.cols]
 

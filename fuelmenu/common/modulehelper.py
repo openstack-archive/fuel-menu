@@ -195,9 +195,9 @@ class ModuleHelper(object):
 
         if field_type == WidgetType.TEXT_FIELD:
             ispassword = "PASSWORD" in key.upper()
-            caption = default_data["label"]
-            default = default_data["value"]
-            tooltip = default_data["tooltip"]
+            caption = default_data.get("label", "")
+            default = default_data.get("value", "")
+            tooltip = default_data.get("tooltip", "")
             return widget.TextField(key, caption, width=23,
                                     default_value=default,
                                     tooltip=tooltip, toolbar=toolbar,
