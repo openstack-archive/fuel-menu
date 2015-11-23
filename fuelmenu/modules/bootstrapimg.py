@@ -48,6 +48,16 @@ BOOTSTRAP_SKIP_BUILD_KEY = "BOOTSTRAP/SKIP_DEFAULT_IMG_BUILD"
 ADD_REPO_BUTTON_KEY = 'add_repo_button'
 
 
+class Flavors(object):
+    """Enum for flavors.
+    """
+
+    FLAVORS = ["CentOS", "Ubuntu"]
+
+    def __getattr__(self, item):
+        return self.FLAVORS.index(item)
+
+
 class bootstrapimg(urwid.WidgetWrap):
     def __init__(self, parent):
         self.name = "Bootstrap Image"
@@ -60,13 +70,20 @@ class bootstrapimg(urwid.WidgetWrap):
         self._mos_version = None
         self._mos_release = None
         self._bootstrap_flavor = None
+        self._flavors = Flavors()
 
         # UI Text
         self.header_content = ["Bootstrap image configuration"]
-        self.fields = (
+
+        self._common_fields = (
             BOOTSTRAP_FLAVOR_KEY,
+        )
+        self._skip_build_fields = (
             BLANK_KEY,
             BOOTSTRAP_SKIP_BUILD_KEY,
+        )
+
+        self._repo_related_fields = (
             BLANK_KEY,
             BOOTSTRAP_MIRROR_DISTRO_KEY,
             BOOTSTRAP_DISTRO_RELEASE_KEY,
@@ -79,6 +96,8 @@ class bootstrapimg(urwid.WidgetWrap):
             BOOTSTRAP_EXTRA_DEB_REPOS_KEY,
             ADD_REPO_BUTTON_KEY
         )
+
+        self.fields = self._common_fields
 
         # TODO(asheplyakov):
         # switch to the new MOS APT repo structure when it's ready
@@ -112,12 +131,14 @@ class bootstrapimg(urwid.WidgetWrap):
             BOOTSTRAP_SKIP_BUILD_KEY: {
                 "label": "Skip building bootstrap image",
                 "tooltip": "",
-                "type": WidgetType.CHECKBOX},
+                "type": WidgetType.CHECKBOX,
+                "callback": self.skip_build_callback},
             BOOTSTRAP_FLAVOR_KEY: {
                 "label": "Flavor",
                 "tooltip": "",
                 "type": WidgetType.RADIO,
-                "choices": ["CentOS", "Ubuntu"]},
+                "choices": self._flavors.FLAVORS,
+                "callback": self.flavor_callback},
             BOOTSTRAP_MIRROR_DISTRO_KEY: {
                 "label": "Ubuntu mirror",
                 "tooltip": "Ubuntu APT repo URL",
@@ -172,7 +193,8 @@ class bootstrapimg(urwid.WidgetWrap):
                 pass
             elif fieldname == BOOTSTRAP_FLAVOR_KEY:
                 rb_group = self.edits[index].rb_group
-                flavor = 'centos' if rb_group[0].state else 'ubuntu'
+                flavor = 'centos' if rb_group[self._flavors.CentOS].state\
+                    else 'ubuntu'
                 ret[fieldname] = flavor
             elif fieldname == BOOTSTRAP_EXTRA_DEB_REPOS_KEY:
                 ret[fieldname] = \
@@ -190,7 +212,8 @@ class bootstrapimg(urwid.WidgetWrap):
         responses = self.responses
 
         errors = []
-        if responses.get(BOOTSTRAP_FLAVOR_KEY) == 'ubuntu':
+        if responses.get(BOOTSTRAP_FLAVOR_KEY) == 'ubuntu' and \
+           not responses.get(BOOTSTRAP_SKIP_BUILD_KEY):
             errors.extend(self.check_apt_repos(responses))
 
         if errors:
@@ -288,20 +311,21 @@ class bootstrapimg(urwid.WidgetWrap):
 
     def _ui_set_bootstrap_flavor(self):
         rb_index = self.fields.index(BOOTSTRAP_FLAVOR_KEY)
-        is_ubuntu = self._bootstrap_flavor is not None and \
-            'ubuntu' in self._bootstrap_flavor
+        is_ubuntu = self._flavor_is_ubuntu(self._bootstrap_flavor)
         try:
             rb_group = self.edits[rb_index].rb_group
-            rb_group[0].set_state(not is_ubuntu)
-            rb_group[1].set_state(is_ubuntu)
+            index = self._flavors.Ubuntu if is_ubuntu else self._flavors.CentOS
+            rb_group[index].set_state(True, do_callback=False)
         except AttributeError:
             # the UI hasn't been initalized yet
             pass
 
     def _set_bootstrap_flavor(self, flavor):
-        is_ubuntu = flavor is not None and 'ubuntu' in flavor.lower()
+        is_ubuntu = self._flavor_is_ubuntu(flavor)
         self._bootstrap_flavor = 'ubuntu' if is_ubuntu else 'centos'
-        self._ui_set_bootstrap_flavor()
+
+    def _flavor_is_ubuntu(self, flavor=None):
+        return flavor is not None and 'ubuntu' in flavor.lower()
 
     def _get_repo_list_response(self, list_box):
         # Here we assumed that we get object of WalkerStoredListBox
@@ -514,11 +538,13 @@ class bootstrapimg(urwid.WidgetWrap):
     def load(self):
         # Read in yaml
         defaultsettings = Settings().read(self.parent.defaultsettingsfile)
-        oldsettings = defaultsettings
-        oldsettings.update(Settings().read(self.parent.settingsfile))
+        settings = defaultsettings
+        settings.update(Settings().read(self.parent.settingsfile))
 
-        self._update_defaults(self.defaults, oldsettings)
-        return oldsettings
+        self._update_defaults(self.defaults, settings)
+        self._select_fields_to_show(self.defaults)
+        self._ui_set_bootstrap_flavor()
+        return settings
 
     def _make_settings_from_responses(self, responses):
         settings = dict()
@@ -617,6 +643,40 @@ class bootstrapimg(urwid.WidgetWrap):
                 break
             result += 1
         return result
+
+    def _select_fields_to_show(self, defaults, flavor=None):
+        if not flavor:
+            flavor = self._bootstrap_flavor
+        if not self._flavor_is_ubuntu(flavor):
+            self.fields = self._common_fields
+            return
+        skip_build = defaults[BOOTSTRAP_SKIP_BUILD_KEY].get('value')
+        if skip_build:
+            self.fields = self._common_fields + self._skip_build_fields
+            return
+        self.fields = \
+            self._common_fields +\
+            self._skip_build_fields +\
+            self._repo_related_fields
+
+    def flavor_callback(self, widget, new_state, label, data=None):
+        if not new_state:
+            # process only selected radiobutton
+            return
+        defaults = self._get_fresh_defaults()
+        self._set_bootstrap_flavor(label.lower())
+        self._select_fields_to_show(defaults)
+        self._redraw_screen(
+            defaults,
+            self._calculate_field_position(BOOTSTRAP_FLAVOR_KEY))
+
+    def skip_build_callback(self, widget, new_state):
+        defaults = self._get_fresh_defaults()
+        defaults[BOOTSTRAP_SKIP_BUILD_KEY]['value'] = new_state
+        self._select_fields_to_show(defaults)
+        self._redraw_screen(
+            defaults,
+            self._calculate_field_position(BOOTSTRAP_SKIP_BUILD_KEY))
 
     def screenUI(self):
         return self._generate_screen_by_defaults(self.defaults)
