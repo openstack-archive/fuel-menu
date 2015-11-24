@@ -132,9 +132,8 @@ class ntpsetup(urwid.WidgetWrap):
                     warnings.append("%s unable to sync time with server.: %s"
                                     % self.defaults[ntpfield]['label'])
         if len(errors) > 0:
-            self.parent.footer.set_text(
-                "Errors: %s First error: %s" % (len(errors), errors[0]))
             log.error("Errors: %s %s" % (len(errors), errors))
+            ModuleHelper.check_failed_dialog(self, errors)
             return False
         else:
             if len(warnings) > 0:
