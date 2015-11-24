@@ -16,9 +16,11 @@ import copy
 import re
 import six
 
+from fuelmenu.common import dialog
 from fuelmenu.common.modulehelper import BLANK_KEY
 from fuelmenu.common.modulehelper import ModuleHelper
 from fuelmenu.common.modulehelper import WidgetType
+import fuelmenu.common.urwidwrapper as widget
 from fuelmenu.settings import Settings
 import logging
 import url_access_checker.api as urlck
@@ -196,8 +198,10 @@ class bootstrapimg(urwid.WidgetWrap):
             errors.extend(self.check_apt_repos(responses))
 
         if errors:
-            self.parent.footer.set_text("Error: %s" % (errors[0]))
             log.error("Errors: %s", errors)
+            error_msg = "\n".join(errors)
+            dialog.display_dialog(self, widget.TextLabel(error_msg),
+                                  "Check failed.")
             return False
         else:
             self.parent.footer.set_text("No errors found.")
@@ -240,12 +244,13 @@ class bootstrapimg(urwid.WidgetWrap):
         for index, repo in enumerate(repos):
             name = repo['name']
             if not name:
-                name = "#{0}".format(index)
+                name = "#{0}".format(index + 1)
                 errors.append("Empty name for extra repository {0}."
                               .format(name))
             if not all((repo['type'], repo['uri'], repo['suite'])):
                 errors.append("Cannot parse extra repository {0}. "
-                              "Deb format is expected."
+                              "Expected format: "
+                              "'deb uri distribution [component1] [...]'."
                               .format(name))
                 continue
             if not self._check_repo(repo['uri'], repo['suite'], proxies):
@@ -334,10 +339,10 @@ class bootstrapimg(urwid.WidgetWrap):
 
         match = re.match(regexp, uri)
 
-        repo_type = match.group('type') if match else None
-        repo_suite = match.group('suite') if match else None
-        repo_section = match.group('section') if match else None
-        repo_uri = match.group('uri') if match else None
+        repo_type = match.group('type') if match else ''
+        repo_suite = match.group('suite') if match else ''
+        repo_section = match.group('section') if match else ''
+        repo_uri = match.group('uri') if match else uri
 
         return {
             "name": name,
@@ -431,7 +436,7 @@ class bootstrapimg(urwid.WidgetWrap):
             uri_template += section_suffix
         uri = ''
         if any(data.values()):
-            uri = uri_template.format(**data)
+            uri = uri_template.format(**data).strip()
         result = {
             "uri": uri,
             "name": name,
