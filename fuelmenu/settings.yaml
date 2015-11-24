@@ -21,6 +21,7 @@ BOOTSTRAP:
   MIRROR_DISTRO: "http://archive.ubuntu.com/ubuntu"
   DISTRO_RELEASE: "trusty"
   MIRROR_MOS: "http://mirror.fuel-infra.org/mos-repos/ubuntu/8.0"
+  MOS_RELEASE: "mos8.0"
   HTTP_PROXY: ""
   HTTPS_PROXY: ""
   flavor: "centos"

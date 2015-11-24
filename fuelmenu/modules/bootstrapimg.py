@@ -39,6 +39,7 @@ BOOTSTRAP_FLAVOR_KEY = 'BOOTSTRAP/flavor'
 BOOTSTRAP_MIRROR_DISTRO_KEY = "BOOTSTRAP/MIRROR_DISTRO"
 BOOTSTRAP_DISTRO_RELEASE_KEY = "BOOTSTRAP/DISTRO_RELEASE"
 BOOTSTRAP_MIRROR_MOS_KEY = "BOOTSTRAP/MIRROR_MOS"
+BOOTSTRAP_MOS_RELEASE_KEY = "BOOTSTRAP/MOS_RELEASE"
 BOOTSTRAP_HTTP_PROXY_KEY = "BOOTSTRAP/HTTP_PROXY"
 BOOTSTRAP_HTTPS_PROXY_KEY = "BOOTSTRAP/HTTPS_PROXY"
 BOOTSTRAP_EXTRA_DEB_REPOS_KEY = "BOOTSTRAP/EXTRA_DEB_REPOS"
@@ -70,6 +71,7 @@ class bootstrapimg(urwid.WidgetWrap):
             BOOTSTRAP_MIRROR_DISTRO_KEY,
             BOOTSTRAP_DISTRO_RELEASE_KEY,
             BOOTSTRAP_MIRROR_MOS_KEY,
+            BOOTSTRAP_MOS_RELEASE_KEY,
             BLANK_KEY,
             BOOTSTRAP_HTTP_PROXY_KEY,
             BOOTSTRAP_HTTPS_PROXY_KEY,
@@ -127,6 +129,10 @@ class bootstrapimg(urwid.WidgetWrap):
                 "tooltip": ("MOS APT repo URL (can use file:// protocol, will"
                             "use local mirror in such case"),
                 "value": mos_repo_default},
+            BOOTSTRAP_MOS_RELEASE_KEY: {
+                "label": "MOS release",
+                "tooltip": "MOS release, e.g. mos8.0, mos7.0, etc.",
+                "value": ""},
             BOOTSTRAP_HTTP_PROXY_KEY: {
                 "label": "HTTP proxy",
                 "tooltip": "Use this proxy when building the bootstrap image",
@@ -210,6 +216,7 @@ class bootstrapimg(urwid.WidgetWrap):
         distro_repo_release = \
             responses[BOOTSTRAP_DISTRO_RELEASE_KEY].strip()
         mos_repo_base = responses[BOOTSTRAP_MIRROR_MOS_KEY].strip()
+        mos_release = responses[BOOTSTRAP_MOS_RELEASE_KEY].strip()
         http_proxy = responses[BOOTSTRAP_HTTP_PROXY_KEY].strip()
         https_proxy = responses[BOOTSTRAP_HTTPS_PROXY_KEY].strip()
 
@@ -232,7 +239,10 @@ class bootstrapimg(urwid.WidgetWrap):
         if len(mos_repo_base) == 0:
             errors.append("MOS repo URL must not be empty.")
 
-        if not self.check_mos_repo(mos_repo_base, proxies):
+        if len(mos_release) == 0:
+            errors.append("MOS release must not be empty.")
+
+        if not self.check_mos_repo(mos_repo_base, mos_release, proxies):
             errors.append("MOS repository is not accessible.")
 
         repos = responses.get(BOOTSTRAP_EXTRA_DEB_REPOS_KEY)
@@ -348,10 +358,10 @@ class bootstrapimg(urwid.WidgetWrap):
             "section": repo_section
         }
 
-    def _generate_mos_repos(self, uri):
+    def _generate_mos_repos(self, uri, release):
         result = self._generate_repos_from_uri(
             uri=uri,
-            codename=self.mos_release,
+            codename=release,
             name=self.mos_repo_name,
             components=['', '-updates', '-security'],
             section='main restricted',
@@ -359,7 +369,7 @@ class bootstrapimg(urwid.WidgetWrap):
         )
         result += self._generate_repos_from_uri(
             uri=uri,
-            codename=self.mos_release,
+            codename=release,
             name=self.mos_repo_name,
             components=['-holdback'],
             section='main restricted',
@@ -480,6 +490,10 @@ class bootstrapimg(urwid.WidgetWrap):
                     defaults[setting]["value"] = \
                         self._get_repo_uri_by_name(self.mos_repo_name,
                                                    new_value)
+                    # We also should get release name
+                    defaults[BOOTSTRAP_MOS_RELEASE_KEY]["value"] = \
+                        self._get_repo_suite_by_name(self.mos_repo_name,
+                                                     new_value)
                     continue
                 if BOOTSTRAP_MIRROR_DISTRO_KEY == setting:
                     defaults[setting]["value"] = \
@@ -514,12 +528,15 @@ class bootstrapimg(urwid.WidgetWrap):
         for setting in responses.keys():
             new_value = responses[setting]
             if BOOTSTRAP_MIRROR_MOS_KEY == setting:
-                new_value = self._generate_mos_repos(new_value)
+                new_value = self._generate_mos_repos(
+                    new_value,
+                    responses.get(BOOTSTRAP_MOS_RELEASE_KEY))
             if BOOTSTRAP_MIRROR_DISTRO_KEY == setting:
                 new_value = self._generate_distro_repos(
                     new_value,
                     responses.get(BOOTSTRAP_DISTRO_RELEASE_KEY))
-            if BOOTSTRAP_DISTRO_RELEASE_KEY == setting:
+            if BOOTSTRAP_DISTRO_RELEASE_KEY == setting or \
+                    BOOTSTRAP_MOS_RELEASE_KEY == setting:
                 continue  # It's handled above
             if "/" in setting:
                 part1, part2 = setting.split("/")
@@ -562,10 +579,9 @@ class bootstrapimg(urwid.WidgetWrap):
         # check if it's possible to debootstrap with this repo
         return self._check_repo(base_url, distro_release, proxies)
 
-    def check_mos_repo(self, base_url, proxies):
-        # deb {repo_base_url}/mos/ubuntu mos{mos_version} main
-        suite = self.mos_release
-        return self._check_repo(base_url, suite, proxies)
+    def check_mos_repo(self, base_url, mos_release, proxies):
+        # deb {repo_base_url}/mos/ubuntu {mos_release} main
+        return self._check_repo(base_url, mos_release, proxies)
 
     def refresh(self):
         pass
