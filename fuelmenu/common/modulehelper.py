@@ -14,6 +14,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from fuelmenu.common import dialog
 from fuelmenu.common import network
 import fuelmenu.common.urwidwrapper as widget
 from fuelmenu.common.utils import dict_merge
@@ -98,6 +99,14 @@ class ModuleHelper(object):
                             'value'])
                 except AttributeError:
                     log.warning("Field %s unable to reset text" % fieldname)
+
+    @classmethod
+    def check_failed_dialog(cls, modobj, errors):
+        error_msg = "Errors:\n  {0}".format("\n  ".join(errors))
+
+        dialog.display_dialog(modobj, widget.TextLabel(error_msg),
+                              "Check failed in module {0}".format(
+                                  modobj.name))
 
     @classmethod
     def _create_checkbox_widget(cls, default_data):
