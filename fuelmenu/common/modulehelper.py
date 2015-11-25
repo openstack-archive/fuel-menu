@@ -13,6 +13,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import six
 
 from fuelmenu.common import dialog
 from fuelmenu.common import network
@@ -63,16 +64,21 @@ class ModuleHelper(object):
         defaultsettings = Settings().read(modobj.parent.defaultsettingsfile)
         usersettings = Settings().read(modobj.parent.settingsfile)
         oldsettings = dict_merge(defaultsettings, usersettings)
-        for setting in modobj.defaults.keys():
-            if "label" in setting:
-                continue
-            elif ignoredparams and setting in ignoredparams:
-                continue
-            elif "/" in setting:
-                part1, part2 = setting.split("/")
-                modobj.defaults[setting]["value"] = oldsettings[part1][part2]
-            else:
-                modobj.defaults[setting]["value"] = oldsettings[setting]
+        for setting, setting_def in six.iteritems(modobj.defaults):
+            try:
+                if setting_def["type"] in (WidgetType.BUTTON,
+                                           WidgetType.LABEL):
+                    continue
+                elif ignoredparams and setting in ignoredparams:
+                    continue
+                elif "/" in setting:
+                    part1, part2 = setting.split("/")
+                    new_value = oldsettings[part1][part2]
+                else:
+                    new_value = oldsettings[setting]
+                setting_def["value"] = new_value
+            except KeyError:
+                log.warning("Failed to load %s value from settings", setting)
         return oldsettings
 
     @classmethod
