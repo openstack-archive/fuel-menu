@@ -62,6 +62,7 @@ class ModuleHelper(object):
         defaultsettings = Settings().read(modobj.parent.defaultsettingsfile)
         usersettings = Settings().read(modobj.parent.settingsfile)
         oldsettings = dict_merge(defaultsettings, usersettings)
+        loadFailed = False
         for setting in modobj.defaults.keys():
             if "label" in setting:
                 continue
@@ -69,9 +70,15 @@ class ModuleHelper(object):
                 continue
             elif "/" in setting:
                 part1, part2 = setting.split("/")
-                modobj.defaults[setting]["value"] = oldsettings[part1][part2]
+                try:
+                    [setting]["value"] = oldsettings[part1][part2]
+                except KeyError:
+                    loadFailed = True
             else:
                 modobj.defaults[setting]["value"] = oldsettings[setting]
+        if loadFailed:
+            modobj.parent.footer.set_text("Some indexes failed to load "
+                                          "from /etc/fuel/astute.yaml")
         return oldsettings
 
     @classmethod
