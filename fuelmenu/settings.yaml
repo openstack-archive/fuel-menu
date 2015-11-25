@@ -28,3 +28,30 @@ PRODUCTION: docker
 FEATURE_GROUPS:
   - experimental
   - advanced
+astute:
+  password: naily
+  user: naily
+cobbler:
+  password: cobbler
+  user: cobbler
+keystone:
+  admin_token: admin
+  monitord_user: monitord
+  monitord_password: monitord
+  nailgun_user: nailgun
+  nailgun_password: nailgun
+  ostf_user: ostf
+  ostf_password: ostf
+mcollective:
+  password: mcollective
+  user: mcollective
+postgres:
+  keystone_dbname: keystone
+  keystone_user: keystone
+  keystone_password: keystone
+  nailgun_dbname: nailgun
+  nailgun_user: nailgun
+  nailgun_password: nailgun
+  ostf_dbname: ostf
+  ostf_user: ostf
+  ostf_password: ostf
