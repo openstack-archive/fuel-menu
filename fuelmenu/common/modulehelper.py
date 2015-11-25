@@ -63,15 +63,18 @@ class ModuleHelper(object):
         usersettings = Settings().read(modobj.parent.settingsfile)
         oldsettings = dict_merge(defaultsettings, usersettings)
         for setting in modobj.defaults.keys():
-            if "label" in setting:
-                continue
-            elif ignoredparams and setting in ignoredparams:
-                continue
-            elif "/" in setting:
-                part1, part2 = setting.split("/")
-                modobj.defaults[setting]["value"] = oldsettings[part1][part2]
-            else:
-                modobj.defaults[setting]["value"] = oldsettings[setting]
+            try:
+                if "label" in setting:
+                    continue
+                elif ignoredparams and setting in ignoredparams:
+                    continue
+                elif "/" in setting:
+                    part1, part2 = setting.split("/")
+                    [setting]["value"] = oldsettings[part1][part2]
+                else:
+                    modobj.defaults[setting]["value"] = oldsettings[setting]
+            except KeyError:
+                log.warning("Failed to load %s value from settings" % setting)
         return oldsettings
 
     @classmethod
