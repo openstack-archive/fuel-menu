@@ -22,6 +22,7 @@ except Exception:
 from fuelmenu.common.modulehelper import ModuleHelper
 from fuelmenu.settings import Settings
 import logging
+import re
 import urwid
 import urwid.raw_display
 import urwid.web_display
@@ -42,8 +43,9 @@ class fueluser(urwid.WidgetWrap):
             "Default user: admin",
             "Default password: admin",
             "",
-            "The password should contain upper and lower-case letters, digits"
-            ", and characters like !@#$%^&*()_+."
+            "For the better security please consider using password with "
+            "at least 8 symbols, both upper- and lowercase letters, and "
+            "at least one digit and special character like !@#$%^&*()_+."
         ]
         self.fields = ["FUEL_ACCESS/password", "CONFIRM_PASSWORD"]
         self.defaults = \
@@ -70,36 +72,60 @@ class fueluser(urwid.WidgetWrap):
             if fieldname != "blank":
                 responses[fieldname] = self.edits[index].get_edit_text()
 
+        password = responses["FUEL_ACCESS/password"]
+
         # Validate each field
         errors = []
+        warnings = []
 
         # Passwords must match
-        if responses["FUEL_ACCESS/password"] != responses["CONFIRM_PASSWORD"]:
+        if password != responses["CONFIRM_PASSWORD"]:
             # Ignore if password is unchanged
-            if responses["FUEL_ACCESS/password"] != self.defaults[
-                    'FUEL_ACCESS/password']['value']:
+            if password != self.defaults['FUEL_ACCESS/password']['value']:
                 errors.append("Passwords do not match.")
 
         # Password must not be empty
-        if len(responses["FUEL_ACCESS/password"]) == 0:
+        if len(password) == 0:
             errors.append("Password must not be empty.")
 
         # Password needs to be in ASCII character set
         try:
-            if responses["FUEL_ACCESS/password"].decode('ascii'):
+            if password.decode('ascii'):
                 pass
         except UnicodeDecodeError:
             errors.append("Password contains non-ASCII characters.")
+
+        # Passwords should be at least 8 symbols
+        if len(password) < 8:
+            warnings.append("8 symbols")
+
+        # Passwords should contain at least one digit
+        if re.search(r"\d", password) is None:
+            warnings.append("one digit")
+
+        if re.search(r"[A-Z]", password) is None:
+            warnings.append("one uppercase letter")
+
+        if re.search(r"[a-z]", password) is None:
+            warnings.append("one lowercase letter")
+
+        if re.search(r"[!#$%&'()*+,-./[\\\]^_`{|}~" + r'"]', password) is None:
+            warnings.append("one special character")
 
         if len(errors) > 0:
             self.parent.footer.set_text("Error: %s" % (errors[0]))
             log.error("Errors: %s %s" % (len(errors), errors))
             return False
+
+        if len(warnings) > 0:
+            self.parent.footer.set_text("Warning: Password should have "
+                                        "at least %s." % (warnings[0]))
         else:
             self.parent.footer.set_text("No errors found.")
-            # Remove confirm from responses so it isn't saved
-            del responses["CONFIRM_PASSWORD"]
-            return responses
+
+        # Remove confirm from responses so it isn't saved
+        del responses["CONFIRM_PASSWORD"]
+        return responses
 
     def apply(self, args):
         responses = self.check(args)
@@ -114,13 +140,13 @@ class fueluser(urwid.WidgetWrap):
         return True
 
     def save(self, responses):
-        ## Generic settings start ##
+        # Generic settings start
         newsettings = OrderedDict()
         for setting in responses.keys():
             if "/" in setting:
                 part1, part2 = setting.split("/")
                 if part1 not in newsettings:
-                #We may not touch all settings, so copy oldsettings first
+                    # We may not touch all settings, so copy oldsettings first
                     try:
                         newsettings[part1] = self.oldsettings[part1]
                     except Exception:
