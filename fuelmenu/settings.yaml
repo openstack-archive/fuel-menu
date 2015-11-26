@@ -24,6 +24,22 @@ BOOTSTRAP:
   HTTP_PROXY: ""
   HTTPS_PROXY: ""
   flavor: "centos"
+  extend_kopts: 'biosedevname=0 ifnames=1'
+  post_script_file: /root/hello.sh
+  extra_files: [
+  '/usr/share/mk_bootstrap/files/trusty']
+  root_ssh_authorized_file: '/root/.ssh/id_rsa.pub'
+  output: '/root/bs.tar.gz'
+  packages: [
+    vim, 
+    mc, 
+    openssh-client, openssh-server, ntp, 
+    mcollective, nailgun-agent,
+    nailgun-mcagents, network-checker, fuel-agent, 
+    ubuntu-minimal, live-boot, live-boot-initramfs-tools,
+    wget,
+    linux-image-generic-lts-trusty, linux-firmware, linux-firmware-nonfree,
+    xz-utils, squashfs-tools, msmtp-mta]
 PRODUCTION: docker
 FEATURE_GROUPS:
   - experimental
