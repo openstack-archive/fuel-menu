@@ -89,7 +89,7 @@ class FuelSetup(object):
         self.managediface = network.get_physical_ifaces()[0]
         #Set to true to move all settings to end
         self.globalsave = True
-        self.version = self.getVersion("/etc/fuel/version.yaml")
+        self.version = self.getFuelVersion()
         self.main()
         self.choices = []
 
@@ -154,10 +154,10 @@ class FuelSetup(object):
 
         self.draw_child_screen(child.screen)
 
-    def getVersion(self, versionfile):
+    def getFuelVersion(self, versionfile='/etc/fuel_release'):
         try:
-            versiondata = Settings().read(versionfile)
-            return versiondata['VERSION']['release']
+            with open(versionfile, 'r') as f:
+                return f.read().strip()
         except (IOError, KeyError):
             log.error("Unable to set Fuel version from %s" % versionfile)
             return ""
