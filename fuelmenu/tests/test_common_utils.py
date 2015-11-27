@@ -79,3 +79,13 @@ class TestUtils(unittest.TestCase):
             mode = utils.get_deployment_mode()
             process_mock.communicate.assert_called_once_with()
             self.assertEqual('post', mode)
+
+    def test_get_fuel_version(self):
+        output = 'abc.xyz'
+        with patch(
+                '__builtin__.open',
+                mock.mock_open(read_data=output),
+                create=True
+        ):
+            data = utils.get_fuel_version()
+            self.assertEqual(output, data)

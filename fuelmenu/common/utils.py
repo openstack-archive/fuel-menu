@@ -72,3 +72,13 @@ def get_deployment_mode():
         log.warning('Unable to check deployment mode via docker. Assuming'
                     ' pre-deployment stage.')
         return "pre"
+
+
+def get_fuel_version(versionfile='/etc/fuel_release'):
+    """Read version from versionfile or return empty string."""
+    try:
+        with open(versionfile, 'r') as f:
+            return f.read().strip()
+    except IOError:
+        log.error("Unable to set Fuel version from %s" % versionfile)
+        return ""
