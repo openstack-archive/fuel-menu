@@ -51,7 +51,7 @@ class Flavors(object):
     """Enum for flavors.
     """
 
-    FLAVORS = ["CentOS", "Ubuntu"]
+    FLAVORS = ["Ubuntu", "CentOS"]
 
     def __getattr__(self, item):
         return self.FLAVORS.index(item)
@@ -283,23 +283,6 @@ class bootstrapimg(urwid.WidgetWrap):
             log.error("Check failed. Not applying")
             log.error("%s" % (responses))
             return False
-
-        with open(FUEL_BOOTSTRAP_IMAGE_CONF, "w") as fbiconf:
-            for var in self.fields:
-                if var == BLANK_KEY:
-                    continue
-                name = var
-                val = responses.get(var)
-                if var == BOOTSTRAP_EXTRA_DEB_REPOS_KEY:
-                    # EXTRA_DEB_REPOS is a pipe separated list of APT URLs
-                    # Note: current bootstrap build script has no concept of
-                    # repo priorities
-                    val = '|'.join([self._parse_config_repo_entry(repo)['uri']
-                                    for repo in val])
-                if "/" in name:
-                    _, name = name.split('/')
-                fbiconf.write('{0}="{1}"\n'.format(name, val))
-            fbiconf.write('MOS_VERSION="{0}"'.format(self.mos_version))
         self.save(responses)
         return True
 
