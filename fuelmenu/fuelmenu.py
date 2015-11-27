@@ -17,6 +17,7 @@ from common import dialog
 from common import network
 from common import timeout
 from common import urwidwrapper as widget
+from common import utils
 import dhcp_checker.api
 import dhcp_checker.utils
 import logging
@@ -89,7 +90,7 @@ class FuelSetup(object):
         self.managediface = network.get_physical_ifaces()[0]
         #Set to true to move all settings to end
         self.globalsave = True
-        self.version = self.getVersion("/etc/fuel/version.yaml")
+        self.version = utils.get_fuel_version()
         self.main()
         self.choices = []
 
@@ -153,14 +154,6 @@ class FuelSetup(object):
         child.screen = child.screenUI()
 
         self.draw_child_screen(child.screen)
-
-    def getVersion(self, versionfile):
-        try:
-            versiondata = Settings().read(versionfile)
-            return versiondata['VERSION']['release']
-        except (IOError, KeyError):
-            log.error("Unable to set Fuel version from %s" % versionfile)
-            return ""
 
     def main(self):
         #Disable kernel print messages. They make our UI ugly
