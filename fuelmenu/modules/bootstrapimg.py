@@ -36,14 +36,14 @@ MOS_REPO_DEFAULT = \
     'http://mirror.fuel-infra.org/mos-repos/ubuntu/{mos_version}'
 
 BOOTSTRAP_FLAVOR_KEY = 'BOOTSTRAP/flavor'
-BOOTSTRAP_MIRROR_DISTRO_KEY = "BOOTSTRAP/MIRROR_DISTRO"
-BOOTSTRAP_DISTRO_RELEASE_KEY = "BOOTSTRAP/DISTRO_RELEASE"
-BOOTSTRAP_MIRROR_MOS_KEY = "BOOTSTRAP/MIRROR_MOS"
-BOOTSTRAP_MOS_RELEASE_KEY = "BOOTSTRAP/MOS_RELEASE"
-BOOTSTRAP_HTTP_PROXY_KEY = "BOOTSTRAP/HTTP_PROXY"
-BOOTSTRAP_HTTPS_PROXY_KEY = "BOOTSTRAP/HTTPS_PROXY"
-BOOTSTRAP_EXTRA_DEB_REPOS_KEY = "BOOTSTRAP/EXTRA_DEB_REPOS"
-BOOTSTRAP_SKIP_BUILD_KEY = "BOOTSTRAP/SKIP_DEFAULT_IMG_BUILD"
+BOOTSTRAP_MIRROR_DISTRO_KEY = "BOOTSTRAP/ubuntu_repos"
+BOOTSTRAP_DISTRO_RELEASE_KEY = "distro_release"
+BOOTSTRAP_MIRROR_MOS_KEY = "BOOTSTRAP/mos_repos"
+BOOTSTRAP_MOS_RELEASE_KEY = "mos_release"
+BOOTSTRAP_HTTP_PROXY_KEY = "BOOTSTRAP/http_proxy"
+BOOTSTRAP_HTTPS_PROXY_KEY = "BOOTSTRAP/https_proxy"
+BOOTSTRAP_EXTRA_DEB_REPOS_KEY = "BOOTSTRAP/extra_repos"
+BOOTSTRAP_SKIP_BUILD_KEY = "BOOTSTRAP/skip_default_img_build"
 
 ADD_REPO_BUTTON_KEY = 'add_repo_button'
 
@@ -52,7 +52,7 @@ class Flavors(object):
     """Enum for flavors.
     """
 
-    FLAVORS = ["CentOS", "Ubuntu"]
+    FLAVORS = ["Ubuntu", "CentOS"]
 
     def __getattr__(self, item):
         return self.FLAVORS.index(item)
@@ -286,23 +286,6 @@ class bootstrapimg(urwid.WidgetWrap):
             log.error("Check failed. Not applying")
             log.error("%s" % (responses))
             return False
-
-        with open(FUEL_BOOTSTRAP_IMAGE_CONF, "w") as fbiconf:
-            for var in self.fields:
-                if var == BLANK_KEY:
-                    continue
-                name = var
-                val = responses.get(var)
-                if var == BOOTSTRAP_EXTRA_DEB_REPOS_KEY:
-                    # EXTRA_DEB_REPOS is a pipe separated list of APT URLs
-                    # Note: current bootstrap build script has no concept of
-                    # repo priorities
-                    val = '|'.join([self._parse_config_repo_entry(repo)['uri']
-                                    for repo in val])
-                if "/" in name:
-                    _, name = name.split('/')
-                fbiconf.write('{0}="{1}"\n'.format(name, val))
-            fbiconf.write('MOS_VERSION="{0}"'.format(self.mos_version))
         self.save(responses)
         return True
 
