@@ -281,8 +281,8 @@ interface first.")
                               "deployment.")
 
         if len(errors) > 0:
-            self.parent.footer.set_text("Error: %s" % (errors[0]))
             log.error("Errors: %s %s" % (len(errors), errors))
+            ModuleHelper.display_failed_check_dialog(self, errors)
             return False
         else:
             self.parent.footer.set_text("No errors found.")

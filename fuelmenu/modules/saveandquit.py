@@ -13,7 +13,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from fuelmenu.common import dialog
 from fuelmenu.common.modulehelper import ModuleHelper
 import fuelmenu.common.urwidwrapper as widget
 import time
@@ -59,11 +58,6 @@ class saveandquit():
             self.parent.footer.set_text("All changes saved successfully!")
             return True
         else:
-            #show pop up with more details
-            msg = "ERROR: Module %s failed to save. Go back" % (modulename)\
-                  + " and fix any mistakes or choose Quit without Saving."
-            dialog.display_dialog(self, widget.TextLabel(msg),
-                                  "Error saving changes!")
             return False
 
     def quit_without_saving(self, args):
