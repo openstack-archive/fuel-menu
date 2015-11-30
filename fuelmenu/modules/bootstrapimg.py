@@ -19,6 +19,7 @@ import six
 from fuelmenu.common.modulehelper import BLANK_KEY
 from fuelmenu.common.modulehelper import ModuleHelper
 from fuelmenu.common.modulehelper import WidgetType
+from fuelmenu.common import utils
 from fuelmenu.settings import Settings
 import logging
 import url_access_checker.api as urlck
@@ -30,7 +31,6 @@ import urwid.web_display
 log = logging.getLogger('fuelmenu.mirrors')
 blank = urwid.Divider()
 
-FUEL_RELEASE_FILE = '/etc/fuel_release'
 FUEL_BOOTSTRAP_IMAGE_CONF = '/etc/fuel-bootstrap-image.conf'
 MOS_REPO_DEFAULT = \
     'http://mirror.fuel-infra.org/mos-repos/ubuntu/{mos_version}'
@@ -158,14 +158,10 @@ class bootstrapimg(urwid.WidgetWrap):
         self.oldsettings = self.load()
         self.screen = None
 
-    def _read_version_info(self):
-        with open(FUEL_RELEASE_FILE) as f:
-            self._mos_version = f.read().strip()
-
     @property
     def mos_version(self):
         if not self._mos_version:
-            self._read_version_info()
+            self._mos_version = utils.get_fuel_version()
         return self._mos_version
 
     @property
