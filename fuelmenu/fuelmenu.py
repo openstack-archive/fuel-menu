@@ -13,25 +13,24 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import logging
+import operator
+from optparse import OptionParser
+import os
+import signal
+import subprocess
+import sys
+
+import urwid
+import urwid.raw_display
+import urwid.web_display
+
 from common import dialog
 from common import network
 from common import timeout
 from common import urwidwrapper as widget
 from common import utils
-import dhcp_checker.api
-import dhcp_checker.utils
-import logging
-import operator
-from optparse import OptionParser
-import os
-from settings import Settings
-import signal
-import subprocess
-import sys
-import traceback
-import urwid
-import urwid.raw_display
-import urwid.web_display
+
 
 # set up logging
 logging.basicConfig(filename='/var/log/fuelmenu.log',
@@ -80,15 +79,17 @@ class Loader(object):
 
 class FuelSetup(object):
 
-    def __init__(self):
+    def __init__(self, save_only=False, managed_iface=None):
+        self.save_only = save_only
         self.footer = None
         self.frame = None
         self.screen = None
         self.defaultsettingsfile = os.path.join(os.path.dirname(__file__),
                                                 "settings.yaml")
         self.settingsfile = "/etc/fuel/astute.yaml"
-        self.managediface = network.get_physical_ifaces()[0]
-        #Set to true to move all settings to end
+        self.managediface = (managed_iface if managed_iface else
+                             network.get_physical_ifaces()[0])
+        # Set to true to move all settings to end
         self.globalsave = True
         self.version = utils.get_fuel_version()
         self.main()
@@ -147,6 +148,8 @@ class FuelSetup(object):
         self.draw_child_screen(self.child.screen)
 
     def refreshScreen(self):
+        if self.save_only:
+            return
         size = self.screen.get_cols_rows()
         self.screen.draw_screen(size, self.frame.render(size))
 
@@ -258,7 +261,10 @@ class FuelSetup(object):
             widget.TextLabel("It is highly recommended to change default "
                              "admin password."),
             "WARNING!")
-        self.mainloop.run()
+        if not self.save_only:
+            self.mainloop.run()
+        else:
+            self.global_save()
 
     def exit_program(self, button):
         #return kernel logging to normal
@@ -317,134 +323,12 @@ class FuelSetup(object):
         return True, None
 
 
-def setup():
+def setup(**kwargs):
     urwid.web_display.set_preferences("Fuel Setup")
     # try to handle short web requests quickly
     if urwid.web_display.handle_short_request():
         return
-    FuelSetup()
-
-
-def save_only(iface, settingsfile='/etc/fuel/astute.yaml'):
-    import common.network as network
-    from common import pwgen
-    from common import utils
-    import netifaces
-
-    if utils.get_deployment_mode() == "post":
-        print("Not updating settings when invoked during post-deployment.\n"
-              "Run fuelmenu manually to make changes.")
-        sys.exit(0)
-
-    #Calculate and set Static/DHCP pool fields
-    #Max IPs = net size - 2 (master node + bcast)
-    try:
-        ip = netifaces.ifaddresses(iface)[netifaces.AF_INET][0]['addr']
-        netmask = netifaces.ifaddresses(iface)[netifaces.AF_INET][0]['netmask']
-        mac = netifaces.ifaddresses(iface)[netifaces.AF_LINK][0]['addr']
-    except Exception:
-        print("Interface %s is missing either IP address or netmask"
-              % (iface))
-        sys.exit(1)
-    net_ip_list = network.getNetwork(ip, netmask)
-    try:
-        dhcp_pool = net_ip_list[1:]
-        dynamic_start = str(dhcp_pool[0])
-        dynamic_end = str(dhcp_pool[-1])
-    except Exception:
-        print("Unable to define DHCP pools")
-        sys.exit(1)
-    try:
-        hostname, sep, domain = os.uname()[1].partition('.')
-    except Exception:
-        print("Unable to calculate hostname and domain")
-        sys.exit(1)
-    try:
-        dhcptimeout = 5
-        default = []
-        with timeout.run_with_timeout(dhcp_checker.utils.IfaceState, [iface],
-                                      timeout=dhcptimeout) as iface:
-            dhcp_server_data = timeout.run_with_timeout(
-                dhcp_checker.api.check_dhcp_on_eth,
-                [iface, dhcptimeout], timeout=dhcptimeout,
-                default=default)
-    except (KeyboardInterrupt, timeout.TimeoutError):
-        log.debug("DHCP scan timed out")
-        log.warning(traceback.format_exc())
-        dhcp_server_data = default
-
-    num_dhcp = len(dhcp_server_data)
-    if num_dhcp == 0:
-        log.debug("No DHCP servers found")
-    else:
-        #Problem exists, but permit user to continue
-        log.error("%s foreign DHCP server(s) found: %s" %
-                  (num_dhcp, dhcp_server_data))
-        print("ERROR: %s foreign DHCP server(s) found: %s" %
-              (num_dhcp, dhcp_server_data))
-    if network.duplicateIPExists(ip, iface):
-        log.error("Duplicate host found with IP {0}".format(ip))
-        print("ERROR: Duplicate host found with IP {0}".format(ip))
-
-    defaultsettingsfile = os.path.join(os.path.dirname(__file__),
-                                       "settings.yaml")
-    newsettings = Settings().read(settingsfile)
-    settings = \
-        {
-            "ADMIN_NETWORK/interface": iface,
-            "ADMIN_NETWORK/ipaddress": ip,
-            "ADMIN_NETWORK/netmask": netmask,
-            "ADMIN_NETWORK/mac": mac,
-            "ADMIN_NETWORK/dhcp_pool_start": dynamic_start,
-            "ADMIN_NETWORK/dhcp_pool_end": dynamic_end,
-            "ADMIN_NETWORK/dhcp_gateway": ip,
-            "HOSTNAME": hostname,
-            "DNS_DOMAIN": domain,
-            "DNS_SEARCH": domain,
-            "astute/user": "naily",
-            "astute/password": pwgen.password(),
-            "cobbler/user": "cobbler",
-            "cobbler/password": pwgen.password(),
-            "keystone/admin_token": pwgen.password(),
-            "keystone/ostf_user": "ostf",
-            "keystone/ostf_password": pwgen.password(),
-            "keystone/nailgun_user": "nailgun",
-            "keystone/nailgun_password": pwgen.password(),
-            "keystone/monitord_user": "monitord",
-            "keystone/monitord_password": pwgen.password(),
-            "mcollective/user": "mcollective",
-            "mcollective/password": pwgen.password(),
-            "postgres/keystone_dbname": "keystone",
-            "postgres/keystone_user": "keystone",
-            "postgres/keystone_password": pwgen.password(),
-            "postgres/nailgun_dbname": "nailgun",
-            "postgres/nailgun_user": "nailgun",
-            "postgres/nailgun_password": pwgen.password(),
-            "postgres/ostf_dbname": "ostf",
-            "postgres/ostf_user": "ostf",
-            "postgres/ostf_password": pwgen.password(),
-            "FUEL_ACCESS/user": "admin",
-            "FUEL_ACCESS/password": "admin",
-        }
-    for setting in settings.keys():
-        if "/" in setting:
-            part1, part2 = setting.split("/")
-            if part1 not in newsettings.keys():
-                newsettings[part1] = {}
-            #Keep old values for passwords if already set
-            if "password" in setting:
-                newsettings[part1].setdefault(part2, settings[setting])
-            else:
-                newsettings[part1][part2] = settings[setting]
-        else:
-            if "password" in setting:
-                newsettings.setdefault(setting, settings[setting])
-            else:
-                newsettings[setting] = settings[setting]
-
-    #Write astute.yaml
-    Settings().write(newsettings, defaultsfile=defaultsettingsfile,
-                     outfn=settingsfile)
+    FuelSetup(**kwargs)
 
 
 def main(*args, **kwargs):
@@ -467,10 +351,11 @@ def main(*args, **kwargs):
 
     options, args = parser.parse_args()
 
+    s_kwargs = {}
     if options.save_only:
-        save_only(options.iface)
-    else:
-        setup()
+        s_kwargs = {"save_only": True,
+                    "managed_iface": options.iface}
+    setup(**s_kwargs)
 
 if '__main__' == __name__ or urwid.web_display.is_web_request():
     setup()
