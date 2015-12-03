@@ -13,6 +13,17 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import logging
+import re
+import socket
+import subprocess
+import traceback
+
+import netaddr
+import urwid
+import urwid.raw_display
+import urwid.web_display
+
 from fuelmenu.common.errors import BadIPException
 from fuelmenu.common.errors import NetworkException
 from fuelmenu.common.modulehelper import ModuleHelper
@@ -21,15 +32,6 @@ from fuelmenu.common import network
 from fuelmenu.common import puppet
 from fuelmenu.common import replace
 import fuelmenu.common.urwidwrapper as widget
-import logging
-import netaddr
-import re
-import socket
-import subprocess
-import traceback
-import urwid
-import urwid.raw_display
-import urwid.web_display
 
 blank = urwid.Divider()
 
@@ -135,6 +137,9 @@ class interfaces(urwid.WidgetWrap):
                     responses["onboot"] = "no"
             else:
                 responses[fieldname] = self.edits[index].get_edit_text()
+
+        if self.parent.save_only:
+            return responses
 
         ###Validate each field
         errors = []
