@@ -73,13 +73,17 @@ class fueluser(urwid.WidgetWrap):
                 responses[fieldname] = self.edits[index].get_edit_text()
 
         password = responses["FUEL_ACCESS/password"]
+        confirm_password = responses.pop("CONFIRM_PASSWORD")
+
+        if self.parent.save_only:
+            return responses
 
         # Validate each field
         errors = []
         warnings = []
 
         # Passwords must match
-        if password != responses["CONFIRM_PASSWORD"] and \
+        if password != confirm_password and \
                 password != self.defaults['FUEL_ACCESS/password']['value']:
             errors.append("Passwords do not match.")
 
@@ -122,8 +126,6 @@ class fueluser(urwid.WidgetWrap):
         else:
             self.parent.footer.set_text("No errors found.")
 
-        # Remove confirm from responses so it isn't saved
-        del responses["CONFIRM_PASSWORD"]
         return responses
 
     def apply(self, args):
