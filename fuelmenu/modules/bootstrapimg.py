@@ -211,6 +211,9 @@ class bootstrapimg(urwid.WidgetWrap):
         self.parent.refreshScreen()
         responses = self.responses
 
+        if self.parent.save_only:
+            return responses
+
         errors = []
         if responses.get(BOOTSTRAP_FLAVOR_KEY) == 'ubuntu' and \
            not responses.get(BOOTSTRAP_SKIP_BUILD_KEY):
