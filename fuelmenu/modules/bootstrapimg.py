@@ -139,6 +139,9 @@ class bootstrapimg(urwid.WidgetWrap):
         self.parent.refreshScreen()
         responses = self.responses
 
+        if self.parent.save_only:
+            return responses
+
         errors = []
         if not responses.get(BOOTSTRAP_SKIP_BUILD_KEY):
             errors.extend(self.check_apt_repos(responses))

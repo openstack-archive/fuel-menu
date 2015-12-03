@@ -101,16 +101,15 @@ class security(urwid.WidgetWrap):
         self.parent.settings.merge(newsettings)
 
     def load(self):
+        admin_network = network.get_iface_info(self.parent.managediface)
+        self.defaults[SSH_NETWORK]['value'] = network.getCidr(
+            admin_network["addr"],
+            admin_network["netmask"])
+
         helper.ModuleHelper.load_to_defaults(
             self.parent.settings,
             self.defaults,
             ignoredparams=[SSH_NETWORK])
-        admin_network = self.parent.settings["ADMIN_NETWORK"]
-        self.defaults[SSH_NETWORK]['value'] = network.getCidr(
-            admin_network["ipaddress"],
-            admin_network["netmask"])
-        if 'ssh_network' in admin_network:
-            self.defaults[SSH_NETWORK]['value'] = admin_network["ssh_network"]
 
     def refresh(self):
         pass
