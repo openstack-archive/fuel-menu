@@ -88,6 +88,10 @@ class rootpw(urwid.WidgetWrap):
         return password
 
     def apply(self, args):
+        if self.parent.save_only:
+            # We shouldn't change root password in save_only mode
+            return True
+
         password = self.check(args)
         if password is False:
             log.error("Check failed. Not applying")
