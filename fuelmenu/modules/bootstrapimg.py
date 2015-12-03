@@ -13,20 +13,21 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 import copy
+import logging
 import re
+
 import six
+import url_access_checker.api as urlck
+import url_access_checker.errors as url_errors
+import urwid
+import urwid.raw_display
+import urwid.web_display
 
 from fuelmenu.common.modulehelper import BLANK_KEY
 from fuelmenu.common.modulehelper import ModuleHelper
 from fuelmenu.common.modulehelper import WidgetType
 from fuelmenu.common import utils
 from fuelmenu.settings import Settings
-import logging
-import url_access_checker.api as urlck
-import url_access_checker.errors as url_errors
-import urwid
-import urwid.raw_display
-import urwid.web_display
 
 log = logging.getLogger('fuelmenu.mirrors')
 blank = urwid.Divider()
@@ -36,7 +37,7 @@ MOS_REPO_DEFAULT = \
 
 BOOTSTRAP_FLAVOR_KEY = 'BOOTSTRAP/flavor'
 BOOTSTRAP_MIRROR_DISTRO_KEY = "BOOTSTRAP/ubuntu_repos"
-BOOTSTRAP_DISTRO_RELEASE_KEY = "distro_release"
+BOOTSTRAP_DISTRO_RELEASE_KEY = "BOOTSTRAP/distro_release"
 BOOTSTRAP_MIRROR_MOS_KEY = "BOOTSTRAP/mos_repos"
 BOOTSTRAP_MOS_RELEASE_KEY = "mos_release"
 BOOTSTRAP_HTTP_PROXY_KEY = "BOOTSTRAP/http_proxy"
@@ -209,6 +210,9 @@ class bootstrapimg(urwid.WidgetWrap):
         self.parent.footer.set_text("Checking data...")
         self.parent.refreshScreen()
         responses = self.responses
+
+        if self.parent.save_only:
+            return responses
 
         errors = []
         if responses.get(BOOTSTRAP_FLAVOR_KEY) == 'ubuntu' and \
@@ -494,16 +498,21 @@ class bootstrapimg(urwid.WidgetWrap):
                         self._get_repo_uri_by_name(self.mos_repo_name,
                                                    new_value)
                     # We also should get release name
-                    defaults[BOOTSTRAP_MOS_RELEASE_KEY]["value"] = \
-                        self._get_repo_suite_by_name(self.mos_repo_name,
-                                                     new_value)
+                    release = self._get_repo_suite_by_name(self.mos_repo_name,
+                                                           new_value)
+                    if release:
+                        defaults[BOOTSTRAP_MOS_RELEASE_KEY]["value"] = \
+                            release
                     continue
                 if BOOTSTRAP_MIRROR_DISTRO_KEY == setting:
                     defaults[setting]["value"] = \
                         self._get_repo_uri_by_name(self.distro, new_value)
                     # We also should get release name
-                    defaults[BOOTSTRAP_DISTRO_RELEASE_KEY]["value"] = \
-                        self._get_repo_suite_by_name(self.distro, new_value)
+                    release = self._get_repo_suite_by_name(self.distro,
+                                                           new_value)
+                    if release:
+                        defaults[BOOTSTRAP_DISTRO_RELEASE_KEY]["value"] = \
+                            release
                     continue
 
                 if BOOTSTRAP_EXTRA_DEB_REPOS_KEY == setting:
@@ -547,14 +556,13 @@ class bootstrapimg(urwid.WidgetWrap):
                 part1, part2 = setting.split("/")
                 if part1 not in settings:
                     # We may not touch all settings, so copy oldsettings first
-                    settings[part1] = self.oldsettings[part1]
+                    settings[part1] = self.oldsettings.get(part1, {})
                 settings[part1][part2] = new_value
             else:
                 settings[setting] = new_value
         return settings
 
     def save(self, responses):
-
         newsettings = self._make_settings_from_responses(responses)
 
         Settings().write(newsettings,
