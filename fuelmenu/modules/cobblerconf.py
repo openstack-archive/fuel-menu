@@ -114,6 +114,9 @@ to advertise via DHCP to nodes",
         responses["ADMIN_NETWORK/ipaddress"] = self.netsettings[
             self.activeiface]["addr"]
 
+        if self.parent.save_only:
+            return responses
+
         #ensure management interface is valid
         if responses["ADMIN_NETWORK/interface"] not in self.netsettings.keys():
             errors.append("Management interface not valid")
