@@ -13,17 +13,20 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import logging
+import re
+import subprocess
+
+import urwid
+import urwid.raw_display
+import urwid.web_display
+
 from fuelmenu.common import dialog
 from fuelmenu.common.modulehelper import ModuleHelper
 from fuelmenu.common.modulehelper import WidgetType
 import fuelmenu.common.urwidwrapper as widget
 from fuelmenu.settings import Settings
-import logging
-import re
-import subprocess
-import urwid
-import urwid.raw_display
-import urwid.web_display
+
 log = logging.getLogger('fuelmenu.mirrors')
 blank = urwid.Divider()
 
@@ -73,6 +76,7 @@ class ntpsetup(urwid.WidgetWrap):
         self.parent.refreshScreen()
         #Get field information
         responses = dict()
+        ntp_enabled = False
 
         for index, fieldname in enumerate(self.fields):
             if fieldname == "blank":
@@ -80,16 +84,17 @@ class ntpsetup(urwid.WidgetWrap):
             elif fieldname == "ntpenabled":
                 rb_group = self.edits[index].rb_group
                 if rb_group[0].state:
-                    responses["ntpenabled"] = "Yes"
-                else:
-                    responses["ntpenabled"] = "No"
+                    ntp_enabled = True
             else:
                 responses[fieldname] = self.edits[index].get_edit_text()
+
+        if self.parent.save_only:
+            return responses
 
         ###Validate each field
         errors = []
         warnings = []
-        if responses['ntpenabled'] == "No":
+        if not ntp_enabled:
             #Disabled NTP means passing no NTP servers to save method
             responses = {
                 'NTP1': "",
@@ -98,17 +103,6 @@ class ntpsetup(urwid.WidgetWrap):
             self.parent.footer.set_text("No errors found.")
             log.info("No errors found")
             return responses
-        if all(map(lambda f: (len(responses[f]) == 0), self.fields)):
-            pass
-            #We will allow empty if user doesn't need external networking
-            #and present a strongly worded warning
-            #msg = "If you continue without NTP, you may have issues with "\
-            #      + "deployment due to time synchronization issues. These "\
-            #      + "problems are exacerbated in virtualized deployments."
-
-            #dialog.display_dialog(
-            #    self, widget.TextLabel(msg), "Empty NTP Warning")
-        del responses['ntpenabled']
         for ntpfield, ntpvalue in responses.iteritems():
             #NTP must be under 255 chars
             if len(ntpvalue) >= 255:
@@ -179,18 +173,7 @@ class ntpsetup(urwid.WidgetWrap):
         return ModuleHelper.load(self, ignoredparams=['ntpenabled'])
 
     def save(self, responses):
-        ## Generic settings start ##
-        newsettings = dict()
-        for setting in responses.keys():
-            if "/" in setting:
-                part1, part2 = setting.split("/")
-                if part1 not in newsettings:
-                #We may not touch all settings, so copy oldsettings first
-                    newsettings[part1] = self.oldsettings[part1]
-                newsettings[part1][part2] = responses[setting]
-            else:
-                newsettings[setting] = responses[setting]
-        ## Generic settings end ##
+        newsettings = ModuleHelper.save(self, responses)
 
         Settings().write(newsettings,
                          defaultsfile=self.parent.defaultsettingsfile,
