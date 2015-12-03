@@ -15,20 +15,23 @@
 #    under the License.
 import six
 
-from fuelmenu.common import dialog
-from fuelmenu.common import network
-import fuelmenu.common.urwidwrapper as widget
-from fuelmenu.common.utils import dict_merge
-from fuelmenu.settings import Settings
+import collections
 import logging
 import netifaces
 import re
 import socket
 import struct
 import subprocess
+
 import urwid
 import urwid.raw_display
 import urwid.web_display
+
+from fuelmenu.common import dialog
+from fuelmenu.common import network
+import fuelmenu.common.urwidwrapper as widget
+from fuelmenu.common.utils import dict_merge
+from fuelmenu.settings import Settings
 
 log = logging.getLogger('fuelmenu.modulehelper')
 
@@ -83,13 +86,15 @@ class ModuleHelper(object):
 
     @classmethod
     def save(cls, modobj, responses):
-        newsettings = dict()
+        newsettings = collections.OrderedDict()
         for setting in responses.keys():
             if "/" in setting:
                 part1, part2 = setting.split("/")
                 if part1 not in newsettings:
                     # We may not touch all settings, so copy oldsettings first
-                    newsettings[part1] = modobj.oldsettings[part1]
+                    newsettings[part1] = modobj.oldsettings.get(
+                        part1,
+                        collections.OrderedDict())
                 newsettings[part1][part2] = responses[setting]
             else:
                 newsettings[setting] = responses[setting]
