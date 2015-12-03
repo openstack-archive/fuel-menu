@@ -98,6 +98,10 @@ class rootpw(urwid.WidgetWrap):
         return True
 
     def save(self, password):
+        if self.parent.save_only:
+            # We shouldn't change root password in save_only mode
+            return True
+
         hashed = crypt.crypt(password, utils.gensalt())
         log.info("Changing root password")
         # clear any locks first

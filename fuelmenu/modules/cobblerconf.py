@@ -38,8 +38,7 @@ class cobblerconf(urwid.WidgetWrap):
         self.parent = parent
         self.getNetwork()
         self.gateway = self.get_default_gateway_linux()
-        self.activeiface = sorted(self.netsettings.keys())[0]
-        self.parent.managediface = self.activeiface
+        self.activeiface = self.parent.managediface
 
         # UI text
         text1 = "Settings for PXE booting of slave nodes."
@@ -107,6 +106,9 @@ to advertise via DHCP to nodes",
             self.activeiface]["mac"]
         responses["ADMIN_NETWORK/ipaddress"] = self.netsettings[
             self.activeiface]["addr"]
+
+        if self.parent.save_only:
+            return responses
 
         # ensure management interface is valid
         if responses["ADMIN_NETWORK/interface"] not in self.netsettings.keys():
@@ -290,7 +292,7 @@ interface first.")
         settings = self.parent.settings
         ModuleHelper.load_to_defaults(settings, self.defaults)
 
-        iface = settings["ADMIN_NETWORK"]["interface"]
+        iface = settings.get("ADMIN_NETWORK", {}).get("interface")
         if iface in self.netsettings.keys():
             self.activeiface = iface
 
