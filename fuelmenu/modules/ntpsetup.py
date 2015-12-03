@@ -73,6 +73,7 @@ class ntpsetup(urwid.WidgetWrap):
         self.parent.refreshScreen()
         #Get field information
         responses = dict()
+        ntp_enabled = False
 
         for index, fieldname in enumerate(self.fields):
             if fieldname == "blank":
@@ -80,16 +81,17 @@ class ntpsetup(urwid.WidgetWrap):
             elif fieldname == "ntpenabled":
                 rb_group = self.edits[index].rb_group
                 if rb_group[0].state:
-                    responses["ntpenabled"] = "Yes"
-                else:
-                    responses["ntpenabled"] = "No"
+                    ntp_enabled = True
             else:
                 responses[fieldname] = self.edits[index].get_edit_text()
+
+        if self.parent.save_only:
+            return responses
 
         ###Validate each field
         errors = []
         warnings = []
-        if responses['ntpenabled'] == "No":
+        if not ntp_enabled:
             #Disabled NTP means passing no NTP servers to save method
             responses = {
                 'NTP1': "",
@@ -98,17 +100,6 @@ class ntpsetup(urwid.WidgetWrap):
             self.parent.footer.set_text("No errors found.")
             log.info("No errors found")
             return responses
-        if all(map(lambda f: (len(responses[f]) == 0), self.fields)):
-            pass
-            #We will allow empty if user doesn't need external networking
-            #and present a strongly worded warning
-            #msg = "If you continue without NTP, you may have issues with "\
-            #      + "deployment due to time synchronization issues. These "\
-            #      + "problems are exacerbated in virtualized deployments."
-
-            #dialog.display_dialog(
-            #    self, widget.TextLabel(msg), "Empty NTP Warning")
-        del responses['ntpenabled']
         for ntpfield, ntpvalue in responses.iteritems():
             #NTP must be under 255 chars
             if len(ntpvalue) >= 255:

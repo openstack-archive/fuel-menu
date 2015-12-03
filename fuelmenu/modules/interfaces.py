@@ -139,6 +139,9 @@ class interfaces(urwid.WidgetWrap):
             else:
                 responses[fieldname] = self.edits[index].get_edit_text()
 
+        if self.parent.save_only:
+            return responses
+
         ###Validate each field
         errors = []
         if responses["onboot"] == "no":
