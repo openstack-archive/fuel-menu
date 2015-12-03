@@ -113,6 +113,9 @@ is accessible"}
             else:
                 responses[fieldname] = self.edits[index].get_edit_text()
 
+        if self.parent.save_only:
+            return responses
+
         ###Validate each field
         errors = []
 
@@ -334,17 +337,7 @@ is accessible"}
 
     def save(self, responses):
         ## Generic settings start ##
-        newsettings = dict()
-        for setting in responses.keys():
-            if "/" in setting:
-                part1, part2 = setting.split("/")
-                if part1 not in newsettings:
-                #We may not touch all settings, so copy oldsettings first
-                    newsettings[part1] = self.oldsettings[part1]
-                newsettings[part1][part2] = responses[setting]
-            else:
-                newsettings[setting] = responses[setting]
-        ## Generic settings end ##
+        newsettings = ModuleHelper.save(self, responses)
 
         #log.debug(str(newsettings))
         Settings().write(newsettings,
