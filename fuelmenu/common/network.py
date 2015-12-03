@@ -193,3 +193,7 @@ def upIface(iface):
     code, _, _ = execute(["ifconfig", iface, "up"])
     if code != 0:
         raise NetworkException("Failed to up interface {0}".format(iface))
+
+
+def get_iface_info(iface, address_family=netifaces.AF_INET):
+    return netifaces.ifaddresses(iface)[address_family][0]

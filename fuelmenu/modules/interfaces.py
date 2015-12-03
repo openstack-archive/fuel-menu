@@ -133,6 +133,9 @@ class interfaces(urwid.WidgetWrap):
             else:
                 responses[fieldname] = self.edits[index].get_edit_text()
 
+        if self.parent.save_only:
+            return responses
+
         # Validate each field
         errors = []
 
@@ -245,6 +248,10 @@ class interfaces(urwid.WidgetWrap):
                      self.netsettings[name]['netmask'])}}
                 for name in self.netsettings if include_interface(name)]
 
+    def save(self, responses):
+        """This empty method defined for save-only feature"""
+        pass
+
     def apply(self, args):
         responses = self.check(args)
         if responses is False:
@@ -303,6 +310,10 @@ class interfaces(urwid.WidgetWrap):
         l3ifconfig['params'] = params
         puppetclasses.append(l3ifconfig)
         self.log.info("Puppet data: %s" % (puppetclasses))
+
+        if self.parent.save_only:
+            return True
+
         try:
             self.parent.refreshScreen()
             result = puppet.puppetApply(puppetclasses)
