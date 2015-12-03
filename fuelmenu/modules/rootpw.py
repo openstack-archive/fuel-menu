@@ -14,12 +14,15 @@
 # under the License.
 
 import crypt
-from fuelmenu.common.modulehelper import ModuleHelper
 import logging
 import subprocess
+
 import urwid
 import urwid.raw_display
 import urwid.web_display
+
+from fuelmenu.common.modulehelper import ModuleHelper
+
 
 log = logging.getLogger('fuelmenu.rootpw')
 blank = urwid.Divider()
@@ -84,6 +87,9 @@ class rootpw(urwid.WidgetWrap):
             return responses
 
     def apply(self, args):
+        if self.parent.save_only:
+            # We shouldn't change root password in save_only mode
+            return True
         responses = self.check(args)
         if responses is False:
             log.error("Check failed. Not applying")

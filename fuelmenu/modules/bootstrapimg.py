@@ -171,6 +171,9 @@ class bootstrapimg(urwid.WidgetWrap):
         self.parent.refreshScreen()
         responses = self.responses
 
+        if self.parent.save_only:
+            return responses
+
         errors = []
         if responses.get(BOOTSTRAP_FLAVOR_KEY) == 'ubuntu' and \
            not responses.get(BOOTSTRAP_SKIP_BUILD_KEY):
@@ -378,7 +381,9 @@ class bootstrapimg(urwid.WidgetWrap):
             self.parent.defaultsettingsfile,
             template_kwargs={"mos_version": self.mos_version})
         settings = default_settings
-        settings.update(Settings().read(self.parent.settingsfile))
+        settings.update(Settings().read(
+            self.parent.settingsfile,
+            template_kwargs={"mos_version": self.mos_version}))
 
         self._update_defaults(self.defaults, settings)
         self._select_fields_to_show(self.defaults)
@@ -394,7 +399,6 @@ class bootstrapimg(urwid.WidgetWrap):
         return settings
 
     def save(self, responses):
-
         newsettings = self._make_settings_from_responses(responses)
 
         Settings().write(newsettings,
