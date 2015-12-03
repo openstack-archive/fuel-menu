@@ -12,11 +12,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from fuelmenu import consts
-
 from copy import deepcopy
 import logging
 import subprocess
+
+from fuelmenu.common import consts
 
 log = logging.getLogger('fuelmenu.common.utils')
 try:
