@@ -169,9 +169,12 @@ class FuelSetup(object):
                         stdout=noout, stderr=noout)
 
         text_header = (u"Fuel %s setup "
-                       u"Use Up/Down/Left/Right to navigate.  F8 exits."
+                       u"Use Up/Down/Left/Right to navigate.  F8 exits. "
+                       u"Any changes you make on each screen need to be saved "
+                       u"individually"
                        % self.version)
-        text_footer = (u"Status messages go here.")
+        text_footer = (u"Any changes you make on each screen need to be saved "
+                       u"individually.")
 
         #Top and bottom lines of frame
         self.header = urwid.AttrWrap(urwid.Text(text_header), 'header')
