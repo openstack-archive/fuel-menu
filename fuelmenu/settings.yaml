@@ -69,6 +69,4 @@ BOOTSTRAP:
   https_proxy: ""
   flavor: "ubuntu"
 PRODUCTION: docker
-FEATURE_GROUPS:
-  - experimental
-  - advanced
+FEATURE_GROUPS: []
