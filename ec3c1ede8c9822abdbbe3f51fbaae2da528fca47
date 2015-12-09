@@ -1,0 +1,15 @@
+Verified+2: Jenkins
+Code-Review+2: Vladimir Kozhukalov <vkozhukalov@mirantis.com>
+Workflow+1: Vladimir Kozhukalov <vkozhukalov@mirantis.com>
+Code-Review+1: Matthew Mosesohn <mmosesohn@mirantis.com>
+Code-Review+2: Evgeniy L <eli@mirantis.com>
+Code-Review+1: Sergey Slipushenko <sslypushenko@mirantis.com>
+Code-Review+1: Artur Svechnikov <asvechnikov@mirantis.com>
+Code-Review+1: Alexander Saprykin <asaprykin@mirantis.com>
+Code-Review+1: Valyavskiy Viacheslav <vvalyavskiy@mirantis.com>
+Code-Review+1: Valeriy Saharov <vsakharov@mirantis.com>
+Submitted-by: Jenkins
+Submitted-at: Wed, 09 Dec 2015 15:32:12 +0000
+Reviewed-on: https://review.openstack.org/250662
+Project: openstack/fuel-menu
+Branch: refs/heads/master
