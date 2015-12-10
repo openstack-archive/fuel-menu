@@ -164,7 +164,8 @@ class FuelSetup(object):
                         stdout=noout, stderr=noout)
 
         text_header = (u"Fuel %s setup "
-                       u"Use Up/Down/Left/Right to navigate.  F8 exits."
+                       u"Use Up/Down/Left/Right to navigate.  F8 exits. "
+                       u"Remember to save your changes."
                        % self.version)
         text_footer = (u"Status messages go here.")
 
