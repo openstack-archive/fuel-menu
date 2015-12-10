@@ -264,7 +264,7 @@ interface first.")
         # Extra checks for post-deployment changes
         if utils.get_deployment_mode() == "post":
             # Admin interface cannot change
-            if mgmt_if_ipaddr != \
+            if self.activeiface != \
                     self.oldsettings["ADMIN_NETWORK"]["interface"]:
                 errors.append("Cannot change admin interface after deployment")
             # PXE network range must contain previous PXE network range
