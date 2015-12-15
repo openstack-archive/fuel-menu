@@ -82,6 +82,8 @@ yaml.representer.Representer.add_representer(OrderedDict, yaml.representer.
 
 class Settings(object):
 
+    INTERNAL_SECTION_NAME = 'INTERNAL'
+
     def read(self, yamlfile):
         try:
             infile = file(yamlfile, 'r')
@@ -97,6 +99,9 @@ class Settings(object):
         settings = self.read(defaultsfile)
         settings.update(self.read(outfn))
         settings.update(newvalues)
+        # remove
+        if self.INTERNAL_SECTION_NAME in settings:
+            del settings[self.INTERNAL_SECTION_NAME]
         outfile = file(outfn, 'w')
         yaml.dump(settings, outfile, default_style='"',
                   default_flow_style=False)

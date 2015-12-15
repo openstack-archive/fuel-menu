@@ -32,17 +32,19 @@ from fuelmenu.settings import Settings
 log = logging.getLogger('fuelmenu.mirrors')
 blank = urwid.Divider()
 
-MOS_REPO_DEFAULT = \
+MOS_REPO_DEFAULT_TEMPLATE = \
     'http://mirror.fuel-infra.org/mos-repos/ubuntu/{mos_version}'
 
+MOS_REPO_LOCAL = 'http://127.0.0.1:8080/ubuntu/x86_64'
+DISTRO_REPO_DEFAULT = 'http://archive.ubuntu.com/ubuntu'
+
+BOOTSTRAP_DISTRO_RELEASE_KEY = "{0}/distro_release".format(
+    Settings.INTERNAL_SECTION_NAME)
+
 BOOTSTRAP_FLAVOR_KEY = 'BOOTSTRAP/flavor'
-BOOTSTRAP_MIRROR_DISTRO_KEY = "BOOTSTRAP/ubuntu_repos"
-BOOTSTRAP_DISTRO_RELEASE_KEY = "BOOTSTRAP/distro_release"
-BOOTSTRAP_MIRROR_MOS_KEY = "BOOTSTRAP/mos_repos"
-BOOTSTRAP_MOS_RELEASE_KEY = "mos_release"
 BOOTSTRAP_HTTP_PROXY_KEY = "BOOTSTRAP/http_proxy"
 BOOTSTRAP_HTTPS_PROXY_KEY = "BOOTSTRAP/https_proxy"
-BOOTSTRAP_EXTRA_DEB_REPOS_KEY = "BOOTSTRAP/extra_repos"
+BOOTSTRAP_REPOS_KEY = "BOOTSTRAP/repos"
 BOOTSTRAP_SKIP_BUILD_KEY = "BOOTSTRAP/skip_default_img_build"
 
 ADD_REPO_BUTTON_KEY = 'add_repo_button'
@@ -85,15 +87,10 @@ class bootstrapimg(urwid.WidgetWrap):
 
         self._repo_related_fields = (
             BLANK_KEY,
-            BOOTSTRAP_MIRROR_DISTRO_KEY,
-            BOOTSTRAP_DISTRO_RELEASE_KEY,
-            BOOTSTRAP_MIRROR_MOS_KEY,
-            BOOTSTRAP_MOS_RELEASE_KEY,
-            BLANK_KEY,
             BOOTSTRAP_HTTP_PROXY_KEY,
             BOOTSTRAP_HTTPS_PROXY_KEY,
             BLANK_KEY,
-            BOOTSTRAP_EXTRA_DEB_REPOS_KEY,
+            BOOTSTRAP_REPOS_KEY,
             ADD_REPO_BUTTON_KEY
         )
 
@@ -101,14 +98,14 @@ class bootstrapimg(urwid.WidgetWrap):
 
         # TODO(asheplyakov):
         # switch to the new MOS APT repo structure when it's ready
-        mos_repo_default = MOS_REPO_DEFAULT.format(
+        self.mos_repo_default = MOS_REPO_DEFAULT_TEMPLATE.format(
             mos_version=self.mos_version)
 
-        mos_release_default = "mos{0}".format(self.mos_version)
+        self.mos_release_default = "mos{0}".format(self.mos_version)
 
-        self.extra_repo_list = []
+        self.repo_list = []
 
-        self.extra_repo_value_scheme = {
+        self.repo_value_scheme = {
             "name": {
                 "type": WidgetType.TEXT_FIELD,
                 "label": "Name",
@@ -139,23 +136,9 @@ class bootstrapimg(urwid.WidgetWrap):
                 "type": WidgetType.RADIO,
                 "choices": self._flavors.FLAVORS,
                 "callback": self.flavor_callback},
-            BOOTSTRAP_MIRROR_DISTRO_KEY: {
-                "label": "Ubuntu mirror",
-                "tooltip": "Ubuntu APT repo URL",
-                "value": "http://archive.ubuntu.com/ubuntu"},
             BOOTSTRAP_DISTRO_RELEASE_KEY: {
-                "label": "Ubuntu release",
-                "tooltip": "Ubuntu release, e.g. trusty, vivid, etc.",
+                # Used for generating default configuration only
                 "value": ""},
-            BOOTSTRAP_MIRROR_MOS_KEY: {
-                "label": "MOS mirror",
-                "tooltip": ("MOS APT repo URL (can use file:// protocol, will"
-                            "use local mirror in such case"),
-                "value": mos_repo_default},
-            BOOTSTRAP_MOS_RELEASE_KEY: {
-                "label": "MOS release",
-                "tooltip": "MOS release, e.g. mos8.0, mos7.0, etc.",
-                "value": mos_release_default},
             BOOTSTRAP_HTTP_PROXY_KEY: {
                 "label": "HTTP proxy",
                 "tooltip": "Use this proxy when building the bootstrap image",
@@ -164,14 +147,14 @@ class bootstrapimg(urwid.WidgetWrap):
                 "label": "HTTPS proxy",
                 "tooltip": "Use this proxy when building the bootstrap image",
                 "value": ""},
-            BOOTSTRAP_EXTRA_DEB_REPOS_KEY: {
-                "label": "Extra Repositories",
+            BOOTSTRAP_REPOS_KEY: {
+                "label": "List of repositories",
                 "type": WidgetType.LIST,
-                "value_scheme": self.extra_repo_value_scheme,
-                "value": self.extra_repo_list
+                "value_scheme": self.repo_value_scheme,
+                "value": self.repo_list
             },
             ADD_REPO_BUTTON_KEY: {
-                "label": "Add Extra Repository",
+                "label": "Add repository",
                 "type": WidgetType.BUTTON,
                 "callback": self.add_repo
             }
@@ -196,7 +179,7 @@ class bootstrapimg(urwid.WidgetWrap):
                 flavor = 'centos' if rb_group[self._flavors.CentOS].state\
                     else 'ubuntu'
                 ret[fieldname] = flavor
-            elif fieldname == BOOTSTRAP_EXTRA_DEB_REPOS_KEY:
+            elif fieldname == BOOTSTRAP_REPOS_KEY:
                 ret[fieldname] = \
                     self._get_repo_list_response(self.edits[index])
             elif fieldname == BOOTSTRAP_SKIP_BUILD_KEY:
@@ -229,12 +212,7 @@ class bootstrapimg(urwid.WidgetWrap):
 
     def check_apt_repos(self, responses):
         errors = []
-        # APT repo URL must not be empty
-        distro_repo_base = responses[BOOTSTRAP_MIRROR_DISTRO_KEY].strip()
-        distro_repo_release = \
-            responses[BOOTSTRAP_DISTRO_RELEASE_KEY].strip()
-        mos_repo_base = responses[BOOTSTRAP_MIRROR_MOS_KEY].strip()
-        mos_release = responses[BOOTSTRAP_MOS_RELEASE_KEY].strip()
+
         http_proxy = responses[BOOTSTRAP_HTTP_PROXY_KEY].strip()
         https_proxy = responses[BOOTSTRAP_HTTPS_PROXY_KEY].strip()
 
@@ -243,27 +221,10 @@ class bootstrapimg(urwid.WidgetWrap):
             'https': https_proxy
         }
 
-        if len(distro_repo_base) == 0:
-            errors.append("Ubuntu mirror URL must not be empty.")
+        repos = responses.get(BOOTSTRAP_REPOS_KEY)
 
-        if len(distro_repo_release) == 0:
-            errors.append("Ubuntu release must not be empty.")
-
-        if not self.check_distro_repo(distro_repo_base,
-                                      distro_repo_release,
-                                      proxies):
-            errors.append("Ubuntu repository is not accessible.")
-
-        if len(mos_repo_base) == 0:
-            errors.append("MOS repo URL must not be empty.")
-
-        if len(mos_release) == 0:
-            errors.append("MOS release must not be empty.")
-
-        if not self.check_mos_repo(mos_repo_base, mos_release, proxies):
-            errors.append("MOS repository is not accessible.")
-
-        repos = responses.get(BOOTSTRAP_EXTRA_DEB_REPOS_KEY)
+        if not repos:
+            errors.append("Specify at least one repository.")
 
         for index, repo in enumerate(repos):
             name = repo['name']
@@ -322,8 +283,7 @@ class bootstrapimg(urwid.WidgetWrap):
 
         # on UI we have labels, but not keys...
         label_to_key_mapping = dict((v['label'], k) for k, v in
-                                    six.iteritems(
-                                        self.extra_repo_value_scheme))
+                                    six.iteritems(self.repo_value_scheme))
         result = []
         for lb in external_lw:
             repo = {}
@@ -367,12 +327,24 @@ class bootstrapimg(urwid.WidgetWrap):
             "section": repo_section
         }
 
-    def _generate_mos_repos(self, uri, release):
-        result = self._generate_repos_from_uri(
+    def _generate_mos_repos(self, uri, release, use_local=False):
+        result = []
+        base_components = ['', '-updates', '-security']
+        if use_local:
+            base_components.remove('')
+            result += self._generate_repos_from_uri(
+                uri=MOS_REPO_LOCAL,
+                codename=release,
+                name=self.mos_repo_name,
+                components=None,
+                section='main restricted',
+                priority='1050'
+            )
+        result += self._generate_repos_from_uri(
             uri=uri,
             codename=release,
             name=self.mos_repo_name,
-            components=['', '-updates', '-security'],
+            components=base_components,
             section='main restricted',
             priority='1050'
         )
@@ -411,22 +383,6 @@ class bootstrapimg(urwid.WidgetWrap):
 
             })
         return result
-
-    def _get_repo_uri_by_name(self, name, repos):
-        if not repos:
-            return ""
-        filter_result = filter(lambda x: x['name'] == name, repos)
-        if filter_result:
-            return filter_result[0].get("uri", "")
-        return ""
-
-    def _get_repo_suite_by_name(self, name, repos):
-        if not repos:
-            return ""
-        filter_result = filter(lambda x: x['name'] == name, repos)
-        if filter_result:
-            return filter_result[0].get("suite", "")
-        return ""
 
     def _parse_config_repo_entry(self, repo_from_config):
         uri_template = "{type} {uri} {suite}"
@@ -475,47 +431,20 @@ class bootstrapimg(urwid.WidgetWrap):
     def add_repo(self, data=None):
 
         defaults = self._get_fresh_defaults()
-        extra_repo_list = defaults[BOOTSTRAP_EXTRA_DEB_REPOS_KEY]['value']
-        extra_repo_list.append(
-            dict((k, "") for k in self.extra_repo_value_scheme))
+        repo_list = defaults[BOOTSTRAP_REPOS_KEY]['value']
+        repo_list.append(
+            dict((k, "") for k in self.repo_value_scheme))
         button_position = self._calculate_field_position(ADD_REPO_BUTTON_KEY)
         self._redraw_screen(defaults, button_position)
 
     def _update_defaults(self, defaults, new_settings):
         for setting in defaults:
             try:
-                if "/" in setting:
-                    part1, part2 = setting.split("/")
-                    new_value = new_settings[part1][part2]
-                else:
-                    new_value = new_settings[setting]
-
+                new_value = ModuleHelper.get_setting(new_settings, setting)
                 if BOOTSTRAP_FLAVOR_KEY == setting:
                     self._set_bootstrap_flavor(new_value)
                     continue
-                if BOOTSTRAP_MIRROR_MOS_KEY == setting:
-                    defaults[setting]["value"] = \
-                        self._get_repo_uri_by_name(self.mos_repo_name,
-                                                   new_value)
-                    # We also should get release name
-                    release = self._get_repo_suite_by_name(self.mos_repo_name,
-                                                           new_value)
-                    if release:
-                        defaults[BOOTSTRAP_MOS_RELEASE_KEY]["value"] = \
-                            release
-                    continue
-                if BOOTSTRAP_MIRROR_DISTRO_KEY == setting:
-                    defaults[setting]["value"] = \
-                        self._get_repo_uri_by_name(self.distro, new_value)
-                    # We also should get release name
-                    release = self._get_repo_suite_by_name(self.distro,
-                                                           new_value)
-                    if release:
-                        defaults[BOOTSTRAP_DISTRO_RELEASE_KEY]["value"] = \
-                            release
-                    continue
-
-                if BOOTSTRAP_EXTRA_DEB_REPOS_KEY == setting:
+                if BOOTSTRAP_REPOS_KEY == setting:
                     defaults[setting]["value"] = \
                         self._parse_config_repo_list(new_value)
                     continue
@@ -528,38 +457,51 @@ class bootstrapimg(urwid.WidgetWrap):
 
     def load(self):
         # Read in yaml
-        defaultsettings = Settings().read(self.parent.defaultsettingsfile)
-        settings = defaultsettings
+        default_settings = Settings().read(self.parent.defaultsettingsfile)
+        settings = default_settings
         settings.update(Settings().read(self.parent.settingsfile))
+        self._verify_repos(settings, default_settings)
 
         self._update_defaults(self.defaults, settings)
         self._select_fields_to_show(self.defaults)
         self._ui_set_bootstrap_flavor()
         return settings
 
+    def _verify_repos(self, settings, default_settings):
+        repos = None
+        try:
+            repos = ModuleHelper.get_setting(settings, BOOTSTRAP_REPOS_KEY)
+        except KeyError:
+            pass
+        if repos:
+            # Ok. List of repositories is presented and not empty.
+            return
+        log.warn("Repositories list is empty. Default one will be generated.")
+        try:
+            distro_release = ModuleHelper.get_setting(
+                default_settings,
+                BOOTSTRAP_DISTRO_RELEASE_KEY)
+        except KeyError:
+            log.error("Can't find default distributive release to generate "
+                      "list of repositories.")
+            return
+        repos = (
+            self._generate_distro_repos(
+                DISTRO_REPO_DEFAULT,
+                distro_release) +
+            self._generate_mos_repos(
+                self.mos_repo_default,
+                self.mos_release_default,
+                use_local=True)
+        )
+        ModuleHelper.set_setting(settings, BOOTSTRAP_REPOS_KEY, repos)
+
     def _make_settings_from_responses(self, responses):
         settings = dict()
         for setting in responses.keys():
             new_value = responses[setting]
-            if BOOTSTRAP_MIRROR_MOS_KEY == setting:
-                new_value = self._generate_mos_repos(
-                    new_value,
-                    responses.get(BOOTSTRAP_MOS_RELEASE_KEY))
-            if BOOTSTRAP_MIRROR_DISTRO_KEY == setting:
-                new_value = self._generate_distro_repos(
-                    new_value,
-                    responses.get(BOOTSTRAP_DISTRO_RELEASE_KEY))
-            if BOOTSTRAP_DISTRO_RELEASE_KEY == setting or \
-                    BOOTSTRAP_MOS_RELEASE_KEY == setting:
-                continue  # It's handled above
-            if "/" in setting:
-                part1, part2 = setting.split("/")
-                if part1 not in settings:
-                    # We may not touch all settings, so copy oldsettings first
-                    settings[part1] = self.oldsettings.get(part1, {})
-                settings[part1][part2] = new_value
-            else:
-                settings[setting] = new_value
+            ModuleHelper.set_setting(settings, setting, new_value,
+                                     self.oldsettings)
         return settings
 
     def save(self, responses):
@@ -586,15 +528,6 @@ class bootstrapimg(urwid.WidgetWrap):
         release_url = '{base_url}/dists/{suite}/Release'.format(
             base_url=base_url, suite=suite)
         return self.check_url(release_url, proxies)
-
-    def check_distro_repo(self, base_url, distro_release, proxies):
-        # TODO(asheplyakov):
-        # check if it's possible to debootstrap with this repo
-        return self._check_repo(base_url, distro_release, proxies)
-
-    def check_mos_repo(self, base_url, mos_release, proxies):
-        # deb {repo_base_url}/mos/ubuntu {mos_release} main
-        return self._check_repo(base_url, mos_release, proxies)
 
     def refresh(self):
         pass

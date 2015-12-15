@@ -54,6 +54,43 @@ class WidgetType(object):
 
 class ModuleHelper(object):
     @classmethod
+    def get_setting(cls, settings, key):
+        """Retrieving setting by key
+        :param settings: settings from config file
+        :param key: setting name (format: '[{section_name}/]{setting_name}')
+        :returns: setting value
+        :raises: KeyError if there are no setting with such
+        """
+        if "/" in key:
+            part1, part2 = key.split("/")
+            new_value = settings[part1][part2]
+        else:
+            new_value = settings[key]
+        return new_value
+
+    @classmethod
+    def set_setting(cls, settings, key, value, default_settings=None):
+        """Sets new setting by key
+        :param settings: settings from config file
+        :param key: setting name (format: '[{section_name}/]{setting_name}')
+        :param value: new value
+        :param default_settings: settings, which will be used to find missed
+               section
+        """
+        if default_settings is None:
+            default_settings = {}
+        if "/" in key:
+            part1, part2 = key.split("/")
+            if part1 not in settings:
+                # We may not touch all settings, so copy oldsettings first
+                settings[part1] = default_settings.get(
+                    part1,
+                    collections.OrderedDict())
+            settings[part1][part2] = value
+        else:
+            settings[key] = value
+
+    @classmethod
     def load(cls, modobj, ignoredparams=None):
         """Returns settings found in settings files that are found in class
 
@@ -72,14 +109,9 @@ class ModuleHelper(object):
                 if setting_def["type"] in (WidgetType.BUTTON,
                                            WidgetType.LABEL):
                     continue
-                elif ignoredparams and setting in ignoredparams:
+                if ignoredparams and setting in ignoredparams:
                     continue
-                elif "/" in setting:
-                    part1, part2 = setting.split("/")
-                    new_value = oldsettings[part1][part2]
-                else:
-                    new_value = oldsettings[setting]
-                setting_def["value"] = new_value
+                setting_def["value"] = cls.get_setting(oldsettings, setting)
             except KeyError:
                 log.warning("Failed to load %s value from settings", setting)
         return oldsettings
@@ -88,16 +120,10 @@ class ModuleHelper(object):
     def save(cls, modobj, responses):
         newsettings = collections.OrderedDict()
         for setting in responses.keys():
-            if "/" in setting:
-                part1, part2 = setting.split("/")
-                if part1 not in newsettings:
-                    # We may not touch all settings, so copy oldsettings first
-                    newsettings[part1] = modobj.oldsettings.get(
-                        part1,
-                        collections.OrderedDict())
-                newsettings[part1][part2] = responses[setting]
-            else:
-                newsettings[setting] = responses[setting]
+            cls.set_setting(newsettings,
+                            setting,
+                            responses[setting],
+                            modobj.oldsettings)
         return newsettings
 
     @classmethod
