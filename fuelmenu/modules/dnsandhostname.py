@@ -299,12 +299,9 @@ is accessible"}
 
         for setting in self.defaults.keys():
             try:
-                if "/" in setting:
-                    part1, part2 = setting.split("/")
-                    self.defaults[setting]["value"] = oldsettings[part1][part2]
-                else:
-                    self.defaults[setting]["value"] = oldsettings[setting]
-            except Exception:
+                self.defaults[setting]["value"] = \
+                    ModuleHelper.get_setting(oldsettings, setting)
+            except KeyError:
                 log.warning("No setting named %s found." % setting)
                 continue
         return oldsettings
