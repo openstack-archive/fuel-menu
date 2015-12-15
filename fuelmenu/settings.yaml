@@ -10,6 +10,8 @@ FUEL_ACCESS:
   password: "admin"
 BOOTSTRAP:
   flavor: "ubuntu"
-  distro_release: "trusty"
 PRODUCTION: docker
 FEATURE_GROUPS: []
+# settings for internal usage only. will not be copied to astute.yaml
+INTERNAL:
+  distro_release: "trusty"
