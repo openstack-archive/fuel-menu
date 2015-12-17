@@ -10,6 +10,5 @@ FUEL_ACCESS:
   password: "admin"
 BOOTSTRAP:
   flavor: "ubuntu"
-  distro_release: "trusty"
 PRODUCTION: docker
 FEATURE_GROUPS: []
