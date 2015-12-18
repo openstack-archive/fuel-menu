@@ -13,15 +13,19 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import logging
-import re
-
-import urwid
-import urwid.raw_display
-import urwid.web_display
+try:
+    from collections import OrderedDict
+except Exception:
+    # python 2.6 or earlier use backport
+    from ordereddict import OrderedDict
 
 from fuelmenu.common.modulehelper import ModuleHelper
 from fuelmenu.settings import Settings
+import logging
+import re
+import urwid
+import urwid.raw_display
+import urwid.web_display
 
 log = logging.getLogger('fuelmenu.rootpw')
 blank = urwid.Divider()
@@ -69,17 +73,13 @@ class fueluser(urwid.WidgetWrap):
                 responses[fieldname] = self.edits[index].get_edit_text()
 
         password = responses["FUEL_ACCESS/password"]
-        confirm_password = responses.pop("CONFIRM_PASSWORD")
-
-        if self.parent.save_only:
-            return responses
 
         # Validate each field
         errors = []
         warnings = []
 
         # Passwords must match
-        if password != confirm_password and \
+        if password != responses["CONFIRM_PASSWORD"] and \
                 password != self.defaults['FUEL_ACCESS/password']['value']:
             errors.append("Passwords do not match.")
 
@@ -122,6 +122,8 @@ class fueluser(urwid.WidgetWrap):
         else:
             self.parent.footer.set_text("No errors found.")
 
+        # Remove confirm from responses so it isn't saved
+        del responses["CONFIRM_PASSWORD"]
         return responses
 
     def apply(self, args):
@@ -131,13 +133,29 @@ class fueluser(urwid.WidgetWrap):
             log.error("%s" % (responses))
             for index, fieldname in enumerate(self.fields):
                 if fieldname == "FUEL_ACCESS/password":
-                    return self.edits[index].get_edit_text() == ""
+                    return (self.edits[index].get_edit_text() == "")
             return False
         self.save(responses)
         return True
 
     def save(self, responses):
-        newsettings = ModuleHelper.save(self, responses)
+        # Generic settings start
+        newsettings = OrderedDict()
+        for setting in responses.keys():
+            if "/" in setting:
+                part1, part2 = setting.split("/")
+                if part1 not in newsettings:
+                    # We may not touch all settings, so copy oldsettings first
+                    try:
+                        newsettings[part1] = self.oldsettings[part1]
+                    except Exception:
+                        if part1 not in newsettings.keys():
+                            newsettings[part1] = OrderedDict()
+                        log.warning("issues setting newsettings %s " % setting)
+                        log.warning("current newsettings: %s" % newsettings)
+                newsettings[part1][part2] = responses[setting]
+            else:
+                newsettings[setting] = responses[setting]
         Settings().write(newsettings,
                          defaultsfile=self.parent.defaultsettingsfile,
                          outfn=self.parent.settingsfile)

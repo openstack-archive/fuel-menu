@@ -14,15 +14,12 @@
 # under the License.
 
 import crypt
+from fuelmenu.common.modulehelper import ModuleHelper
 import logging
 import subprocess
-
 import urwid
 import urwid.raw_display
 import urwid.web_display
-
-from fuelmenu.common.modulehelper import ModuleHelper
-
 
 log = logging.getLogger('fuelmenu.rootpw')
 blank = urwid.Divider()
@@ -59,9 +56,6 @@ class rootpw(urwid.WidgetWrap):
         for index, fieldname in enumerate(self.fields):
             if fieldname != "blank":
                 responses[fieldname] = self.edits[index].get_edit_text()
-
-        if self.parent.save_only:
-            return responses
 
         ###Validate each field
         errors = []

@@ -13,16 +13,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import logging
-import netaddr
-import traceback
-
 import dhcp_checker.api
 import dhcp_checker.utils
-import urwid
-import urwid.raw_display
-import urwid.web_display
-
 from fuelmenu.common import dialog
 from fuelmenu.common.errors import BadIPException
 from fuelmenu.common.modulehelper import ModuleHelper
@@ -32,7 +24,12 @@ from fuelmenu.common import timeout
 import fuelmenu.common.urwidwrapper as widget
 from fuelmenu.common import utils
 from fuelmenu.settings import Settings
-
+import logging
+import netaddr
+import traceback
+import urwid
+import urwid.raw_display
+import urwid.web_display
 log = logging.getLogger('fuelmenu.pxe_setup')
 blank = urwid.Divider()
 
@@ -47,7 +44,8 @@ class cobblerconf(urwid.WidgetWrap):
         self.deployment = "pre"
         self.getNetwork()
         self.gateway = self.get_default_gateway_linux()
-        self.activeiface = self.parent.managediface
+        self.activeiface = sorted(self.netsettings.keys())[0]
+        self.parent.managediface = self.activeiface
 
         #UI text
         text1 = "Settings for PXE booting of slave nodes."
@@ -115,9 +113,6 @@ to advertise via DHCP to nodes",
             self.activeiface]["mac"]
         responses["ADMIN_NETWORK/ipaddress"] = self.netsettings[
             self.activeiface]["addr"]
-
-        if self.parent.save_only:
-            return responses
 
         #ensure management interface is valid
         if responses["ADMIN_NETWORK/interface"] not in self.netsettings.keys():
@@ -310,13 +305,24 @@ interface first.")
 
     def load(self):
         oldsettings = ModuleHelper.load(self)
-        if oldsettings.get("ADMIN_NETWORK", {}).get("interface") \
+        if oldsettings["ADMIN_NETWORK"]["interface"] \
                 in self.netsettings.keys():
             self.activeiface = oldsettings["ADMIN_NETWORK"]["interface"]
         return oldsettings
 
     def save(self, responses):
+        ## Generic settings start ##
         newsettings = ModuleHelper.save(self, responses)
+        for setting in responses.keys():
+            if "/" in setting:
+                part1, part2 = setting.split("/")
+                if part1 not in newsettings:
+                    #We may not touch all settings, so copy oldsettings first
+                    newsettings[part1] = self.oldsettings[part1]
+                newsettings[part1][part2] = responses[setting]
+            else:
+                newsettings[setting] = responses[setting]
+        ## Generic settings end ##
 
         ## Need to calculate and netmask
         newsettings['ADMIN_NETWORK']['netmask'] = \

@@ -13,14 +13,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from fuelmenu.common.modulehelper import ModuleHelper
+import fuelmenu.common.urwidwrapper as widget
 import time
 import urwid
 import urwid.raw_display
 import urwid.web_display
-
-from fuelmenu.common.modulehelper import ModuleHelper
-import fuelmenu.common.urwidwrapper as widget
-
 
 blank = urwid.Divider()
 
