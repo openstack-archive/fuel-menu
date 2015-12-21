@@ -62,7 +62,6 @@ class bootstrapimg(urwid.WidgetWrap):
         self.name = "Bootstrap Image"
         self.priority = 55
         self.visible = True
-        self.deployment = "pre"
         self.parent = parent
         self.distro = 'ubuntu'
         self.mos_repo_name = 'mos'

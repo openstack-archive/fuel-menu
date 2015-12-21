@@ -41,7 +41,6 @@ class cobblerconf(urwid.WidgetWrap):
         self.visible = True
         self.netsettings = dict()
         self.parent = parent
-        self.deployment = "pre"
         self.getNetwork()
         self.gateway = self.get_default_gateway_linux()
         self.activeiface = sorted(self.netsettings.keys())[0]
@@ -262,7 +261,7 @@ interface first.")
                         mgmt_if_ipaddr))
 
         # Extra checks for post-deployment changes
-        if utils.get_deployment_mode() == "post":
+        if utils.is_post_deployment():
             # Admin interface cannot change
             if self.activeiface != \
                     self.oldsettings["ADMIN_NETWORK"]["interface"]:
@@ -295,7 +294,6 @@ interface first.")
             log.error("%s" % (responses))
             return False
 
-        #Always save even if "post"
         self.save(responses)
         return True
 
