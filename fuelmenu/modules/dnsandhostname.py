@@ -39,7 +39,6 @@ class dnsandhostname(urwid.WidgetWrap):
         self.priority = 50
         self.visible = True
         self.netsettings = dict()
-        self.deployment = "pre"
         self.getNetwork()
         self.gateway = self.get_default_gateway_linux()
         self.extdhcp = True
@@ -258,7 +257,7 @@ is accessible"}
             with open(filename, 'w') as f:
                 f.write("search {0}\n".format(responses['DNS_SEARCH']))
                 f.write("domain {0}\n".format(responses['DNS_DOMAIN']))
-                if utils.get_deployment_mode() == "post":
+                if utils.is_post_deployment():
                     f.write("nameserver {0}\n".format(managediface_ip))
                 for upstream_dns in responses['DNS_UPSTREAM'].split(','):
                     f.write("nameserver {0}\n".format(upstream_dns))

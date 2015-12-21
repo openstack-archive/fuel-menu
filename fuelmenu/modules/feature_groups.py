@@ -30,7 +30,6 @@ class feature_groups(urwid.WidgetWrap):
         self.name = "Feature groups"
         self.priority = 70
         self.visible = True
-        self.deployment = "pre"
         self.parent = parent
 
         #UI details
