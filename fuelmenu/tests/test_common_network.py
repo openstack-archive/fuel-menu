@@ -17,8 +17,11 @@
 from fuelmenu.common import errors
 from fuelmenu.common import network
 
+import json
 import mock
+from mock import patch
 import netifaces
+import subprocess
 import unittest
 
 
@@ -87,3 +90,26 @@ class TestUtils(unittest.TestCase):
         self.assertRaises(errors.NetworkException,
                           network.list_host_ip_addresses,
                           bad_iface)
+
+    def make_process_mock(self, return_code=0, retval=('stdout', 'stderr')):
+        process_mock = mock.Mock(
+            communicate=mock.Mock(return_value=retval))
+        process_mock.stdout = ['Stdout line 1', 'Stdout line 2']
+        process_mock.returncode = return_code
+
+        return process_mock
+
+    def test_search_external_dhcp(self):
+        output = """[{"iface": "eth2", "mac": "52:54:00:12:35:02", "server_ip":
+"192.168.200.2", "server_id": "192.168.200.2", "gateway": "0.0.0.0", "dport":
+67, "message": "offer", "yiaddr": "192.168.200.15"}]"""
+
+        interface = "abc0"
+        timeout = 1
+
+        process_mock = self.make_process_mock(return_code=0,
+                                              retval=(output, ''))
+        with patch.object(subprocess, 'Popen', return_value=process_mock):
+            data = network.searchExternalDHCP(interface, timeout)
+            process_mock.communicate.assert_called_once_with()
+            self.assertEqual(data, json.loads(output))
