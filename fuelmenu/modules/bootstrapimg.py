@@ -22,8 +22,6 @@ from fuelmenu.common.modulehelper import WidgetType
 from fuelmenu.common import utils
 from fuelmenu.settings import Settings
 import logging
-import url_access_checker.api as urlck
-import url_access_checker.errors as url_errors
 import urwid
 import urwid.raw_display
 import urwid.web_display
@@ -568,11 +566,16 @@ class bootstrapimg(urwid.WidgetWrap):
         self._update_defaults(self.defaults, newsettings)
 
     def check_url(self, url, proxies):
-        try:
-            return urlck.check_urls([url], proxies=proxies)
-        except (url_errors.UrlNotAvailable,
-                url_errors.InvalidProtocol):
+        command = ['/usr/bin/urlaccesscheck', 'check']
+        if proxies.get('http'):
+            command += ['--http-proxy', proxies.get('http')]
+        if proxies.get('https'):
+            command += ['--https-proxy', proxies.get('https')]
+        command.append(url)
+        return_code, _, _ = utils.execute(command)
+        if return_code != 0:
             return False
+        return True
 
     def _check_repo(self, base_url, suite, proxies):
         release_url = '{base_url}/dists/{suite}/Release'.format(
