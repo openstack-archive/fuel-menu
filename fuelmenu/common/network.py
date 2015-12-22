@@ -12,13 +12,18 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from fuelmenu.common.errors import BadIPException
-from fuelmenu.common.errors import NetworkException
+import json
+import logging
+import os
+import subprocess
 
 import netaddr
 import netifaces
-import os
-import subprocess
+
+from fuelmenu.common.errors import BadIPException
+from fuelmenu.common.errors import NetworkException
+
+log = logging.getLogger('fuelmenu.common.network')
 
 
 def inSameSubnet(ip1, ip2, netmask_or_cidr):
@@ -137,6 +142,37 @@ def duplicateIPExists(ip, iface, arping_bind=False):
     no_dupes = subprocess.call(["arping", "-D", "-c3", "-w1", "-I", iface,
                                "-s", bind_ip, ip], stdout=noout, stderr=noout)
     return (no_dupes != 0)
+
+
+def search_external_dhcp(iface, timeout):
+    """Checks for non-local DHCP servers discoverable on specified iface.
+
+    :param iface: Interface for scanning.
+    :type iface: string
+    :param timeout: command timeout in seconds.
+    :type timeout: int
+    :returns: list of DHCP data
+    :raises: errors.NetworkException
+    """
+    command = ["dhcpcheck", "discover", "--timeout", str(timeout), "-f",
+               "json", "--ifaces", iface]
+    try:
+        process = subprocess.Popen(command, stdout=subprocess.PIPE,
+                                   stdin=subprocess.PIPE,
+                                   stderr=subprocess.PIPE)
+        output, errout = process.communicate()
+        data = json.loads(output.strip())
+        # FIXME(mattymo): Sometimes dhcpcheck prints json with keys, but no
+        # values instead of empty array.
+        if len(data) and not data[0]['mac']:
+            return []
+        return data
+    except ValueError:
+        # ValueError thrown if output is completely empty
+        log.debug('Unable to parse JSON.')
+        return []
+    except OSError:
+        raise NetworkException('Unable to check DHCP.')
 
 
 def upIface(iface):

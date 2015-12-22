@@ -14,12 +14,11 @@
 # under the License.
 
 from common import dialog
+from common import errors
 from common import network
 from common import timeout
 from common import urwidwrapper as widget
 from common import utils
-import dhcp_checker.api
-import dhcp_checker.utils
 import logging
 import operator
 from optparse import OptionParser
@@ -28,7 +27,6 @@ from settings import Settings
 import signal
 import subprocess
 import sys
-import traceback
 import urwid
 import urwid.raw_display
 import urwid.web_display
@@ -361,17 +359,10 @@ def save_only(iface, settingsfile='/etc/fuel/astute.yaml'):
         sys.exit(1)
     try:
         dhcptimeout = 5
-        default = []
-        with timeout.run_with_timeout(dhcp_checker.utils.IfaceState, [iface],
-                                      timeout=dhcptimeout) as iface:
-            dhcp_server_data = timeout.run_with_timeout(
-                dhcp_checker.api.check_dhcp_on_eth,
-                [iface, dhcptimeout], timeout=dhcptimeout,
-                default=default)
-    except (KeyboardInterrupt, timeout.TimeoutError):
-        log.debug("DHCP scan timed out")
-        log.warning(traceback.format_exc())
-        dhcp_server_data = default
+        dhcp_server_data = network.search_external_dhcp(iface, dhcptimeout)
+    except errors.NetworkException:
+        log.error("DHCP scan failed")
+        dhcp_server_data = []
 
     num_dhcp = len(dhcp_server_data)
     if num_dhcp == 0:
