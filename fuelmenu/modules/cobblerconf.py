@@ -13,20 +13,16 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import dhcp_checker.api
-import dhcp_checker.utils
 from fuelmenu.common import dialog
 from fuelmenu.common.errors import BadIPException
 from fuelmenu.common.modulehelper import ModuleHelper
 from fuelmenu.common.modulehelper import WidgetType
 from fuelmenu.common import network
-from fuelmenu.common import timeout
 import fuelmenu.common.urwidwrapper as widget
 from fuelmenu.common import utils
 from fuelmenu.settings import Settings
 import logging
 import netaddr
-import traceback
 import urwid
 import urwid.raw_display
 import urwid.web_display
@@ -122,26 +118,13 @@ to advertise via DHCP to nodes",
 Please wait...")
             self.parent.refreshScreen()
 
-            ###Start DHCP check on this interface
-            #dhcp_server_data=[{'server_id': '192.168.200.2', 'iface': 'eth2',
-            #                   'yiaddr': '192.168.200.15', 'mac':
-            #                '52:54:00:12:35:02', 'server_ip': '192.168.200.2',
-            #                   'dport': 67, 'message': 'offer',
-            #                   'gateway': '0.0.0.0'}]
             try:
                 dhcptimeout = 5
-                default = []
-                with timeout.run_with_timeout(dhcp_checker.utils.IfaceState,
-                                              [self.activeiface],
-                                              timeout=dhcptimeout) as iface:
-                    dhcp_server_data = timeout.run_with_timeout(
-                        dhcp_checker.api.check_dhcp_on_eth,
-                        [iface, dhcptimeout], timeout=dhcptimeout,
-                        default=default)
-            except (KeyboardInterrupt, timeout.TimeoutError):
-                log.debug("DHCP scan timed out")
-                log.warning(traceback.format_exc())
-                dhcp_server_data = default
+                dhcp_server_data = network.search_external_dhcp(
+                    self.activeiface, dhcptimeout)
+            except network.NetworkException:
+                log.warning('DHCP scan failed.')
+                dhcp_server_data = []
 
             num_dhcp = len(dhcp_server_data)
             if num_dhcp == 0:

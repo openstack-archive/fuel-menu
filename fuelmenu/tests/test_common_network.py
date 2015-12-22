@@ -14,12 +14,17 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from fuelmenu.common import errors
-from fuelmenu.common import network
 
+import json
 import mock
+from mock import patch
+import subprocess
+
 import netifaces
 import unittest
+
+from fuelmenu.common import errors
+from fuelmenu.common import network
 
 
 class TestUtils(unittest.TestCase):
@@ -87,3 +92,46 @@ class TestUtils(unittest.TestCase):
         self.assertRaises(errors.NetworkException,
                           network.list_host_ip_addresses,
                           bad_iface)
+
+    def make_process_mock(self, return_code=0, retval=('stdout', 'stderr')):
+        process_mock = mock.Mock(
+            communicate=mock.Mock(return_value=retval))
+        process_mock.stdout = ['Stdout line 1', 'Stdout line 2']
+        process_mock.returncode = return_code
+
+        return process_mock
+
+    def test_search_external_dhcp(self):
+        output = '[{"mac": "52:54:00:12:35:02"}]'
+
+        interface = "abc0"
+        timeout = 1
+
+        process_mock = self.make_process_mock(return_code=0,
+                                              retval=(output, ''))
+        with patch.object(subprocess, 'Popen', return_value=process_mock):
+            data = network.search_external_dhcp(interface, timeout)
+            process_mock.communicate.assert_called_once_with()
+            self.assertEqual(data, json.loads(output))
+
+    def test_search_external_dhcp_nodata(self):
+        output = ''
+
+        interface = "abc0"
+        timeout = 1
+
+        process_mock = self.make_process_mock(return_code=0,
+                                              retval=(output, ''))
+        with patch.object(subprocess, 'Popen', return_value=process_mock):
+            data = network.search_external_dhcp(interface, timeout)
+            process_mock.communicate.assert_called_once_with()
+            self.assertEqual(data, [])
+
+    def test_search_external_dhcp_raises_exception(self):
+        interface = "abc0"
+        timeout = 1
+
+        with patch.object(subprocess, 'Popen', side_effect=OSError()):
+            self.assertRaises(errors.NetworkException,
+                              network.search_external_dhcp,
+                              interface, timeout)
