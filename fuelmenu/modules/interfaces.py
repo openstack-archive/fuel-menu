@@ -13,8 +13,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import dhcp_checker.api
-import dhcp_checker.utils
 from fuelmenu.common.errors import BadIPException
 from fuelmenu.common.errors import NetworkException
 from fuelmenu.common.modulehelper import ModuleHelper
@@ -22,7 +20,6 @@ from fuelmenu.common.modulehelper import WidgetType
 from fuelmenu.common import network
 from fuelmenu.common import puppet
 from fuelmenu.common import replace
-from fuelmenu.common import timeout
 import fuelmenu.common.urwidwrapper as widget
 import logging
 import netaddr
@@ -157,16 +154,8 @@ class interfaces(urwid.WidgetWrap):
             self.parent.refreshScreen()
             try:
                 dhcptimeout = 5
-                with timeout.run_with_timeout(dhcp_checker.utils.IfaceState,
-                                              [self.activeiface],
-                                              timeout=dhcptimeout) as iface:
-                    dhcp_server_data = timeout.run_with_timeout(
-                        dhcp_checker.api.check_dhcp_on_eth,
-                        [iface, dhcptimeout], timeout=dhcptimeout)
-            except (KeyboardInterrupt, timeout.TimeoutError):
-                self.log.debug("DHCP scan timed out")
-                self.log.warning(traceback.format_exc())
-                dhcp_server_data = []
+                dhcp_server_data = network.searchExternalDHCP(
+                    self.activeiface, dhcptimeout)
             except Exception:
                 self.log.warning("dhcp_checker failed to check on %s"
                                  % self.activeiface)

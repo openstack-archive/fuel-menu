@@ -13,8 +13,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import dhcp_checker.api
-import dhcp_checker.utils
 from fuelmenu.common import dialog
 from fuelmenu.common.errors import BadIPException
 from fuelmenu.common.modulehelper import ModuleHelper
@@ -130,18 +128,12 @@ Please wait...")
             #                   'gateway': '0.0.0.0'}]
             try:
                 dhcptimeout = 5
-                default = []
-                with timeout.run_with_timeout(dhcp_checker.utils.IfaceState,
-                                              [self.activeiface],
-                                              timeout=dhcptimeout) as iface:
-                    dhcp_server_data = timeout.run_with_timeout(
-                        dhcp_checker.api.check_dhcp_on_eth,
-                        [iface, dhcptimeout], timeout=dhcptimeout,
-                        default=default)
+                dhcp_server_data = network.searchExternalDHCP(
+                    self.activeiface, dhcptimeout)
             except (KeyboardInterrupt, timeout.TimeoutError):
                 log.debug("DHCP scan timed out")
                 log.warning(traceback.format_exc())
-                dhcp_server_data = default
+                dhcp_server_data = []
 
             num_dhcp = len(dhcp_server_data)
             if num_dhcp == 0:
