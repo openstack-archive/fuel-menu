@@ -388,7 +388,8 @@ def save_only(iface, settingsfile='/etc/fuel/astute.yaml'):
 
     defaultsettingsfile = os.path.join(os.path.dirname(__file__),
                                        "settings.yaml")
-    newsettings = Settings().read(settingsfile)
+    mos_version = utils.get_fuel_version()
+    newsettings = Settings().read(settingsfile, {'mos_version': mos_version})
     settings = \
         {
             "ADMIN_NETWORK/interface": iface,
