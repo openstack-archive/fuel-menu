@@ -13,22 +13,26 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import six
 
-from fuelmenu.common import dialog
-from fuelmenu.common import network
-import fuelmenu.common.urwidwrapper as widget
-from fuelmenu.common.utils import dict_merge
-from fuelmenu.settings import Settings
+
+import collections
 import logging
 import netifaces
 import re
 import socket
 import struct
 import subprocess
+
+import six
 import urwid
 import urwid.raw_display
 import urwid.web_display
+
+from fuelmenu.common import dialog
+from fuelmenu.common import network
+import fuelmenu.common.urwidwrapper as widget
+from fuelmenu.common.utils import dict_merge
+from fuelmenu.settings import Settings
 
 log = logging.getLogger('fuelmenu.modulehelper')
 
@@ -51,6 +55,40 @@ class WidgetType(object):
 
 class ModuleHelper(object):
     @classmethod
+    def get_setting(cls, settings, key):
+        """Retrieving setting by key
+        :param settings: settings from config file
+        :param key: setting name (format: '[{section_name}/]{setting_name}')
+        :returns: setting value
+        :raises: KeyError if there are no setting with such key
+        """
+        part1, _, part2 = key.partition('/')
+        if part2:
+            value = settings[part1][part2]
+        else:
+            value = settings[part1]
+        return value
+
+    @classmethod
+    def set_setting(cls, settings, key, value, default_settings=None):
+        """Sets new setting by key
+        :param settings: settings from config file
+        :param key: setting name (format: '[{section_name}/]{setting_name}')
+        :param value: new value
+        :param default_settings: settings, which will be used to find missed
+               section
+        """
+        part1, _, part2 = key.partition('/')
+        if part2:
+            if part1 not in settings:
+                settings.setdefault(part1, collections.OrderedDict())
+                if default_settings and part1 in default_settings:
+                    settings[part1].update(default_settings[part1])
+            settings[part1][part2] = value
+        else:
+            settings[part1] = value
+
+    @classmethod
     def load(cls, modobj, ignoredparams=None):
         """Returns settings found in settings files that are found in class
 
@@ -71,28 +109,19 @@ class ModuleHelper(object):
                ignoredparams and setting in ignoredparams):
                     continue
             try:
-                if "/" in setting:
-                    part1, part2 = setting.split("/")
-                    new_value = oldsettings[part1][part2]
-                else:
-                    new_value = oldsettings[setting]
-                setting_def["value"] = new_value
+                setting_def["value"] = cls.get_setting(oldsettings, setting)
             except KeyError:
                 log.warning("Failed to load %s value from settings", setting)
         return oldsettings
 
     @classmethod
     def save(cls, modobj, responses):
-        newsettings = dict()
-        for setting in responses.keys():
-            if "/" in setting:
-                part1, part2 = setting.split("/")
-                if part1 not in newsettings:
-                    # We may not touch all settings, so copy oldsettings first
-                    newsettings[part1] = modobj.oldsettings[part1]
-                newsettings[part1][part2] = responses[setting]
-            else:
-                newsettings[setting] = responses[setting]
+        newsettings = collections.OrderedDict()
+        for setting in responses:
+            cls.set_setting(newsettings,
+                            setting,
+                            responses[setting],
+                            modobj.oldsettings)
         return newsettings
 
     @classmethod
