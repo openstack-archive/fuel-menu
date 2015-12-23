@@ -386,10 +386,14 @@ def save_only(iface, settingsfile='/etc/fuel/astute.yaml'):
         log.error("Duplicate host found with IP {0}".format(ip))
         print("ERROR: Duplicate host found with IP {0}".format(ip))
 
-    defaultsettingsfile = os.path.join(os.path.dirname(__file__),
-                                       "settings.yaml")
-    newsettings = Settings().read(settingsfile)
-    settings = \
+    default_settings_file = os.path.join(os.path.dirname(__file__),
+                                         "settings.yaml")
+    mos_version = utils.get_fuel_version()
+    settings = Settings().read(
+        default_settings_file,
+        template_kwargs={"mos_version": mos_version})
+    settings.update(Settings().read(settingsfile))
+    settings_upd = \
         {
             "ADMIN_NETWORK/interface": iface,
             "ADMIN_NETWORK/ipaddress": ip,
@@ -426,24 +430,24 @@ def save_only(iface, settingsfile='/etc/fuel/astute.yaml'):
             "FUEL_ACCESS/user": "admin",
             "FUEL_ACCESS/password": "admin",
         }
-    for setting in settings.keys():
+    for setting in settings_upd.keys():
         if "/" in setting:
             part1, part2 = setting.split("/")
-            if part1 not in newsettings.keys():
-                newsettings[part1] = {}
+            if part1 not in settings.keys():
+                settings[part1] = {}
             #Keep old values for passwords if already set
             if "password" in setting:
-                newsettings[part1].setdefault(part2, settings[setting])
+                settings[part1].setdefault(part2, settings_upd[setting])
             else:
-                newsettings[part1][part2] = settings[setting]
+                settings[part1][part2] = settings_upd[setting]
         else:
             if "password" in setting:
-                newsettings.setdefault(setting, settings[setting])
+                settings.setdefault(setting, settings_upd[setting])
             else:
-                newsettings[setting] = settings[setting]
+                settings[setting] = settings_upd[setting]
 
     #Write astute.yaml
-    Settings().write(newsettings, defaultsfile=defaultsettingsfile,
+    Settings().write(settings, defaultsfile=default_settings_file,
                      outfn=settingsfile)
 
 
