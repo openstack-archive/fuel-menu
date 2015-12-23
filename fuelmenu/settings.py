@@ -14,6 +14,7 @@
 
 import collections
 import logging
+from string import Template
 
 try:
     from collections import OrderedDict
@@ -81,11 +82,14 @@ yaml.representer.Representer.add_representer(OrderedDict, yaml.representer.
 
 
 class Settings(object):
-
-    def read(self, yamlfile):
+    def read(self, yamlfile, template_kwargs=None):
         try:
-            infile = file(yamlfile, 'r')
-            settings = yaml.load(infile)
+            with open(yamlfile) as infile:
+                if template_kwargs:
+                    settings = yaml.load(Template(
+                        infile.read()).safe_substitute(template_kwargs))
+                else:
+                    settings = yaml.load(infile)
             return settings or OrderedDict()
         except Exception:
             if yamlfile is not None:
