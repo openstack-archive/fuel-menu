@@ -153,7 +153,7 @@ class bootstrapimg(urwid.WidgetWrap):
                 "value": mos_repo_default},
             BOOTSTRAP_MOS_RELEASE_KEY: {
                 "label": "MOS release",
-                "tooltip": "MOS release, e.g. mos8.0, mos7.0, etc.",
+                "tooltip": "MOS release, e.g. mos9.0, mos8.0, mos7.0, etc.",
                 "value": mos_release_default},
             BOOTSTRAP_HTTP_PROXY_KEY: {
                 "label": "HTTP proxy",
