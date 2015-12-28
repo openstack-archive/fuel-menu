@@ -17,8 +17,6 @@ import logging
 import re
 
 import six
-import url_access_checker.api as urlck
-import url_access_checker.errors as url_errors
 import urwid
 import urwid.raw_display
 import urwid.web_display
@@ -410,11 +408,17 @@ class bootstrapimg(urwid.WidgetWrap):
         self._update_defaults(self.defaults, newsettings)
 
     def check_url(self, url, proxies):
-        try:
-            return urlck.check_urls([url], proxies=proxies)
-        except (url_errors.UrlNotAvailable,
-                url_errors.InvalidProtocol):
+        command = ['/usr/bin/urlaccesscheck', 'check']
+        if proxies.get('http'):
+            command += ['--http-proxy', proxies['http']]
+        if proxies.get('https'):
+            command += ['--https-proxy', proxies['https']]
+        command.append(url)
+        return_code, _, err = utils.execute(command)
+        if return_code != 0:
+            log.error("Error while checking url: %s error: %s", url, err)
             return False
+        return True
 
     def _check_repo(self, base_url, suite, proxies):
         release_url = '{base_url}/dists/{suite}/Release'.format(
