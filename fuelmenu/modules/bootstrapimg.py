@@ -32,6 +32,8 @@ from fuelmenu.settings import Settings
 log = logging.getLogger('fuelmenu.mirrors')
 blank = urwid.Divider()
 
+local_repo_pattern = re.compile(r'^http[s]?://127.0.0.1')
+
 
 BOOTSTRAP_FLAVOR_KEY = 'BOOTSTRAP/flavor'
 BOOTSTRAP_HTTP_PROXY_KEY = "BOOTSTRAP/http_proxy"
@@ -419,6 +421,16 @@ class bootstrapimg(urwid.WidgetWrap):
     def _check_repo(self, base_url, suite, proxies):
         release_url = '{base_url}/dists/{suite}/Release'.format(
             base_url=base_url, suite=suite)
+        if (local_repo_pattern.search(release_url) and
+            utils.get_deployment_mode() == "pre"):
+            # Due to pre-deployment stage we can't check accessibility of local
+            # repository since it is not created at that moment. Although we
+            # still should provide an ability to use it, because in fact
+            # it will be created at the end of deployment.
+            log.warn('Accessibility check is skipped for local repository: %s',
+                     release_url)
+            return True
+
         return self.check_url(release_url, proxies)
 
     def refresh(self):
