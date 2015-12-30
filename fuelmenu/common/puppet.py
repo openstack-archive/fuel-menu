@@ -13,6 +13,7 @@
 # under the License.
 
 import logging
+import re
 import subprocess
 
 #Python 2.6 hack to add check_output command
@@ -70,11 +71,9 @@ def puppetApply(classes):
                                    stderr=subprocess.PIPE)
         output, errout = process.communicate(input=' '.join(input))
     except Exception as e:
-        import traceback
-        log.error(traceback.print_exc())
-        if "err:" in output:
-            log.error(e)
-            return False
+        pattern = re.compile('(err:|\(err\):)')
+        if pattern.match(output):
+            log.traceback("Puppet apply errored")
         else:
-            log.debug(output)
-            return True
+            log.traceback("Puppet apply failed for unknown reason")
+        return False
