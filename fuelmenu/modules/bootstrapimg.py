@@ -280,8 +280,7 @@ class bootstrapimg(urwid.WidgetWrap):
                  r"(?P<section>[\w\s]*))?"
 
         priority = repo_from_ui.get('priority')
-        if not priority:
-            priority = None
+        priority = int(priority) if priority else None
         name = repo_from_ui.get('name')
         uri = repo_from_ui.get('uri', '')
 
@@ -327,7 +326,7 @@ class bootstrapimg(urwid.WidgetWrap):
         result = {
             "uri": uri,
             "name": name,
-            "priority": priority
+            "priority": str(priority)
         }
 
         return result
