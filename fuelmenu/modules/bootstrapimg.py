@@ -15,6 +15,7 @@
 import copy
 import logging
 import re
+import types
 
 import six
 import url_access_checker.api as urlck
@@ -206,6 +207,11 @@ class bootstrapimg(urwid.WidgetWrap):
 
         for index, repo in enumerate(repos):
             name = repo['name']
+            priority = repo['priority']
+            if priority and not isinstance(priority,
+                                           (types.IntType, types.NoneType)):
+                errors.append("Priority value for repository {0} should be "
+                              "empty or numeric.".format(name))
             if not name:
                 name = "#{0}".format(index + 1)
                 errors.append("Empty name for repository {0}."
@@ -284,10 +290,13 @@ class bootstrapimg(urwid.WidgetWrap):
                  r"(?P<section>[\w\s]*))?"
 
         priority = repo_from_ui.get('priority')
-        if not priority:
-            priority = None
         name = repo_from_ui.get('name')
         uri = repo_from_ui.get('uri', '')
+        try:
+            priority = int(priority) if priority else None
+        except (TypeError, ValueError):
+            log.debug("Wrong priority value for repository '{0}': "
+                      "'{1}'.".format(name, priority))
 
         match = re.match(regexp, uri)
 
@@ -331,7 +340,7 @@ class bootstrapimg(urwid.WidgetWrap):
         result = {
             "uri": uri,
             "name": name,
-            "priority": priority
+            "priority": str(priority)
         }
 
         return result
