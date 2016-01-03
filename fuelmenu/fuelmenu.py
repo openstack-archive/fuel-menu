@@ -19,7 +19,7 @@ from common import network
 from common import timeout
 from common import urwidwrapper as widget
 from common import utils
-from fuelmenu import consts
+import consts
 import logging
 import operator
 from optparse import OptionParser
