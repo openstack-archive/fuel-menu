@@ -13,18 +13,19 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from common import dialog
-from common import errors
-from common import network
-from common import timeout
-from common import urwidwrapper as widget
-from common import utils
+from __future__ import absolute_import
+from fuelmenu.common import dialog
+from fuelmenu.common import errors
+from fuelmenu.common import network
+from fuelmenu.common import timeout
+from fuelmenu.common import urwidwrapper as widget
+from fuelmenu.common import utils
 from fuelmenu import consts
+from fuelmenu.settings import Settings
 import logging
 import operator
 from optparse import OptionParser
 import os
-from settings import Settings
 import signal
 import subprocess
 import sys
@@ -326,8 +327,8 @@ def setup():
 
 def save_only(iface, settingsfile=consts.SETTINGS_FILE):
     import common.network as network
-    from common import pwgen
-    from common import utils
+    from fuelmenu.common import pwgen
+    from fuelmenu.common import utils
     import netifaces
 
     if utils.is_post_deployment():
