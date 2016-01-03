@@ -13,13 +13,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from __future__ import consts
 from common import dialog
 from common import errors
 from common import network
 from common import timeout
 from common import urwidwrapper as widget
 from common import utils
-from fuelmenu import consts
 import logging
 import operator
 from optparse import OptionParser
