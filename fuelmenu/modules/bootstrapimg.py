@@ -55,6 +55,7 @@ class bootstrapimg(urwid.WidgetWrap):
         self.name = "Bootstrap Image"
         self.priority = 55
         self.visible = True
+        self.deployment = "pre"
         self.parent = parent
         self._mos_version = None
         self._bootstrap_flavor = None

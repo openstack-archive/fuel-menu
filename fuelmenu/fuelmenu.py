@@ -19,7 +19,6 @@ from common import network
 from common import timeout
 from common import urwidwrapper as widget
 from common import utils
-from fuelmenu import consts
 import logging
 import operator
 from optparse import OptionParser
@@ -33,7 +32,7 @@ import urwid.raw_display
 import urwid.web_display
 
 # set up logging
-logging.basicConfig(filename=consts.LOGFILE,
+logging.basicConfig(filename='/var/log/fuelmenu.log',
                     format="%(asctime)s %(levelname)s %(message)s",
                     level=logging.DEBUG)
 log = logging.getLogger('fuelmenu.loader')
@@ -85,7 +84,7 @@ class FuelSetup(object):
         self.screen = None
         self.defaultsettingsfile = os.path.join(os.path.dirname(__file__),
                                                 "settings.yaml")
-        self.settingsfile = consts.SETTINGS_FILE
+        self.settingsfile = "/etc/fuel/astute.yaml"
         self.managediface = network.get_physical_ifaces()[0]
         #Set to true to move all settings to end
         self.globalsave = True
@@ -324,13 +323,13 @@ def setup():
     FuelSetup()
 
 
-def save_only(iface, settingsfile=consts.SETTINGS_FILE):
+def save_only(iface, settingsfile='/etc/fuel/astute.yaml'):
     import common.network as network
     from common import pwgen
     from common import utils
     import netifaces
 
-    if utils.is_post_deployment():
+    if utils.get_deployment_mode() == "post":
         print("Not updating settings when invoked during post-deployment.\n"
               "Run fuelmenu manually to make changes.")
         sys.exit(0)

@@ -33,6 +33,7 @@ class ntpsetup(urwid.WidgetWrap):
         self.name = "Time Sync"
         self.priority = 60
         self.visible = True
+        self.deployment = "pre"
         self.parent = parent
 
         #UI details

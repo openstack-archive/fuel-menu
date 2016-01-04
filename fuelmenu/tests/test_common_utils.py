@@ -80,18 +80,6 @@ class TestUtils(unittest.TestCase):
             process_mock.communicate.assert_called_once_with()
             self.assertEqual('post', mode)
 
-    @mock.patch('fuelmenu.common.utils.get_deployment_mode')
-    def test_is_pre_deployment(self, utils_mock):
-        utils_mock.return_value = "pre"
-        data = utils.is_pre_deployment()
-        self.assertEqual(data, True)
-
-    @mock.patch('fuelmenu.common.utils.get_deployment_mode')
-    def test_is_post_deployment(self, utils_mock):
-        utils_mock.return_value = "pre"
-        data = utils.is_post_deployment()
-        self.assertEqual(data, False)
-
     def test_get_fuel_version(self):
         output = 'abc.xyz'
         with patch(

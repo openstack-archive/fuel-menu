@@ -12,8 +12,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from fuelmenu import consts
-
 from copy import deepcopy
 import logging
 import subprocess
@@ -67,26 +65,16 @@ def get_deployment_mode():
                                    stderr=subprocess.PIPE)
         output, errout = process.communicate()
         if "fuel" in output.lower():
-            return consts.POST_DEPLOYMENT_MODE
+            return "post"
         else:
-            return consts.PRE_DEPLOYMENT_MODE
+            return "pre"
     except OSError:
         log.warning('Unable to check deployment mode via docker. Assuming'
                     ' pre-deployment stage.')
-        return consts.PRE_DEPLOYMENT_MODE
+        return "pre"
 
 
-def is_pre_deployment():
-    """Return True if current deployment mode is pre."""
-    return get_deployment_mode() == consts.PRE_DEPLOYMENT_MODE
-
-
-def is_post_deployment():
-    """Return True if current deployment mode is post."""
-    return get_deployment_mode() == consts.POST_DEPLOYMENT_MODE
-
-
-def get_fuel_version(versionfile=consts.RELEASE_FILE):
+def get_fuel_version(versionfile='/etc/fuel_release'):
     """Read version from versionfile or return empty string."""
     try:
         with open(versionfile, 'r') as f:
