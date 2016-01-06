@@ -1,0 +1,10 @@
+Code-Review+1: Igor Marnat <imarnat@mirantis.com>
+Code-Review+1: Andrew Maksimov <amaksimov@mirantis.com>
+Code-Review+2: Igor Kalnitsky <ikalnitsky@mirantis.com>
+Workflow+1: Igor Kalnitsky <ikalnitsky@mirantis.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Wed, 06 Jan 2016 10:22:43 +0000
+Reviewed-on: https://review.openstack.org/262228
+Project: openstack/fuel-menu
+Branch: refs/heads/stable/8.0
