@@ -431,7 +431,7 @@ class bootstrapimg(urwid.WidgetWrap):
         release_url = '{base_url}/dists/{suite}/Release'.format(
             base_url=base_url, suite=suite)
         if (local_repo_pattern.search(release_url) and
-                utils.is_pre_deployment()):
+                utils.get_deployment_mode() == 'pre'):
             # Due to pre-deployment stage we can't check accessibility of local
             # repository since it is not created at that moment. Although we
             # still should provide an ability to use it, because in fact
