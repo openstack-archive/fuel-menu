@@ -47,7 +47,6 @@ class interfaces(urwid.WidgetWrap):
         self.screen = None
         self.log = logging
         self.log.basicConfig(filename='./fuelmenu.log', level=logging.DEBUG)
-        self.log.info("init Interfaces")
         self.getNetwork()
         self.gateway = self.get_default_gateway_linux()
         self.activeiface = sorted(self.netsettings.keys())[0]
