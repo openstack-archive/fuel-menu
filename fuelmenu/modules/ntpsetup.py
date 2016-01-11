@@ -212,13 +212,11 @@ class ntpsetup(urwid.WidgetWrap):
 
     def refresh(self):
         self.gateway = self.get_default_gateway_linux()
-        log.info("refresh. gateway is %s" % self.gateway)
         #If gateway is empty, disable NTP
         if self.gateway is None:
             for index, fieldname in enumerate(self.fields):
                 if fieldname == "ntpenabled":
-                    log.info("clearing ntp enabled")
-                    log.info("fieldname: %s" % fieldname)
+                    log.info("Disabling NTP because there is no gateway")
                     rb_group = self.edits[index].rb_group
                     rb_group[0].set_state(False)
                     rb_group[1].set_state(True)
