@@ -359,8 +359,6 @@ interface first.")
         self.net_text3.set_text("Netmask: %-15s  Gateway: %s" % (
             self.netsettings[self.activeiface]['netmask'],
             self.gateway))
-        log.debug("bootproto for %s: %s" % (self.netsettings[self.activeiface],
-                  self.netsettings[self.activeiface]['bootproto']))
         if self.netsettings[self.activeiface]['link'].upper() == "UP":
             if self.netsettings[self.activeiface]['bootproto'] == "dhcp":
                 self.net_text4.set_text("WARNING: Cannot use interface running"
@@ -385,7 +383,7 @@ interface first.")
         if network.inSameSubnet(dhcp_start,
                                 self.netsettings[self.activeiface]['addr'],
                                 self.netsettings[self.activeiface]['netmask']):
-            log.debug("Existing network settings exist. Not changing.")
+            log.debug("Existing network settings exist. Skipping generation.")
             return
         else:
             log.debug("Existing network settings missing or invalid. "

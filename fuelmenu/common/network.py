@@ -27,11 +27,14 @@ log = logging.getLogger('fuelmenu.common.network')
 
 
 def inSameSubnet(ip1, ip2, netmask_or_cidr):
+    if not all([ip1,ip2]):
+        return False
     try:
         cidr1 = netaddr.IPNetwork("%s/%s" % (ip1, netmask_or_cidr))
         cidr2 = netaddr.IPNetwork("%s/%s" % (ip2, netmask_or_cidr))
         return cidr1 == cidr2
     except netaddr.AddrFormatError:
+        log.exception('Invalid address specified: {0}'.format(cidr1))
         return False
 
 
