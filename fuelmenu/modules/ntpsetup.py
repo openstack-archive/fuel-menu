@@ -41,7 +41,9 @@ class ntpsetup(urwid.WidgetWrap):
                                "NTP, you may have issues with deployment "
                                "due to time synchronization issues. These "
                                "problems are exacerbated in virtualized "
-                               "environments."]
+                               "environments.", "",
+                               "Deployed nodes will use Fuel Master as time "
+                               "source if NTP is disabled."]
 
         self.fields = ["ntpenabled", "NTP1", "NTP2", "NTP3"]
         self.defaults = \
@@ -90,7 +92,9 @@ class ntpsetup(urwid.WidgetWrap):
         errors = []
         warnings = []
         if responses['ntpenabled'] == "No":
-            #Disabled NTP means passing no NTP servers to save method
+            # Disabled NTP means passing no NTP servers to save method
+            # Even though nodes will use Fuel Master, NTP[1,2,3] are empty so
+            # Fuel Master can initialize itself as a time source.
             responses = {
                 'NTP1': "",
                 'NTP2': "",
