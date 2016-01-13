@@ -108,14 +108,13 @@ class FuelSetup(object):
         self.screen.draw_screen(size, self.frame.render(size))
         for item in self.menuitems.body.contents:
             try:
-                if item.original_widget and \
-                        item.original_widget.get_label() == choice:
-                    item.set_attr_map({None: 'header'})
-                else:
-                    item.set_attr_map({None: None})
-            except Exception as e:
-                log.info("%s" % item)
-                log.error("%s" % e)
+                if isinstance(item.base_widget, urwid.Button):
+                    if item.base_widget.get_label() == choice:
+                        item.set_attr_map({None: 'header'})
+                    else:
+                        item.set_attr_map({None: None})
+            except AttributeError:
+                log.exception("Unable to set menu item %s" % item)
         self.setChildScreen(name=choice)
 
     def draw_child_screen(self, child_screen, focus_on_child=False):
