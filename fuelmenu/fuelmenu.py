@@ -447,9 +447,11 @@ def main(*args, **kwargs):
         print("This program requires urwid 1.1.0 or greater.")
 
     try:
-        default_iface = network.get_physical_ifaces()[0]
+        default_iface = filter(network.is_interface_up,
+                               network.get_physical_ifaces())[0]
     except IndexError:
-        print("Unable to detect any network interfaces. Could not start")
+        print("Unable to detect any active network interfaces. "
+              "Could not start.")
         sys.exit(1)
 
     parser = OptionParser()
@@ -461,6 +463,11 @@ def main(*args, **kwargs):
                       default=default_iface, help="Set IFACE as primary.")
 
     options, args = parser.parse_args()
+
+    if not network.is_interface_up(options.iface):
+        print("Selected interface '{0}' is in down state. "
+              "Could not start.".format(options.iface))
+        sys.exit(1)
 
     if options.save_only:
         save_only(options.iface)
