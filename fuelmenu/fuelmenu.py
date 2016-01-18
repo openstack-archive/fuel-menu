@@ -463,6 +463,11 @@ def main(*args, **kwargs):
 
     options, args = parser.parse_args()
 
+    if not network.is_interface_has_ip(options.iface):
+        print("Selected interface '{0}' has no assigned IP. "
+              "Could not start.".format(options.iface))
+        sys.exit(1)
+
     if options.save_only:
         save_only(options.iface)
     else:
