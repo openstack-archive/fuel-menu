@@ -46,6 +46,20 @@ class TestUtils(unittest.TestCase):
         os_mock.path.realpath.assert_called_once_with(
             '/sys/class/net/{0}'.format(iface))
 
+    @mock.patch('netifaces.ifaddresses')
+    def test_interface_has_ip_false(self, addrs_mock):
+        iface = 'eth0'
+        addrs_mock.return_value = {'some_key': 'some_value'}
+        self.assertFalse(network.is_interface_has_ip(iface))
+        addrs_mock.assert_called_once_with(iface)
+
+    @mock.patch('netifaces.ifaddresses')
+    def test_interface_has_ip_true(self, addrs_mock):
+        iface = 'eth0'
+        addrs_mock.return_value = {netifaces.AF_INET: '192.168.1.2'}
+        self.assertTrue(network.is_interface_has_ip(iface))
+        addrs_mock.assert_called_once_with(iface)
+
     @mock.patch('fuelmenu.common.network.netifaces')
     @mock.patch('fuelmenu.common.network.is_physical')
     def test_get_physical_ifaces(self, is_physical_mock, netifaces_mock):
