@@ -79,6 +79,11 @@ def get_physical_ifaces():
     return sorted(filter(is_physical, ifaces))
 
 
+def is_interface_has_ip(interface):
+    addr = netifaces.ifaddresses(interface)
+    return netifaces.AF_INET in addr
+
+
 def is_physical(iface):
     """Returns true if virtual is not in the iface's linked path."""
     # A virtual interface has a symlink in /sys/class/net pointing to
