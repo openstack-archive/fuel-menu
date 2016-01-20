@@ -254,12 +254,20 @@ class interfaces(urwid.WidgetWrap):
             if len(responses["gateway"]) > 1:
                 params["gateway"] = responses["gateway"]
                 self.unset_gateway()
+            if network.inSameSubnet(responses["ipaddr"],
+                                    self.get_default_gateway_linux(),
+                                    responses["netmask"]):
+                # Unset if clearing currently set gateway on same subnet
+                self.unset_gateway()
+
         l3ifconfig['params'] = params
         puppetclasses.append(l3ifconfig)
         self.log.info("Puppet data: %s" % (puppetclasses))
         try:
             self.parent.refreshScreen()
-            puppet.puppetApply(puppetclasses)
+            result = puppet.puppetApply(puppetclasses)
+            if result is False:
+                raise Exception("Puppet apply failed")
             ModuleHelper.getNetwork(self)
             gateway = self.get_default_gateway_linux()
             if gateway is None:
