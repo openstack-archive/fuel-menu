@@ -157,11 +157,6 @@ class FuelSetup(object):
         self.draw_child_screen(child.screen)
 
     def main(self):
-        #Disable kernel print messages. They make our UI ugly
-        noout = open('/dev/null', 'w')
-        subprocess.call(["sysctl", "-w", "kernel.printk=4 1 1 7"],
-                        stdout=noout, stderr=noout)
-
         text_header = (u"Fuel %s setup "
                        u"Use Up/Down/Left/Right to navigate.  F8 exits. "
                        u"Remember to save your changes."
@@ -260,10 +255,6 @@ class FuelSetup(object):
         self.mainloop.run()
 
     def exit_program(self, button):
-        #return kernel logging to normal
-        noout = open('/dev/null', 'w')
-        subprocess.call(["sysctl", "-w", "kernel.printk=7 4 1 7"],
-                        stdout=noout, stderr=noout)
         #Fix /etc/hosts before quitting
         dnsobj = self.children[int(self.choices.index("DNS & Hostname"))]
         dnsobj.fixEtcHosts()
