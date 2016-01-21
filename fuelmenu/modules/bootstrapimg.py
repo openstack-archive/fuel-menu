@@ -15,11 +15,10 @@
 import copy
 import logging
 import re
+import requests
 import types
 
 import six
-import url_access_checker.api as urlck
-import url_access_checker.errors as url_errors
 import urwid
 import urwid.raw_display
 import urwid.web_display
@@ -422,10 +421,10 @@ class bootstrapimg(urwid.WidgetWrap):
 
     def check_url(self, url, proxies):
         try:
-            return urlck.check_urls([url], proxies=proxies)
-        except (url_errors.UrlNotAvailable,
-                url_errors.InvalidProtocol):
+            resp = requests.get(url, proxies=proxies, verify=False)
+        except requests.exceptions.RequestException:
             return False
+        return resp.ok
 
     def _check_repo(self, base_url, suite, proxies):
         release_url = '{base_url}/dists/{suite}/Release'.format(
