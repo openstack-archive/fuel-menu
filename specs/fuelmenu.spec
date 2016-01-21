@@ -18,6 +18,7 @@ Requires: bind-utils
 Requires: fuel-release
 Requires: network-checker
 Requires: ntp
+Requires: python-requests
 Requires: python-setuptools
 Requires: python-netaddr
 Requires: python-netifaces
