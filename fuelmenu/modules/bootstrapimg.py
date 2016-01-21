@@ -15,6 +15,7 @@
 import copy
 import logging
 import re
+import requests
 import types
 
 import six
@@ -418,17 +419,11 @@ class bootstrapimg(urwid.WidgetWrap):
         self._update_defaults(self.defaults, newsettings)
 
     def check_url(self, url, proxies):
-        command = ['/usr/bin/urlaccesscheck', 'check']
-        if proxies.get('http'):
-            command += ['--http-proxy', proxies['http']]
-        if proxies.get('https'):
-            command += ['--https-proxy', proxies['https']]
-        command.append(url)
-        return_code, _, err = utils.execute(command)
-        if return_code != 0:
-            log.error("Error while checking url: %s error: %s", url, err)
+        try:
+            resp = requests.get(url, proxies=proxies)
+        except requests.exceptions.RequestException:
             return False
-        return True
+        return resp.ok
 
     def _check_repo(self, base_url, suite, proxies):
         release_url = '{base_url}/dists/{suite}/Release'.format(
