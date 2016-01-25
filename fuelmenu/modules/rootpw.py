@@ -15,11 +15,9 @@
 
 import crypt
 from fuelmenu.common.modulehelper import ModuleHelper
+from fuelmenu.common import utils
 import logging
-import subprocess
 import urwid
-import urwid.raw_display
-import urwid.web_display
 
 log = logging.getLogger('fuelmenu.rootpw')
 blank = urwid.Divider()
@@ -97,24 +95,23 @@ class rootpw(urwid.WidgetWrap):
         log.info("Changing root password")
         try:
             #clear any locks first
-            noout = open('/dev/null', 'w')
-            subprocess.call(["rm", "-f", "/etc/passwd.lock",
-                             "/etc/shadow.lock"], stdout=noout,
-                            stderr=noout)
-            retcode = subprocess.call(["usermod", "-p", hashed, "root"],
-                                      stdout=noout,
-                                      stderr=noout)
+            rm_command = ["rm", "-f", "/etc/passwd.lock", "/etc/shadow.lock"]
+            code, stdout, errout = utils.execute(rm_command)
+            usermod_command = ["usermod", "-p", hashed, "root"]
+            code, stdout, errout = utils.execute(usermod_command)
         except OSError:
             log.error("Unable to change password.")
             self.parent.footer.set_text("Unable to change password.")
             return False
 
-        if retcode == 0:
+        if code == 0:
             self.parent.footer.set_text("Changed applied successfully.")
             log.info("Root password successfully changed.")
-            #Reset fields
+            # Reset fields
             self.cancel(None)
         else:
+            log.error("Root password change failed with error:"
+                      "\"{0}\"".format(errout))
             self.parent.footer.set_text("Unable to apply changes. Check logs "
                                         "for more details.")
             return False
