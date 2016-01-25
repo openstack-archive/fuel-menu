@@ -13,6 +13,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import logging
+import netaddr
+import re
+import socket
+import urwid
+
 from fuelmenu.common.errors import BadIPException
 from fuelmenu.common.errors import NetworkException
 from fuelmenu.common.modulehelper import ModuleHelper
@@ -21,15 +27,7 @@ from fuelmenu.common import network
 from fuelmenu.common import puppet
 from fuelmenu.common import replace
 import fuelmenu.common.urwidwrapper as widget
-import logging
-import netaddr
-import re
-import socket
-import subprocess
-import traceback
-import urwid
-import urwid.raw_display
-import urwid.web_display
+from fuelmenu.common import utils
 
 blank = urwid.Divider()
 
@@ -298,17 +296,14 @@ class interfaces(urwid.WidgetWrap):
     def unset_gateway(self):
         """Unset current gateway."""
         command = "ip route del default dev $(ip ro | grep default"\
-                  " | awk '{print $NF}')"
+                  " | awk '{print $5}')"
         if self.get_default_gateway_linux() is None:
             return True
-        try:
-            noout = open('/dev/null', 'w')
-            subprocess.call(command, stdout=noout, stderr=noout,
-                            shell=True)
-        except OSError:
-            self.log.warning(traceback.format_exc())
+        code, output, errout = utils.execute(command, shell=True)
+        if code != 0:
             self.log.error("Unable to unset gateway")
-            self.log.error("Command was: {0}".format(command))
+            self.log.info("Command was: {0}\nStderr: {1}\nStdout:".format(
+                command, output, errout))
             self.parent.footer.set_text("Unable to unset gateway.")
             return False
 
