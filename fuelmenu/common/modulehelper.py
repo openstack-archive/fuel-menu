@@ -21,7 +21,6 @@ import netifaces
 import re
 import socket
 import struct
-import subprocess
 
 import six
 import urwid
@@ -32,6 +31,7 @@ from fuelmenu.common import dialog
 from fuelmenu.common import network
 import fuelmenu.common.urwidwrapper as widget
 from fuelmenu.common.utils import dict_merge
+from fuelmenu.common.utils import execute
 from fuelmenu.settings import Settings
 
 log = logging.getLogger('fuelmenu.modulehelper')
@@ -349,11 +349,9 @@ class ModuleHelper(object):
     @classmethod
     def getDHCP(cls, iface):
         """Returns True if the interface has a dhclient process running."""
-        noout = open('/dev/null', 'w')
-        dhclient_running = subprocess.call(["pgrep", "-f", "dhclient.*%s" %
-                                            iface], stdout=noout,
-                                           stderr=noout)
-        return dhclient_running == 0
+        command = ["pgrep", "-f", "dhclient.*{0}".format(iface)]
+        code, output, errout = execute(command)
+        return code == 0
 
     @classmethod
     def get_default_gateway_linux(cls):
