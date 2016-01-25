@@ -62,10 +62,7 @@ def get_deployment_mode():
     """Report if any fuel containers are already created."""
     command = ['docker', 'ps', '-a']
     try:
-        process = subprocess.Popen(command, stdout=subprocess.PIPE,
-                                   stdin=subprocess.PIPE,
-                                   stderr=subprocess.PIPE)
-        output, errout = process.communicate()
+        _, output, _ = execute(command)
         if "fuel" in output.lower():
             return consts.POST_DEPLOYMENT_MODE
         else:
@@ -96,15 +93,20 @@ def get_fuel_version(versionfile=consts.RELEASE_FILE):
         return ""
 
 
-def execute(command):
+def execute(command, stdin=None, shell=False):
     """Executes commands
 
     :param command: A list of shell lexemes
+    :param shell: Specify shell parameter for subprocess.Popen (optional)
+    :param stdin: String input for stdin (optional)
 
     :returns: Tuple of (return_code, stdout, stderr)
     """
+
     proc = subprocess.Popen(command,
+                            stdin=subprocess.PIPE,
                             stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE)
-    out, err = proc.communicate()
+                            stderr=subprocess.PIPE,
+                            shell=shell)
+    out, err = proc.communicate(input=stdin)
     return proc.poll(), out, err

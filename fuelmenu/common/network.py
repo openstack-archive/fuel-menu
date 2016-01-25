@@ -15,13 +15,13 @@
 import json
 import logging
 import os
-import subprocess
 
 import netaddr
 import netifaces
 
 from fuelmenu.common.errors import BadIPException
 from fuelmenu.common.errors import NetworkException
+from fuelmenu.common.utils import execute
 
 log = logging.getLogger('fuelmenu.common.network')
 
@@ -137,14 +137,13 @@ def duplicateIPExists(ip, iface, arping_bind=False):
     :param arping_bind: Bind to IP when probing (IP must be already assigned.)
     :returns: boolean
     """
-    noout = open('/dev/null', 'w')
     if arping_bind:
         bind_ip = ip
     else:
         bind_ip = "0.0.0.0"
-    no_dupes = subprocess.call(["arping", "-D", "-c3", "-w1", "-I", iface,
-                               "-s", bind_ip, ip], stdout=noout, stderr=noout)
-    return (no_dupes != 0)
+    command = ["arping", "-D", "-c3", "-w1", "-I", iface, "-s", bind_ip, ip]
+    code, _, _ = execute(command)
+    return (code != 0)
 
 
 def search_external_dhcp(iface, timeout):
@@ -160,10 +159,7 @@ def search_external_dhcp(iface, timeout):
     command = ["dhcpcheck", "discover", "--timeout", str(timeout), "-f",
                "json", "--ifaces", iface]
     try:
-        process = subprocess.Popen(command, stdout=subprocess.PIPE,
-                                   stdin=subprocess.PIPE,
-                                   stderr=subprocess.PIPE)
-        output, errout = process.communicate()
+        _, output, _ = execute(command)
         data = json.loads(output.strip())
         # FIXME(mattymo): Sometimes dhcpcheck prints json with keys, but no
         # values instead of empty array.
@@ -179,8 +175,6 @@ def search_external_dhcp(iface, timeout):
 
 
 def upIface(iface):
-    noout = open('/dev/null', 'w')
-    result = subprocess.call(["ifconfig", iface, "up"], stdout=noout,
-                             stderr=noout)
-    if result != 0:
+    code, _, _ = execute(["ifconfig", iface, "up"])
+    if code != 0:
         raise NetworkException("Failed to up interface {0}".format(iface))

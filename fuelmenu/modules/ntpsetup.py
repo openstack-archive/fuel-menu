@@ -17,13 +17,11 @@ from fuelmenu.common import dialog
 from fuelmenu.common.modulehelper import ModuleHelper
 from fuelmenu.common.modulehelper import WidgetType
 import fuelmenu.common.urwidwrapper as widget
+from fuelmenu.common import utils
 from fuelmenu.settings import Settings
 import logging
 import re
-import subprocess
 import urwid
-import urwid.raw_display
-import urwid.web_display
 log = logging.getLogger('fuelmenu.mirrors')
 blank = urwid.Divider()
 
@@ -160,16 +158,15 @@ class ntpsetup(urwid.WidgetWrap):
             return False
 
         self.save(responses)
-        #Apply NTP now
+        #Apply NTP now, ignoring errors
         if len(responses['NTP1']) > 0:
             #Stop ntpd, run ntpdate, start ntpd
-            noout = open('/dev/null', 'w')
-            subprocess.call(["service", "ntpd", "stop"],
-                            stdout=noout, stderr=noout)
-            subprocess.call(["ntpdate", "-t5", responses['NTP1']],
-                            stdout=noout, stderr=noout)
-            subprocess.call(["service", "ntpd", "start"],
-                            stdout=noout, stderr=noout)
+            start_command = ["service", "ntpd", "start"]
+            stop_command = ["service", "ntpd", "stop"]
+            ntpdate_command = ["ntpdate", "-t5", responses['NTP1']]
+            _, _, _ = utils.execute(stop_command)
+            _, _, _ = utils.execute(ntpdate_command)
+            _, _, _ = utils.execute(start_command)
         return True
 
     def cancel(self, button):
@@ -208,11 +205,9 @@ class ntpsetup(urwid.WidgetWrap):
 
     def checkNTP(self, server):
         # Use ntpdate to verify server answers NTP requests
-
-        noout = open('/dev/null', 'w')
-        ntp_works = subprocess.call(["ntpdate", "-q", "-t2", server],
-                                    stdout=noout, stderr=noout)
-        return (ntp_works == 0)
+        command = ["ntpdate", "-q", "-t2", server]
+        code, output, errout = utils.execute(command)
+        return (code == 0)
 
     def refresh(self):
         self.gateway = self.get_default_gateway_linux()
