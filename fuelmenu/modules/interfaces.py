@@ -13,6 +13,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import logging
+import netaddr
+import re
+import socket
+import traceback
+import urwid
+
 from fuelmenu.common.errors import BadIPException
 from fuelmenu.common.errors import NetworkException
 from fuelmenu.common.modulehelper import ModuleHelper
@@ -21,15 +28,7 @@ from fuelmenu.common import network
 from fuelmenu.common import puppet
 from fuelmenu.common import replace
 import fuelmenu.common.urwidwrapper as widget
-import logging
-import netaddr
-import re
-import socket
-import subprocess
-import traceback
-import urwid
-import urwid.raw_display
-import urwid.web_display
+from fuelmenu.common import utils
 
 blank = urwid.Divider()
 
@@ -302,9 +301,7 @@ class interfaces(urwid.WidgetWrap):
         if self.get_default_gateway_linux() is None:
             return True
         try:
-            noout = open('/dev/null', 'w')
-            subprocess.call(command, stdout=noout, stderr=noout,
-                            shell=True)
+            code, output, errout = utils.execute(command, shell=True)
         except OSError:
             self.log.warning(traceback.format_exc())
             self.log.error("Unable to unset gateway")
