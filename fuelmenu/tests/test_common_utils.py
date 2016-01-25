@@ -68,7 +68,7 @@ class TestUtils(unittest.TestCase):
         process_mock = self.make_process_mock(return_code=0)
         with patch.object(subprocess, 'Popen', return_value=process_mock):
             mode = utils.get_deployment_mode()
-            process_mock.communicate.assert_called_once_with()
+            process_mock.communicate.assert_called_once_with(input=None)
             self.assertEqual('pre', mode)
 
     def test_get_deployment_mode_post(self):
@@ -77,7 +77,7 @@ class TestUtils(unittest.TestCase):
                                               retval=(output, ''))
         with patch.object(subprocess, 'Popen', return_value=process_mock):
             mode = utils.get_deployment_mode()
-            process_mock.communicate.assert_called_once_with()
+            process_mock.communicate.assert_called_once_with(input=None)
             self.assertEqual('post', mode)
 
     @mock.patch('fuelmenu.common.utils.get_deployment_mode')
