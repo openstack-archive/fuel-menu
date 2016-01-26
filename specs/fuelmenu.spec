@@ -42,11 +42,10 @@ cd %{_builddir}/%{name}-%{version} && python setup.py build
 %install
 cd %{_builddir}/%{name}-%{version} && python setup.py install --single-version-externally-managed -O1 --root=$RPM_BUILD_ROOT --record=%{_builddir}/%{name}-%{version}/INSTALLED_FILES
 install -d -m 755 %{buildroot}/etc/fuel
-install -m 600 %{_builddir}/%{name}-%{version}/fuelmenu/settings.yaml %{buildroot}/etc/fuel/astute.yaml
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %files -f %{_builddir}/%{name}-%{version}/INSTALLED_FILES
+%dir /etc/fuel
 %defattr(-,root,root)
-%config(noreplace) /etc/fuel/astute.yaml
