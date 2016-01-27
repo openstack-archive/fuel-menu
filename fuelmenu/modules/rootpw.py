@@ -31,7 +31,7 @@ class rootpw(urwid.WidgetWrap):
         self.priority = 60
         self.visible = True
         self.parent = parent
-        #UI text
+        # UI text
         self.header_content = ["Set root user password", ""]
         self.fields = ["PASSWORD", "CONFIRM_PASSWORD"]
         self.defaults = \
@@ -50,53 +50,56 @@ class rootpw(urwid.WidgetWrap):
         """Validate that all fields have valid values and sanity checks."""
         self.parent.footer.set_text("Checking data...")
         self.parent.refreshScreen()
-        #Get field information
+        # Get field information
         responses = dict()
 
         for index, fieldname in enumerate(self.fields):
             if fieldname != "blank":
                 responses[fieldname] = self.edits[index].get_edit_text()
 
-        ###Validate each field
+        # Validate each field
         errors = []
 
-        #Passwords must match
-        if responses["PASSWORD"] != responses["CONFIRM_PASSWORD"]:
+        password = responses["PASSWORD"]
+
+        # Passwords must match
+        if password != responses["CONFIRM_PASSWORD"]:
             errors.append("Passwords do not match.")
 
-        #password must not be empty
-        if len(responses["PASSWORD"]) == 0:
-            errors.append("Password must not be empty.")
-
-        #password needs to be in ASCII character set
+        # password needs to be in ASCII character set
         try:
-            if responses["PASSWORD"].decode('ascii'):
+            if password.decode('ascii'):
                 pass
         except UnicodeDecodeError:
             errors.append("Password contains non-ASCII characters.")
 
         if len(errors) > 0:
+            self.parent.footer.set_text("Errors occurred.")
             log.error("Errors: %s %s" % (len(errors), errors))
             helper.ModuleHelper.display_failed_check_dialog(self, errors)
             return False
+
+        # check empty password
+        if len(password) == 0:
+            self.parent.footer.set_text("Password is empty, "
+                                        "no changes will be made.")
+            log.warning("Empty password, skipping.")
         else:
             self.parent.footer.set_text("No errors found.")
-            responses['HASHED_PASSWORD'] = crypt.crypt(responses["PASSWORD"],
-                                                       utils.gensalt())
-
-            return responses
+        return password
 
     def apply(self, args):
-        responses = self.check(args)
-        if responses is False:
+        password = self.check(args)
+        if password is False:
             log.error("Check failed. Not applying")
-            log.error("%s" % (responses))
-            for index, fieldname in enumerate(self.fields):
-                if fieldname == "PASSWORD":
-                    return (self.edits[index].get_edit_text() == "")
             return False
 
-        hashed = responses['HASHED_PASSWORD']
+        if len(password) > 0:
+            return self.save(password)
+        return True
+
+    def save(self, password):
+        hashed = crypt.crypt(password, utils.gensalt())
         log.info("Changing root password")
         #clear any locks first
         rm_command = ["rm", "-f", "/etc/passwd.lock", "/etc/shadow.lock"]
@@ -105,7 +108,7 @@ class rootpw(urwid.WidgetWrap):
         usermod_code, _, errout = utils.execute(usermod_command)
 
         if usermod_code == 0:
-            self.parent.footer.set_text("Changed applied successfully.")
+            self.parent.footer.set_text("Changes applied successfully.")
             log.info("Root password successfully changed.")
             # Reset fields
             self.cancel(None)
@@ -116,10 +119,10 @@ class rootpw(urwid.WidgetWrap):
                                         "for more details.")
             return False
 
-        self.save(responses)
+        self.save_settings(hashed)
         return True
 
-    def save(self, responses):
+    def save_settings(self, responses):
         bootstrap = helper.ModuleHelper.load(self)['BOOTSTRAP']
         bootstrap['hashed_root_password'] = responses['HASHED_PASSWORD']
 
