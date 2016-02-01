@@ -104,7 +104,13 @@ class bootstrapimg(urwid.WidgetWrap):
                 "type": WidgetType.TEXT_FIELD,
                 "label": "Priority",
                 "tooltip": "Repository priority"
-            }
+            },
+            "key": {
+                "type": WidgetType.TEXT_FIELD,
+                "label": "URL to the GPG public key",
+                "tooltip": "Specify a proper URL if applicable",
+                "value": "",
+            },
         }
 
         self.defaults = {
@@ -206,6 +212,7 @@ class bootstrapimg(urwid.WidgetWrap):
         for index, repo in enumerate(repos):
             name = repo['name']
             priority = repo['priority']
+            key = repo['key']
             if priority and not isinstance(priority,
                                            (types.IntType, types.NoneType)):
                 errors.append("Priority value for repository {0} should be "
@@ -223,6 +230,9 @@ class bootstrapimg(urwid.WidgetWrap):
             if not self._check_repo(repo['uri'], repo['suite'], proxies):
                 errors.append("URL for repository {0} is not accessible."
                               .format(name))
+            if key and not self.check_url(key, proxies):
+                errors.append("GPG public key for the repository {0} is not "
+                              "accessible.".format(name))
 
         return errors
 
@@ -290,6 +300,7 @@ class bootstrapimg(urwid.WidgetWrap):
         priority = repo_from_ui.get('priority')
         name = repo_from_ui.get('name')
         uri = repo_from_ui.get('uri', '')
+        key = repo_from_ui.get('key')
         try:
             priority = int(priority) if priority else None
         except (TypeError, ValueError):
@@ -309,7 +320,8 @@ class bootstrapimg(urwid.WidgetWrap):
             "uri": repo_uri,
             "priority": priority,
             "suite": repo_suite,
-            "section": repo_section
+            "section": repo_section,
+            "key": key,
         }
 
     def _parse_config_repo_entry(self, repo_from_config):
