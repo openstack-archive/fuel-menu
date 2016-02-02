@@ -229,15 +229,34 @@ class interfaces(urwid.WidgetWrap):
             return False
 
         self.parent.footer.set_text("Applying changes... (May take up to 20s)")
+
+        # Build puppet resources to apply l23network puppet module to enable
+        # network changes
         puppetclasses = []
 
-        #If there is a gateway configured in /etc/sysconfig/network, unset it
+        # FIXME(mattymo): install_bondtool param does not work (LP#1541028)
+        # The following 4 lines should be removed when fixed.
+        disable_bond = {
+            'type': "literal",
+            'name': 'K_mod <| title == "bonding" |> {ensure => absent} '}
+        puppetclasses.append(disable_bond)
+
+        # If there is a gateway configured in /etc/sysconfig/network, unset it
         expr = '^GATEWAY=.*'
         replace.replaceInFile("/etc/sysconfig/network", expr, "")
 
+        # Initialize l23network class for NetworkManager fixes
+        l23network = {'type': "resource",
+                      'class': "class",
+                      'name': "l23network",
+                      'params': {'install_bondtool': False}}
+        puppetclasses.append(l23network)
+
+        # Prepare l23network interface configuration
         l3ifconfig = {'type': "resource",
                       'class': "l23network::l3::ifconfig",
                       'name': self.activeiface}
+
         if responses["onboot"].lower() == "no":
             params = {"ipaddr": "none",
                       "gateway": ""}
