@@ -231,6 +231,18 @@ class interfaces(urwid.WidgetWrap):
         self.parent.footer.set_text("Applying changes... (May take up to 20s)")
         puppetclasses = []
 
+        #FIXME(mattymo): install_bondtool param does not work (LP#1541028)
+        disable_bond = {
+            'type': "literal",
+            'name': 'K_mod <| title == "bonding" |> {ensure => absent} '}
+        puppetclasses.append(disable_bond)
+
+        l23network = {'type': "resource",
+                      'class': "class",
+                      'name': "l23network",
+                      'params': {'install_bondtool': False}}
+        puppetclasses.append(l23network)
+
         #If there is a gateway configured in /etc/sysconfig/network, unset it
         expr = '^GATEWAY=.*'
         replace.replaceInFile("/etc/sysconfig/network", expr, "")
