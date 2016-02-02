@@ -25,7 +25,6 @@ import netaddr
 import os
 import re
 import socket
-import subprocess
 import urwid
 import urwid.raw_display
 import urwid.web_display
@@ -365,16 +364,10 @@ is accessible"}
         #Note: Python's internal resolver caches negative answers.
         #Therefore, we should call dig externally to be sure.
 
-        noout = open('/dev/null', 'w')
-        dns_works = subprocess.call(["dig", "+short", "+time=3",
-                                     "+retries=1",
-                                     self.defaults["TEST_DNS"]['value'],
-                                     "@%s" % server], stdout=noout,
-                                    stderr=noout)
-        if dns_works != 0:
-            return False
-        else:
-            return True
+        command = ["dig", "+short", "+time=3", "+retries=1",
+                   self.defaults["TEST_DNS"]['value'], "@{0}".format(server)]
+        code, _, _ = utils.execute(command)
+        return code == 0
 
     def getNetwork(self):
         ModuleHelper.getNetwork(self)
