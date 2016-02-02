@@ -28,7 +28,10 @@ def puppetApply(classes):
                "/var/log/puppet/fuelmenu-puppet.log"]
     input = []
     for cls in classes:
-        if cls['type'] == "resource":
+        if cls['type'] == "literal":
+            input.extend(cls["name"])
+            continue
+        elif cls['type'] == "resource":
             input.extend([cls["class"], "{", '"%s":' % cls["name"]])
         elif cls['type'] == "class":
             input.extend(["class", "{", '"%s":' % cls["class"]])
