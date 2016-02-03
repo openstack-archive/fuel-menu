@@ -169,7 +169,7 @@ class restore(urwid.WidgetWrap):
         responses = self.check(args)
         if responses is None:
             self.parent.footer.set_text("Nothing to restore, skipping.")
-            return False
+            return True
         elif not responses:
             msg = "Checking failed. Not applying."
             LOG.error(msg)
