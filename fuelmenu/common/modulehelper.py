@@ -125,7 +125,7 @@ class ModuleHelper(object):
         return newsettings
 
     @classmethod
-    def cancel(cls, modobj, button=None):
+    def cancel(cls, modobj, *_):
         for index, fieldname in enumerate(modobj.fields):
             if fieldname != BLANK_KEY and "label" not in fieldname:
                 try:
@@ -133,7 +133,7 @@ class ModuleHelper(object):
                         modobj.defaults[fieldname][
                             'value'])
                 except AttributeError:
-                    log.warning("Field %s unable to reset text" % fieldname)
+                    log.warning("Field %s unable to reset text", fieldname)
 
     @classmethod
     def display_dialog(cls, modobj, error_msg, title):
@@ -199,7 +199,7 @@ class ModuleHelper(object):
             object_size = 0
             object_fields = []
             for key in sorted(scheme.keys()):
-                data = scheme[key]
+                data = dict(scheme[key])
                 data["value"] = e.get(key, "")
                 new_widget = cls._create_widget(key, data, toolbar)
                 object_fields.append(new_widget)
@@ -250,48 +250,56 @@ class ModuleHelper(object):
                                     tooltip=tooltip, toolbar=toolbar,
                                     ispassword=ispassword)
 
+    @staticmethod
+    def _get_header_content(header_text):
+        def _convert(text):
+            if isinstance(text, six.string_types):
+                return urwid.Text(text)
+            return text
+
+        return [_convert(text) for text in header_text]
+
     @classmethod
-    def screenUI(cls, modobj, headertext, fields, defaults,
-                 showallbuttons=False, buttons_visible=True):
+    def _get_edits(cls, toolbar, fields, defaults):
+        return [cls._create_widget(key, defaults.get(key, {}), toolbar)
+                for key in fields]
 
-        log.debug("Preparing screen UI for %s" % modobj.name)
+    @staticmethod
+    def _get_check_column(modobj, show_all_buttons):
+        # Button to check
+        button_check = widget.Button("Check", modobj.check)
+
+        if modobj.parent.globalsave and show_all_buttons is False:
+            return widget.Columns([button_check])
+
+        # Button to revert to previously saved settings
+        button_cancel = widget.Button("Cancel", modobj.cancel)
+        # Button to apply (and check again)
+        button_apply = widget.Button("Apply", modobj.apply)
+
+        return widget.Columns([
+            button_check, button_cancel,
+            button_apply, ('weight', 2, blank)])
+
+    @classmethod
+    def screenUI(cls, modobj, header_text, fields, defaults,
+                 show_all_buttons=False, buttons_visible=True):
+
+        log.debug("Preparing screen UI for %s", modobj.name)
+
         # Define text labels, text fields, and buttons first
-        header_content = []
-        for text in headertext:
-            if isinstance(text, str):
-                header_content.append(urwid.Text(text))
-            else:
-                header_content.append(text)
+        listbox_content = cls._get_header_content(header_text)
 
-        edits = []
-        toolbar = modobj.parent.footer
-        for key in fields:
-            edits.append(cls._create_widget(key,
-                                            defaults.get(key, {}),
-                                            toolbar))
+        edits = cls._get_edits(modobj.parent.footer, fields, defaults)
 
-        listbox_content = []
-        listbox_content.extend(header_content)
         listbox_content.append(blank)
         listbox_content.extend(edits)
         listbox_content.append(blank)
 
         # Wrap buttons into Columns so it doesn't expand and look ugly
         if buttons_visible:
-            # Button to check
-            button_check = widget.Button("Check", modobj.check)
-            # Button to revert to previously saved settings
-            button_cancel = widget.Button("Cancel", modobj.cancel)
-            # Button to apply (and check again)
-            button_apply = widget.Button("Apply", modobj.apply)
-
-            if modobj.parent.globalsave and showallbuttons is False:
-                check_col = widget.Columns([button_check])
-            else:
-                check_col = widget.Columns([button_check, button_cancel,
-                                            button_apply,
-                                            ('weight', 2, blank)])
-            listbox_content.append(check_col)
+            listbox_content.append(cls._get_check_column(
+                modobj, show_all_buttons))
 
         # Add everything into a ListBox and return it
         listwalker = widget.TabbedListWalker(listbox_content)
@@ -301,49 +309,60 @@ class ModuleHelper(object):
         modobj.listbox_content = listbox_content
         return screen
 
+    @staticmethod
+    def _get_iface_info(iface, address_family):
+        return netifaces.ifaddresses(iface)[address_family][0]
+
+    @staticmethod
+    def _get_iface_settings(iface):
+        try:
+            settings = ModuleHelper._get_iface_info(iface, netifaces.AF_INET)
+            settings["onboot"] = "Yes"
+        except (TypeError, KeyError):
+            settings = {"addr": "", "netmask": "", "onboot": "no"}
+
+        settings['mac'] = ModuleHelper._get_iface_info(
+            iface, netifaces.AF_LINK)['addr']
+        return settings
+
+    @staticmethod
+    def _get_link_state(iface, addr):
+        try:
+            with open("/sys/class/net/%s/operstate" % iface) as f:
+                arr = f.readlines()
+                return arr[0].strip()
+        except IOError:
+            log.warning("Unable to read operstate file for %s", iface)
+            # if interface has an IP then it is up
+            return "unknown" if addr == "" else "up"
+
+    @staticmethod
+    def _get_boot_proto(iface, dhcp_exists):
+        proto = "none"
+        try:
+            with open("/etc/sysconfig/network-scripts/ifcfg-%s" % iface) as fh:
+                for line in fh:
+                    if re.match("^BOOTPROTO=", line):
+                        proto = line.split('=')[1].strip()
+        except Exception:
+            pass
+        return "dhcp" if proto == "none" and dhcp_exists else proto
+
+    @classmethod
+    def _get_net(cls, iface, dhcp_exists):
+        net = cls._get_iface_settings(iface)
+        net['link'] = cls._get_link_state(iface, net["addr"])
+        net['bootproto'] = cls._get_boot_proto(iface, dhcp_exists)
+        return net
+
     @classmethod
     def getNetwork(cls, modobj):
         """Returns addr, broadcast, netmask for each network interface."""
         for iface in network.get_physical_ifaces():
-            try:
-                modobj.netsettings.update({iface: netifaces.ifaddresses(iface)[
-                    netifaces.AF_INET][0]})
-                modobj.netsettings[iface]["onboot"] = "Yes"
-            except (TypeError, KeyError):
-                modobj.netsettings.update({iface: {"addr": "", "netmask": "",
-                                                   "onboot": "no"}})
-            modobj.netsettings[iface]['mac'] = netifaces.ifaddresses(iface)[
-                netifaces.AF_LINK][0]['addr']
-
-            # Set link state
-            try:
-                with open("/sys/class/net/%s/operstate" % iface) as f:
-                    content = f.readlines()
-                    modobj.netsettings[iface]["link"] = content[0].strip()
-            except IOError:
-                log.warning("Unable to read operstate file for %s" % iface)
-                modobj.netsettings[iface]["link"] = "unknown"
-            # Change unknown link state to up if interface has an IP
-            if modobj.netsettings[iface]["link"] == "unknown":
-                if modobj.netsettings[iface]["addr"] != "":
-                    modobj.netsettings[iface]["link"] = "up"
-
-            # Read bootproto from /etc/sysconfig/network-scripts/ifcfg-DEV
-            modobj.netsettings[iface]['bootproto'] = "none"
-            try:
-                with open("/etc/sysconfig/network-scripts/ifcfg-%s" % iface) \
-                        as fh:
-                    for line in fh:
-                        if re.match("^BOOTPROTO=", line):
-                            modobj.netsettings[iface]['bootproto'] = \
-                                line.split('=')[1].strip()
-                            break
-            except Exception:
-                # Check for dhclient process running for this interface
-                if modobj.getDHCP(iface):
-                    modobj.netsettings[iface]['bootproto'] = "dhcp"
-                else:
-                    modobj.netsettings[iface]['bootproto'] = "none"
+            dhcp_exists = modobj.getDHCP(iface)
+            modobj.netsettings.update(
+                {iface: cls._get_net(iface, dhcp_exists)}
+            )
         modobj.gateway = modobj.get_default_gateway_linux()
 
     @classmethod
