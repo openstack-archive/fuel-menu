@@ -18,7 +18,6 @@ FUEL_ACCESS:
   user: "admin"
   password: "admin"
 BOOTSTRAP:
-  flavor: "ubuntu"
   http_proxy: ""
   https_proxy: ""
   repos:
