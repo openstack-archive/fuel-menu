@@ -11,14 +11,19 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+import logging
+import random as _random
+import string
+import subprocess
+
+from copy import deepcopy
 
 from fuelmenu import consts
 
-from copy import deepcopy
-import logging
-import subprocess
 
 log = logging.getLogger('fuelmenu.common.utils')
+random = _random.SystemRandom()
+
 try:
     from collections import OrderedDict
 except ImportError:
@@ -113,3 +118,11 @@ def execute(command, stdin=None, shell=False):
     code = proc.poll()
     log.debug('Command executed with exit code: {0}'.format(str(code)))
     return code, out, err
+
+
+def gensalt():
+    """Generate SHA-512 salt for crypt.crypt function."""
+    letters = string.ascii_letters + string.digits + './'
+    sha512prefix = "$6$"
+    random_letters = ''.join(random.choice(letters) for _ in range(16))
+    return sha512prefix + random_letters
