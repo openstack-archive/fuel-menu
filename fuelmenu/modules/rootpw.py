@@ -16,6 +16,8 @@
 import crypt
 from fuelmenu.common.modulehelper import ModuleHelper
 from fuelmenu.common import utils
+from fuelmenu.settings import Settings
+
 import logging
 import urwid
 
@@ -79,6 +81,9 @@ class rootpw(urwid.WidgetWrap):
             return False
         else:
             self.parent.footer.set_text("No errors found.")
+            responses['HASHED_PASSWORD'] = crypt.crypt(responses["PASSWORD"],
+                                                       utils.gensalt())
+
             return responses
 
     def apply(self, args):
@@ -91,7 +96,7 @@ class rootpw(urwid.WidgetWrap):
                     return (self.edits[index].get_edit_text() == "")
             return False
 
-        hashed = crypt.crypt(responses["PASSWORD"])
+        hashed = responses['HASHED_PASSWORD']
         log.info("Changing root password")
         #clear any locks first
         rm_command = ["rm", "-f", "/etc/passwd.lock", "/etc/shadow.lock"]
@@ -110,7 +115,17 @@ class rootpw(urwid.WidgetWrap):
             self.parent.footer.set_text("Unable to apply changes. Check logs "
                                         "for more details.")
             return False
+
+        self.save(responses)
         return True
+
+    def save(self, responses):
+        bootstrap = ModuleHelper.load(self)['BOOTSTRAP']
+        bootstrap['hashed_root_password'] = responses['HASHED_PASSWORD']
+
+        Settings().write({'BOOTSTRAP': bootstrap},
+                         defaultsfile=self.parent.defaultsettingsfile,
+                         outfn=self.parent.settingsfile)
 
     def cancel(self, button):
         ModuleHelper.cancel(self, button)
