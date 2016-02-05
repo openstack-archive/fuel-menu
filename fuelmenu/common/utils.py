@@ -11,14 +11,18 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+import copy
+import logging
+import random as _random
+import string
+import subprocess
 
 from fuelmenu import consts
 
-from copy import deepcopy
-import logging
-import subprocess
 
 log = logging.getLogger('fuelmenu.common.utils')
+random = _random.SystemRandom()
+
 try:
     from collections import OrderedDict
 except ImportError:
@@ -44,14 +48,14 @@ def dict_merge(a, b):
     if not isinstance(a, (dict, OrderedDict)):
         raise TypeError('First parameter is not a dict')
 
-    result = deepcopy(a)
+    result = copy.deepcopy(a)
     try:
         for k, v in b.iteritems():
             if k in result and isinstance(result[k],
                                           (dict, OrderedDict)):
                 result[k] = dict_merge(result[k], v)
             else:
-                result[k] = deepcopy(v)
+                result[k] = copy.deepcopy(v)
     except AttributeError:
         #Non-iterable objects should be just returned
         return b
@@ -113,3 +117,11 @@ def execute(command, stdin=None, shell=False):
     code = proc.poll()
     log.debug('Command executed with exit code: {0}'.format(str(code)))
     return code, out, err
+
+
+def gensalt():
+    """Generate SHA-512 salt for crypt.crypt function."""
+    letters = string.ascii_letters + string.digits + './'
+    sha512prefix = "$6$"
+    random_letters = ''.join(random.choice(letters) for _ in range(16))
+    return sha512prefix + random_letters
