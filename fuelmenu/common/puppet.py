@@ -30,7 +30,7 @@ def puppetApply(classes):
     # TODO(mattymo): Convert puppet resource types to consts
     for cls in classes:
         if cls['type'] == "literal":
-            input.extend(cls["name"])
+            input.append(cls["name"])
             continue
         elif cls['type'] == "resource":
             input.extend([cls["class"], "{", '"%s":' % cls["name"]])
