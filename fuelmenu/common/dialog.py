@@ -14,6 +14,7 @@
 # under the License.
 
 import fuelmenu.common.urwidwrapper as widget
+import six
 import urwid
 import urwid.raw_display
 import urwid.web_display
@@ -25,13 +26,13 @@ class ModalDialog(urwid.WidgetWrap):
 
     title = None
 
-    def __init__(self, title, body, escape_key, previous_widget, loop=None):
+    def __init__(self, title, body, escape_key, previous_widget, loop):
         self.escape_key = escape_key
         self.previous_widget = previous_widget
         self.keep_open = True
         self.loop = loop
 
-        if type(body) in [str, unicode]:
+        if isinstance(body, six.string_types):
             body = urwid.Text(body)
         self.title = title
         bodybox = urwid.LineBox(urwid.Pile([body, blank,
@@ -42,7 +43,7 @@ class ModalDialog(urwid.WidgetWrap):
         overlay_attrmap = urwid.AttrMap(overlay, "body")
         super(ModalDialog, self).__init__(overlay_attrmap)
 
-    def close(self, arg):
+    def close(self, _):
         urwid.emit_signal(self, "close")
         self.keep_open = False
         self.loop.widget = self.previous_widget
@@ -56,6 +57,6 @@ def display_dialog(self, body, title, escape_key="esc"):
         filler = urwid.Pile([body])
         dialog = ModalDialog(title, filler, escape_key,
                              self.parent.mainloop.widget,
-                             loop=self.parent.mainloop)
+                             self.parent.mainloop)
         self.parent.mainloop.widget = dialog
         return dialog
