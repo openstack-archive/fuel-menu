@@ -1,4 +1,6 @@
-#    Copyright 2013 Mirantis, Inc.
+# -*- coding: utf-8 -*-
+
+#    Copyright 2016 Mirantis, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -12,14 +14,23 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import random
 import string
+import unittest
+
+from fuelmenu.common import pwgen
 
 
-def password(arg=None):
-    try:
-        length = int(arg)
-    except Exception:
-        length = 8
-    chars = string.letters + string.digits
-    return ''.join([random.choice(chars) for _ in xrange(length)])
+class TestPassword(unittest.TestCase):
+    def test_password(self):
+        chars = string.letters + string.digits
+        cases = [
+            ('10', 10),
+            (None, 8),
+            ('test', 8)
+        ]
+
+        for arg, length in cases:
+            result = pwgen.password(arg)
+            for char in result:
+                self.assertIn(char, chars)
+            self.assertEqual(len(result), length)
