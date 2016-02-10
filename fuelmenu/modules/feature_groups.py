@@ -41,7 +41,6 @@ class feature_groups(urwid.WidgetWrap):
         self.fields = (
             "FEATURE_GROUPS/experimental",
             "FEATURE_GROUPS/advanced",
-            "FEATURE_GROUPS/mirantis",
         )
         self.defaults = {
             "FEATURE_GROUPS/experimental": {
@@ -51,11 +50,6 @@ class feature_groups(urwid.WidgetWrap):
             },
             "FEATURE_GROUPS/advanced": {
                 "label": "Advanced features",
-                "tooltip": "",
-                "type": WidgetType.CHECKBOX,
-            },
-            "FEATURE_GROUPS/mirantis": {
-                "label": "Mirantis features",
                 "tooltip": "",
                 "type": WidgetType.CHECKBOX,
             }
