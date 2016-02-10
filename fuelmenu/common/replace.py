@@ -12,12 +12,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import re
+from fuelmenu.common.utils import execute
+import logging
 
 
 def replaceInFile(filename, orig, new):
-    lines = open(filename).readlines()
-    for lineno, line in enumerate(lines):
-        lines[lineno] = re.sub(orig, new, line)
-    with open(filename, 'w') as f:
-        f.write("".join(lines))
+    code, _, err = execute(
+        ['sed', 's/{0}/{1}/g'.format(orig, new), '-i', filename])
+    if code != 0:
+        logging.error('Replacing in file failed. Exit code: %d. '
+                      'Error: %s', code, err)
