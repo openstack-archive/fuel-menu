@@ -13,7 +13,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import collections
 import logging
 import os
 
@@ -91,7 +90,7 @@ class restore(urwid.WidgetWrap):
             },
         }
 
-        self.oldsettings = self.load()
+        self.load()
 
     def cancel(self, button):
         helper.ModuleHelper.cancel(self, button)
@@ -101,7 +100,7 @@ class restore(urwid.WidgetWrap):
 
     def check_settings(self, settings):
         required_keys = []
-        responses = collections.OrderedDict()
+        responses = settings_utils.Settings()
         for key, subkeys in KEYS_TO_RESTORE:
             if key not in settings:
                 if subkeys:
@@ -139,8 +138,8 @@ class restore(urwid.WidgetWrap):
 
         path = os.path.abspath(path)
         try:
-            with open(path) as f:
-                settings = yaml.load(f)
+            settings = settings_utils.Settings()
+            settings.load(path)
         except IOError as err:
             self.show_error_msg("Could not fetch settings: {0}".format(err),
                                 exc_info=True)
@@ -181,22 +180,11 @@ class restore(urwid.WidgetWrap):
         return True
 
     def load(self):
-        return helper.ModuleHelper.load(self, ignoredparams=('PATH',))
+        helper.ModuleHelper.load_to_defaults(
+            self.parent.settings, self.defaults, ignoredparams=('PATH',))
 
     def save(self, responses):
-        newsettings = helper.ModuleHelper.save(self, responses)
-        # TODO(akscram): The restore module writes settings itself into
-        #                the configuration file and requires from the
-        #                user to exit from the menu without saving
-        #                changes. It is a necessary requirement due to
-        #                the limitations of fuel menu. For more
-        #                information see the bug report
-        #                https://bugs.launchpad.net/fuel/+bug/1527111.
-        settings_utils.Settings().write(
-            newsettings,
-            defaultsfile=self.parent.defaultsettingsfile,
-            outfn=self.parent.settingsfile)
-        self.oldsettings = newsettings
+        self.parent.settings.merge(responses)
 
     def screenUI(self):
         return helper.ModuleHelper.screenUI(
