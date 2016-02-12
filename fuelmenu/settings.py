@@ -13,6 +13,7 @@
 # under the License.
 
 import collections
+import copy
 import logging
 from string import Template
 
@@ -23,6 +24,8 @@ except Exception:
     from ordereddict import OrderedDict
 
 import yaml
+
+log = logging.getLogger('fuelmenu.settings')
 
 
 def construct_ordered_mapping(self, node, deep=False):
@@ -76,29 +79,74 @@ def represent_ordered_mapping(self, tag, mapping, flow_style=None):
         else:
             node.flow_style = best_style
     return node
+
+# Settings object is the instance of OrderedDict, so multi_representer
+# of OrderedDict can handle both types (OrderedDict and Settings)
+yaml.representer.Representer.add_multi_representer(
+    OrderedDict, yaml.representer.SafeRepresenter.represent_dict)
 yaml.representer.BaseRepresenter.represent_mapping = represent_ordered_mapping
-yaml.representer.Representer.add_representer(OrderedDict, yaml.representer.
-                                             SafeRepresenter.represent_dict)
 
 
-class Settings(object):
-    def read(self, yamlfile, template_kwargs=None):
+def dict_merge(a, b):
+    """Recursively merges values in dicts from b into a
+
+    All values in b override a, even if b is not a dict:
+    Example:
+    x = {'a': {'b' : 'val'}}
+    y = {'a': 'notval'}
+    z = {'z': None}
+    dict_merge(x, y) returns {'a': 'notval'}
+    dict_merge(x, z) returns {'a': {'b': 'val'}, {'z': None}}
+    dict_merge(z, x) returns {'z': None, 'a': {'b': 'val'}}
+
+    :param a: the first dict
+    :param b: any value
+    :returns: resulting value of b merged into a, with b taking precedence
+    """
+    if not isinstance(a, (dict, OrderedDict)):
+        raise TypeError('First parameter is not a dict')
+
+    result = copy.deepcopy(a)
+    try:
+        for k, v in b.iteritems():
+            if k in result and isinstance(result[k],
+                                          (dict, OrderedDict)):
+                result[k] = dict_merge(result[k], v)
+            else:
+                result[k] = copy.deepcopy(v)
+    except AttributeError:
+        # Non-iterable objects should be just returned
+        return b
+    return result
+
+
+class Settings(OrderedDict):
+    def load(self, settings_file, template_kwargs=None):
+        """Load setting from file and merge them to existing object
+
+        settings_file: path to setings.yaml file
+
+        template_kwargs: dict with parameters that will be placed
+        instead labeles in settings file before yaml parsing
+        """
         try:
-            with open(yamlfile) as infile:
+            with open(settings_file) as infile:
                 settings = yaml.load(Template(
                     infile.read()).safe_substitute(template_kwargs or {}))
-            return settings or OrderedDict()
-        except Exception:
-            if yamlfile is not None:
-                logging.error("Unable to read YAML: %s", yamlfile)
-            return OrderedDict()
 
-    def write(self, newvalues, tree=None, defaultsfile='settings.yaml',
-              outfn='mysettings.yaml'):
-        settings = self.read(defaultsfile)
-        settings.update(self.read(outfn))
-        settings.update(newvalues)
+                self.merge(settings)
+        except Exception:
+            log.error("Unable to read YAML: %s", settings_file)
+
+        return self
+
+    def write(self, outfn='mysettings.yaml'):
+        """Write settings to file."""
         with open(outfn, 'w') as outfile:
-            yaml.dump(settings, outfile, default_style='"',
+            yaml.dump(self, outfile, default_style='"',
                       default_flow_style=False)
-        return True
+            return True
+
+    def merge(self, other):
+        """Merge this settings object with other."""
+        self.update(dict_merge(self, other))
