@@ -23,39 +23,6 @@ import unittest
 
 
 class TestUtils(unittest.TestCase):
-
-    def test_dict_merge_simple(self):
-        a = {'a': 1}
-        b = {'b': 2}
-        data = utils.dict_merge(a, b)
-        self.assertEqual({'a': 1, 'b': 2}, data)
-
-    def test_dict_merge_intended_behavior(self):
-        """If b is not a dict, it is the result."""
-
-        a = {'a': 1}
-        b = None
-        data = utils.dict_merge(a, b)
-        self.assertEqual(None, data)
-
-    def test_dict_merge_bad_data(self):
-        """If a is not a dict, it should raise TypeError."""
-        a = {'a': 1}
-        b = None
-        c = 1
-        d = (1, 2, 3)
-        e = set(['A', 'B', 'C'])
-        self.assertRaises(TypeError, utils.dict_merge, b, a)
-        self.assertRaises(TypeError, utils.dict_merge, c, a)
-        self.assertRaises(TypeError, utils.dict_merge, d, a)
-        self.assertRaises(TypeError, utils.dict_merge, e, a)
-
-    def test_dict_merge_override(self):
-        a = {'a': {'c': 'val'}}
-        b = {'b': 2, 'a': 'notval'}
-        data = utils.dict_merge(a, b)
-        self.assertEqual({'a': 'notval', 'b': 2}, data)
-
     def make_process_mock(self, return_code=0, retval=('stdout', 'stderr')):
         process_mock = mock.Mock(
             communicate=mock.Mock(return_value=retval))
