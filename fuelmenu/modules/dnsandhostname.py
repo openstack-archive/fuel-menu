@@ -19,7 +19,7 @@ from fuelmenu.common import network
 from fuelmenu.common import replace
 import fuelmenu.common.urwidwrapper as widget
 from fuelmenu.common import utils
-from fuelmenu.settings import Settings
+
 import logging
 import netaddr
 import os
@@ -73,7 +73,7 @@ DNS (space separated)",
 is accessible"}
             }
 
-        self.oldsettings = self.load()
+        self.load()
         self.screen = None
         self.fixEtcHosts()
 
@@ -226,7 +226,7 @@ is accessible"}
                 if "localhost" in line:
                     etchosts.write(line)
                 elif responses["HOSTNAME"] in line \
-                        or self.oldsettings["HOSTNAME"] \
+                        or self.parent.settings["HOSTNAME"] \
                         or self.netsettings[self.parent.managediface]['addr'] \
                         in line:
                     continue
@@ -276,7 +276,7 @@ is accessible"}
         # Precedence of DNS information:
         # Class defaults, fuelmenu default YAML, astute.yaml, uname,
         # /etc/resolv.conf
-        oldsettings = ModuleHelper.load(self, ignoredparams=['TEST_DNS'])
+        oldsettings = self.parent.settings
 
         #Read hostname from uname
         try:
@@ -296,17 +296,9 @@ is accessible"}
         if nameservers:
             oldsettings["DNS_UPSTREAM"] = nameservers
 
-        for setting in self.defaults.keys():
-            try:
-                if "/" in setting:
-                    part1, part2 = setting.split("/")
-                    self.defaults[setting]["value"] = oldsettings[part1][part2]
-                else:
-                    self.defaults[setting]["value"] = oldsettings[setting]
-            except Exception:
-                log.warning("No setting named %s found." % setting)
-                continue
-        return oldsettings
+        ModuleHelper.load_to_defaults(oldsettings,
+                                      self.defaults,
+                                      ignoredparams=['TEST_DNS'])
 
     def getDNS(self, resolver="/etc/resolv.conf"):
         nameservers = []
@@ -335,26 +327,9 @@ is accessible"}
         return searches, domain, ",".join(nameservers)
 
     def save(self, responses):
-        ## Generic settings start ##
-        newsettings = dict()
-        for setting in responses.keys():
-            if "/" in setting:
-                part1, part2 = setting.split("/")
-                if part1 not in newsettings:
-                #We may not touch all settings, so copy oldsettings first
-                    newsettings[part1] = self.oldsettings[part1]
-                newsettings[part1][part2] = responses[setting]
-            else:
-                newsettings[setting] = responses[setting]
-        ## Generic settings end ##
+        newsettings = ModuleHelper.make_settings_from_response(self, responses)
+        self.parent.settings.merge(newsettings)
 
-        #log.debug(str(newsettings))
-        Settings().write(newsettings,
-                         defaultsfile=self.parent.defaultsettingsfile,
-                         outfn=self.parent.settingsfile)
-
-        #Set oldsettings to reflect new settings
-        self.oldsettings = newsettings
         #Update self.defaults
         for index, fieldname in enumerate(self.fields):
             if fieldname != "blank":

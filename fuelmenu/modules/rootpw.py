@@ -120,13 +120,10 @@ class rootpw(urwid.WidgetWrap):
         return True
 
     def save(self, responses):
-        bootstrap = helper.ModuleHelper.load(self)['BOOTSTRAP']
-        bootstrap['hashed_root_password'] = responses['HASHED_PASSWORD']
-
-        settings_module.Settings().write(
-            {'BOOTSTRAP': bootstrap},
-            defaultsfile=self.parent.defaultsettingsfile,
-            outfn=self.parent.settingsfile)
+        newsettings = {'BOOTSTRAP': {
+            'hashed_root_password': responses['HASHED_PASSWORD'],
+        }}
+        self.parent.settings.merge(newsettings)
 
     def cancel(self, button):
         helper.ModuleHelper.cancel(self, button)
