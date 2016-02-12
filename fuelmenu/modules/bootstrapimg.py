@@ -27,7 +27,6 @@ from fuelmenu.common.modulehelper import BLANK_KEY
 from fuelmenu.common.modulehelper import ModuleHelper
 from fuelmenu.common.modulehelper import WidgetType
 from fuelmenu.common import utils
-from fuelmenu.settings import Settings
 
 log = logging.getLogger('fuelmenu.mirrors')
 blank = urwid.Divider()
@@ -49,7 +48,8 @@ class bootstrapimg(urwid.WidgetWrap):
         self.priority = 55
         self.visible = True
         self.parent = parent
-        self._mos_version = None
+        self._bootstrap_flavor = None
+        self._flavors = Flavors()
 
         # UI Text
         self.header_content = ["Bootstrap image configuration"]
@@ -117,14 +117,8 @@ class bootstrapimg(urwid.WidgetWrap):
                 "callback": self.add_repo
             }
         }
-        self.oldsettings = self.load()
+        self.load()
         self.screen = None
-
-    @property
-    def mos_version(self):
-        if not self._mos_version:
-            self._mos_version = utils.get_fuel_version()
-        return self._mos_version
 
     @property
     def responses(self):
@@ -311,7 +305,6 @@ class bootstrapimg(urwid.WidgetWrap):
         return repos_for_ui
 
     def add_repo(self, data=None):
-
         defaults = self._get_fresh_defaults()
         repo_list = defaults[BOOTSTRAP_REPOS_KEY]['value']
         repo_list.append(
@@ -335,38 +328,19 @@ class bootstrapimg(urwid.WidgetWrap):
                 log.warning("unexpected error: {0}".format(e))
 
     def load(self):
-        # Read in yaml
-        default_settings = Settings().read(
-            self.parent.defaultsettingsfile,
-            template_kwargs={"mos_version": self.mos_version})
-        settings = default_settings
-        settings.update(Settings().read(self.parent.settingsfile))
+        settings = self.parent.settings
+        ModuleHelper.load_to_defaults(settings, self.defaults)
 
         self._update_defaults(self.defaults, settings)
         self._select_fields_to_show(self.defaults)
-        return settings
-
-    def _make_settings_from_responses(self, responses):
-        settings = dict()
-        for setting in responses:
-            new_value = responses[setting]
-            ModuleHelper.set_setting(settings, setting, new_value,
-                                     self.oldsettings)
-        return settings
+        self._ui_set_bootstrap_flavor()
 
     def save(self, responses):
+        newsettings = ModuleHelper.make_settings_from_response(self, responses)
+        self.parent.settings.merge(newsettings)
 
-        newsettings = self._make_settings_from_responses(responses)
-
-        Settings().write(newsettings,
-                         defaultsfile=self.parent.defaultsettingsfile,
-                         outfn=self.parent.settingsfile)
-
-        # Set oldsettings to reflect new settings
-        self.oldsettings = newsettings
         # Update self.defaults
-
-        self._update_defaults(self.defaults, newsettings)
+        self._update_defaults(self.defaults, self.parent.settings)
 
     def check_url(self, url, proxies):
         try:
@@ -401,8 +375,8 @@ class bootstrapimg(urwid.WidgetWrap):
     def _get_fresh_defaults(self):
         defaults = copy.copy(self.defaults)
         self._update_defaults(defaults,
-                              self._make_settings_from_responses(
-                                  self.responses))
+                              ModuleHelper.make_settings_from_responses(
+                                  self, self.responses))
         return defaults
 
     def _redraw_screen(self, defaults=None, focus_position=None):

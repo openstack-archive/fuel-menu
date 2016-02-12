@@ -14,39 +14,102 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-try:
-    from collections import OrderedDict
-except Exception:
-    # python 2.6 or earlier use backport
-    from ordereddict import OrderedDict
+import os
+import shutil
+import tempfile
+import unittest
+
 import mock
+import yaml
 
-from fuelmenu import settings
+from fuelmenu import settings as settings_module
 
 
-def test_read_settings(tmpdir):
-    yaml_file = tmpdir.join("yamlfile.yaml")
-    yaml_file.write("""
+class TestDictMege(unittest.TestCase):
+    def test_dict_merge_simple(self):
+        a = {'a': 1}
+        b = {'b': 2}
+        data = settings_module.dict_merge(a, b)
+        self.assertEqual({'a': 1, 'b': 2}, data)
+
+    def test_dict_merge_intended_behavior(self):
+        """If b is not a dict, it is the result."""
+
+        a = {'a': 1}
+        b = None
+        data = settings_module.dict_merge(a, b)
+        self.assertEqual(None, data)
+
+    def test_dict_merge_bad_data(self):
+        """If a is not a dict, it should raise TypeError."""
+        a = {'a': 1}
+        b = None
+        c = 1
+        d = (1, 2, 3)
+        e = set(['A', 'B', 'C'])
+        self.assertRaises(TypeError, settings_module.dict_merge, b, a)
+        self.assertRaises(TypeError, settings_module.dict_merge, c, a)
+        self.assertRaises(TypeError, settings_module.dict_merge, d, a)
+        self.assertRaises(TypeError, settings_module.dict_merge, e, a)
+
+    def test_dict_merge_override(self):
+        a = {'a': {'c': 'val'}}
+        b = {'b': 2, 'a': 'notval'}
+        data = settings_module.dict_merge(a, b)
+        self.assertEqual({'a': 'notval', 'b': 2}, data)
+
+
+class TestSettings(unittest.TestCase):
+    def setUp(self):
+        self.directory = tempfile.mkdtemp()
+
+        yaml_file = os.path.join(self.directory, "__yamlfile.yaml")
+        open(yaml_file, 'w').write("""
 sample:
-    - one
-    - a: b
-      c: d
+  one:
+    a: b
+    c: d
 """)
-    data = settings.Settings().read(yaml_file.strpath)
-    assert data == {
-        'sample': [
-            'one',
-            {
-                'a': 'b',
-                'c': 'd',
+        self.settings = settings_module.Settings()
+        self.settings.load(yaml_file)
+
+    def tearDown(self):
+        shutil.rmtree(self.directory, ignore_errors=True)
+
+    def test_read_settings(self):
+        self.assertEqual(self.settings, {
+            'sample': {
+                'one': {
+                    'a': 'b',
+                    'c': 'd',
+                }
             }
-        ]
-    }
-    assert isinstance(data, OrderedDict)
+        })
 
+    def test_merge_settings(self):
+        yaml_file = os.path.join(self.directory, "yamlfile.yaml")
+        open(yaml_file, 'w').write("""{sample: {one: {a: 666}}}""")
 
-@mock.patch('fuelmenu.settings.file', side_effect=Exception('Error'))
-def test_read_settings_with_error(_):
-    data = settings.Settings().read('some_path')
-    assert data == {}
-    assert isinstance(data, OrderedDict)
+        self.settings.load(yaml_file)
+
+        self.assertEqual(self.settings, {
+            'sample': {
+                'one': {
+                    'a': 666,
+                    'c': 'd',
+                }
+            }
+        })
+
+    @mock.patch('fuelmenu.settings.open', side_effect=Exception('Error'))
+    def test_read_settings_with_error(self, _):
+        data = settings_module.Settings()
+        data.load('some_path')
+        self.assertEqual(data, {})
+
+    def test_write_settings(self):
+        outfile = os.path.join(self.directory, 'out.yaml')
+        self.settings.write(outfile)
+
+        self.assertTrue(os.path.exists(outfile))
+        self.assertTrue(yaml.load(open(outfile)))

@@ -20,7 +20,6 @@ from fuelmenu.common.modulehelper import WidgetType
 from fuelmenu.common import network
 import fuelmenu.common.urwidwrapper as widget
 from fuelmenu.common import utils
-from fuelmenu.settings import Settings
 import logging
 import netaddr
 import urwid
@@ -78,8 +77,8 @@ to advertise via DHCP to nodes",
                                   "type": WidgetType.LABEL},
             }
 
+        self.load()
         self.extdhcp = True
-        self.oldsettings = self.load()
         self.screen = None
 
     def check(self, args):
@@ -244,15 +243,17 @@ interface first.")
                         mgmt_if_ipaddr))
 
         # Extra checks for post-deployment changes
+        settings = self.parent.settings
+
         if utils.is_post_deployment():
             # Admin interface cannot change
-            if self.activeiface != \
-                    self.oldsettings["ADMIN_NETWORK"]["interface"]:
+            if self.activeiface != settings["ADMIN_NETWORK"]["interface"]:
                 errors.append("Cannot change admin interface after deployment")
+
             # PXE network range must contain previous PXE network range
             old_range = network.range(
-                self.oldsettings["ADMIN_NETWORK"]["dhcp_pool_start"],
-                self.oldsettings["ADMIN_NETWORK"]["dhcp_pool_end"])
+                settings["ADMIN_NETWORK"]["dhcp_pool_start"],
+                settings["ADMIN_NETWORK"]["dhcp_pool_end"])
             new_range = network.range(
                 responses["ADMIN_NETWORK/dhcp_pool_start"],
                 responses["ADMIN_NETWORK/dhcp_pool_end"])
@@ -285,43 +286,28 @@ interface first.")
         self.setNetworkDetails()
 
     def load(self):
-        oldsettings = ModuleHelper.load(self)
-        if oldsettings["ADMIN_NETWORK"]["interface"] \
+        settings = self.parent.settings
+        ModuleHelper.load_to_defaults(settings, self.defaults)
+
+        if settings["ADMIN_NETWORK"]["interface"] \
                 in self.netsettings.keys():
-            self.activeiface = oldsettings["ADMIN_NETWORK"]["interface"]
-        return oldsettings
+            self.activeiface = settings["ADMIN_NETWORK"]["interface"]
 
     def save(self, responses):
-        ## Generic settings start ##
-        newsettings = ModuleHelper.save(self, responses)
-        for setting in responses.keys():
-            if "/" in setting:
-                part1, part2 = setting.split("/")
-                if part1 not in newsettings:
-                    #We may not touch all settings, so copy oldsettings first
-                    newsettings[part1] = self.oldsettings[part1]
-                newsettings[part1][part2] = responses[setting]
-            else:
-                newsettings[setting] = responses[setting]
-        ## Generic settings end ##
+        newsettings = ModuleHelper.make_settings_from_response(self, responses)
 
         ## Need to calculate and netmask
         newsettings['ADMIN_NETWORK']['netmask'] = \
             self.netsettings[newsettings['ADMIN_NETWORK']['interface']][
                 "netmask"]
 
-        Settings().write(newsettings,
-                         defaultsfile=self.parent.defaultsettingsfile,
-                         outfn=self.parent.settingsfile)
-
-        #Set oldsettings to reflect new settings
-        self.oldsettings = newsettings
         #Update self.defaults
         for index, fieldname in enumerate(self.fields):
             if fieldname != "blank" and "label" not in fieldname:
                 self.defaults[fieldname]['value'] = responses[fieldname]
 
         self.parent.footer.set_text("Changes saved successfully.")
+        self.parent.settings.merge(newsettings)
 
     def getNetwork(self):
         ModuleHelper.getNetwork(self)
