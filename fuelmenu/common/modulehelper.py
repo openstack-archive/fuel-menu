@@ -30,9 +30,8 @@ import urwid.web_display
 from fuelmenu.common import dialog
 from fuelmenu.common import network
 import fuelmenu.common.urwidwrapper as widget
-from fuelmenu.common.utils import dict_merge
 from fuelmenu.common.utils import execute
-from fuelmenu.settings import Settings
+from fuelmenu import settings as settings_module
 
 log = logging.getLogger('fuelmenu.modulehelper')
 
@@ -89,39 +88,31 @@ class ModuleHelper(object):
             settings[part1] = value
 
     @classmethod
-    def load(cls, modobj, ignoredparams=None):
-        """Returns settings found in settings files that are found in class
+    def load_to_defaults(cls, settings, defaults, ignoredparams=None):
+        """Update module defaults by appropriate values from settings
 
-        :param cls: ModuleHelper object
-        :param modobj: object from calling class
-        :param ignoredparams: list of parameters to skip lookup from settings
-        :returns: OrderedDict of settings for calling class
+        settings: Settings object
+        defaults: module object's defaults from calling class
+        ignoredparams: list of parameters to skip lookup from settings
         """
-
         # Read in yaml
-        defaultsettings = Settings().read(modobj.parent.defaultsettingsfile)
-        usersettings = Settings().read(modobj.parent.settingsfile)
-        oldsettings = dict_merge(defaultsettings, usersettings)
-
         types_to_skip = (WidgetType.BUTTON, WidgetType.LABEL)
-        for setting, setting_def in six.iteritems(modobj.defaults):
+        for setting, setting_def in six.iteritems(defaults):
             if (setting_def.get('type') in types_to_skip or
                ignoredparams and setting in ignoredparams):
                     continue
             try:
-                setting_def["value"] = cls.get_setting(oldsettings, setting)
+                setting_def["value"] = cls.get_setting(settings, setting)
             except KeyError:
                 log.warning("Failed to load %s value from settings", setting)
-        return oldsettings
 
     @classmethod
-    def save(cls, modobj, responses):
-        newsettings = collections.OrderedDict()
+    def make_settings_from_responses(cls, responses):
+        """Create new Settings object from responses."""
+        newsettings = settings_module.Settings()
+
         for setting in responses:
-            cls.set_setting(newsettings,
-                            setting,
-                            responses[setting],
-                            modobj.oldsettings)
+            cls.set_setting(newsettings, setting, responses[setting])
         return newsettings
 
     @classmethod
