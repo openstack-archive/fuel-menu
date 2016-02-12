@@ -13,14 +13,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-try:
-    from collections import OrderedDict
-except Exception:
-    # python 2.6 or earlier use backport
-    from ordereddict import OrderedDict
 from fuelmenu.common.modulehelper import ModuleHelper
 from fuelmenu.common import pwgen
-from fuelmenu.settings import Settings
 import logging
 import urwid
 import urwid.raw_display
@@ -116,7 +110,7 @@ class servicepws(urwid.WidgetWrap):
             }
         self.fields = self.defaults.keys()
 
-        self.oldsettings = self.load()
+        self.load()
         self.screen = None
 
     def check(self, args):
@@ -144,35 +138,13 @@ class servicepws(urwid.WidgetWrap):
         self.save(responses)
 
     def load(self):
-        return ModuleHelper.load(self)
+        ModuleHelper.load_to_defaults(self.parent.settings, self.defaults)
 
     def save(self, responses):
-        ## Generic settings start ##
-        newsettings = OrderedDict()
-        for setting in responses.keys():
-            if "/" in setting:
-                part1, part2 = setting.split("/")
-                if part1 not in newsettings:
-                #We may not touch all settings, so copy oldsettings first
-                    try:
-                        newsettings[part1] = self.oldsettings[part1]
-                    except Exception:
-                        if part1 not in newsettings.keys():
-                            newsettings[part1] = OrderedDict()
-                        log.warning("issues setting newsettings %s " % setting)
-                        log.warning("current newsettings: %s" % newsettings)
-                newsettings[part1][part2] = responses[setting]
-            else:
-                newsettings[setting] = responses[setting]
-        Settings().write(newsettings,
-                         defaultsfile=self.parent.defaultsettingsfile,
-                         outfn=self.parent.settingsfile)
-
-        ## Generic settings end ##
+        newsettings = ModuleHelper.make_settings_from_response(self, responses)
+        self.parent.settings.merge(newsettings)
         log.debug('done saving servicepws')
 
-        #Set oldsettings to reflect new settings
-        self.oldsettings = newsettings
         #Update defaults
         for index, fieldname in enumerate(self.fields):
             if fieldname != "blank" and fieldname in newsettings:
