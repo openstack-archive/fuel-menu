@@ -14,8 +14,10 @@
 # under the License.
 
 import crypt
-from fuelmenu.common.modulehelper import ModuleHelper
+from fuelmenu.common import modulehelper as helper
 from fuelmenu.common import utils
+from fuelmenu import settings as settings_module
+
 import logging
 import urwid
 
@@ -75,10 +77,13 @@ class rootpw(urwid.WidgetWrap):
 
         if len(errors) > 0:
             log.error("Errors: %s %s" % (len(errors), errors))
-            ModuleHelper.display_failed_check_dialog(self, errors)
+            helper.ModuleHelper.display_failed_check_dialog(self, errors)
             return False
         else:
             self.parent.footer.set_text("No errors found.")
+            responses['HASHED_PASSWORD'] = crypt.crypt(responses["PASSWORD"],
+                                                       utils.gensalt())
+
             return responses
 
     def apply(self, args):
@@ -91,7 +96,7 @@ class rootpw(urwid.WidgetWrap):
                     return (self.edits[index].get_edit_text() == "")
             return False
 
-        hashed = crypt.crypt(responses["PASSWORD"])
+        hashed = responses['HASHED_PASSWORD']
         log.info("Changing root password")
         #clear any locks first
         rm_command = ["rm", "-f", "/etc/passwd.lock", "/etc/shadow.lock"]
@@ -110,14 +115,25 @@ class rootpw(urwid.WidgetWrap):
             self.parent.footer.set_text("Unable to apply changes. Check logs "
                                         "for more details.")
             return False
+
+        self.save(responses)
         return True
 
+    def save(self, responses):
+        bootstrap = helper.ModuleHelper.load(self)['BOOTSTRAP']
+        bootstrap['hashed_root_password'] = responses['HASHED_PASSWORD']
+
+        settings_module.Settings().write(
+            {'BOOTSTRAP': bootstrap},
+            defaultsfile=self.parent.defaultsettingsfile,
+            outfn=self.parent.settingsfile)
+
     def cancel(self, button):
-        ModuleHelper.cancel(self, button)
+        helper.ModuleHelper.cancel(self, button)
 
     def refresh(self):
         pass
 
     def screenUI(self):
-        return ModuleHelper.screenUI(self, self.header_content, self.fields,
-                                     self.defaults)
+        return helper.ModuleHelper.screenUI(self, self.header_content,
+                                            self.fields, self.defaults)
