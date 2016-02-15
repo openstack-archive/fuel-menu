@@ -383,4 +383,4 @@ is accessible"}
 
     def screenUI(self):
         return ModuleHelper.screenUI(self, self.header_content, self.fields,
-                                     self.defaults)
+                                     self.defaults, showallbuttons=True)
