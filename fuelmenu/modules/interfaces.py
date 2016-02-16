@@ -135,7 +135,14 @@ class interfaces(urwid.WidgetWrap):
 
         ###Validate each field
         errors = []
-        if responses["onboot"] == "no":
+
+        #Check for the duplicate IP provided
+        parent_ips = [v.get('addr') for k, v in self.netsettings.items()
+                      if k != self.activeiface]
+        if responses["ipaddr"] in parent_ips:
+            errors.append("Duplicate IP provided: {0}".format(
+                responses["ipaddr"]))
+        elif responses["onboot"] == "no":
             numactiveifaces = 0
             for iface in self.netsettings:
                 if self.netsettings[iface]['addr'] != "":
