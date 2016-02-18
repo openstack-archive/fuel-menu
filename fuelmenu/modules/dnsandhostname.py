@@ -207,16 +207,11 @@ is accessible"}
             log.error("Check failed. Not applying")
             log.error("%s" % (responses))
             return False
-
         self.save(responses)
+
         #Update network details so we write correct IP address
         self.getNetwork()
-        #Apply hostname
-        expr = 'HOSTNAME=.*'
-        replace.replaceInFile("/etc/sysconfig/network", expr,
-                              "HOSTNAME=%s.%s"
-                              % (responses["HOSTNAME"],
-                                 responses["DNS_DOMAIN"]))
+
         #remove old hostname from /etc/hosts
         f = open("/etc/hosts", "r")
         lines = f.readlines()
@@ -246,6 +241,9 @@ is accessible"}
                                      responses['DNS_DOMAIN'],
                                      responses["HOSTNAME"]))
             etchosts.close()
+
+        #Apply hostname
+        os.system('/usr/bin/hostnamectl set-hostname ' + responses["HOSTNAME"])
 
         def make_resolv_conf(filename):
             if self.netsettings[self.parent.managediface]["addr"] != "":
