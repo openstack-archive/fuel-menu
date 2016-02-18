@@ -209,14 +209,20 @@ is accessible"}
             return False
 
         self.save(responses)
+
         #Update network details so we write correct IP address
         self.getNetwork()
+
         #Apply hostname
-        expr = 'HOSTNAME=.*'
-        replace.replaceInFile("/etc/sysconfig/network", expr,
-                              "HOSTNAME=%s.%s"
-                              % (responses["HOSTNAME"],
-                                 responses["DNS_DOMAIN"]))
+        cmd = ["/usr/bin/hostnamectl", "set-hostname", responses["HOSTNAME"]]
+        err_code, _, errout = utils.execute(cmd)
+        if err_code != 0:
+            log.error("Hostname change failed with an error: "
+                      "\"{0}\"".format(errout))
+            self.parent.footer.set_text("Unable to apply changes. Check logs "
+                                        "for more details.")
+            return False
+
         #remove old hostname from /etc/hosts
         f = open("/etc/hosts", "r")
         lines = f.readlines()
