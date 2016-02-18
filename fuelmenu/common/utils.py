@@ -82,3 +82,25 @@ def get_fuel_version(versionfile='/etc/fuel_release'):
     except IOError:
         log.error("Unable to set Fuel version from %s" % versionfile)
         return ""
+
+
+def execute(command, stdin=None, shell=False):
+    """Executes commands
+
+    :param command: A list of shell lexemes
+    :param shell: Specify shell parameter for subprocess.Popen (optional)
+    :param stdin: String input for stdin (optional)
+
+    :returns: Tuple of (return_code, stdout, stderr)
+    """
+
+    log.debug('Executing command: {0}'.format(' '.join(command)))
+    proc = subprocess.Popen(command,
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE,
+                            shell=shell)
+    out, err = proc.communicate(input=stdin)
+    code = proc.poll()
+    log.debug('Command executed with exit code: {0}'.format(str(code)))
+    return code, out, err
