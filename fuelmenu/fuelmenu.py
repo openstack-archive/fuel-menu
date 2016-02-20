@@ -265,15 +265,16 @@ class FuelSetup(object):
         try:
             savetimeout = 60
             success, modulename = timeout.run_with_timeout(
-                self.global_save, timeout=savetimeout,
-                default=(False, "timeout"))
+                self.global_save, timeout=savetimeout)
             if success:
                 log.info("Save successful!")
             else:
                 log.error("Save failed on module %s" % modulename)
 
-        except (KeyboardInterrupt, timeout.TimeoutError):
+        except timeout.TimeoutError:
             log.exception("Save on signal timed out. Save not complete.")
+        except KeyboardInterrupt:
+            log.exception("Save was interrupted by the user.")
         except Exception:
             log.exception("Save failed for unknown reason:")
         self.exit_program(None)
