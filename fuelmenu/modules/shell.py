@@ -23,14 +23,14 @@ import urwid.web_display
 blank = urwid.Divider()
 
 
-class shell():
+class shell(object):
     def __init__(self, parent):
         self.name = "Shell Login"
         self.priority = 90
         self.visible = True
         self.parent = parent
         self.screen = None
-        #UI text
+        # UI text
         text1 = "Press the button below to enter a shell login."
         login_button = widget.Button("Shell Login", self.start_shell)
         self.header_content = [text1, blank, login_button]

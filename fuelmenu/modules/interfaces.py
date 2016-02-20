@@ -33,7 +33,7 @@ from fuelmenu.common import utils
 blank = urwid.Divider()
 
 
-#Need to define fields in order so it will render correctly
+# Need to define fields in order so it will render correctly
 
 
 class interfaces(urwid.WidgetWrap):
@@ -51,11 +51,11 @@ class interfaces(urwid.WidgetWrap):
         self.activeiface = sorted(self.netsettings.keys())[0]
         self.extdhcp = True
 
-        #UI text
+        # UI text
         self.net_choices = widget.ChoicesGroup(sorted(self.netsettings.keys()),
                                                default_value=self.activeiface,
                                                fn=self.radioSelectIface)
-        #Placeholders for network settings text
+        # Placeholders for network settings text
         self.net_text1 = widget.TextLabel("")
         self.net_text2 = widget.TextLabel("")
         self.net_text3 = widget.TextLabel("")
@@ -92,7 +92,7 @@ class interfaces(urwid.WidgetWrap):
             }
 
     def fixEtcHosts(self):
-        #replace ip for env variable HOSTNAME in /etc/hosts
+        # replace ip for env variable HOSTNAME in /etc/hosts
         if self.netsettings[self.parent.managediface]["addr"] != "":
             managediface_ip = self.netsettings[self.parent.managediface][
                 "addr"]
@@ -113,7 +113,7 @@ class interfaces(urwid.WidgetWrap):
 
     def check(self, args):
         """Validate that all fields have valid values and sanity checks."""
-        #Get field information
+        # Get field information
         responses = dict()
         self.parent.footer.set_text("Checking data...")
         for index, fieldname in enumerate(self.fields):
@@ -153,8 +153,8 @@ class interfaces(urwid.WidgetWrap):
                     numactiveifaces += 1
             if numactiveifaces < 2 and \
                     self.netsettings[self.activeiface]['addr'] != "":
-                #Block user because puppet l23network fails if all interfaces
-                #are disabled.
+                # Block user because puppet l23network fails if all interfaces
+                # are disabled.
                 errors.append("Cannot disable all interfaces.")
         elif responses["bootproto"] == "dhcp":
             self.parent.footer.set_text("Scanning for DHCP servers. "
@@ -172,7 +172,7 @@ class interfaces(urwid.WidgetWrap):
             if len(dhcp_server_data) < 1:
                 errors.append("No DHCP servers found. Cannot enable DHCP")
 
-        #Check ipaddr, netmask, gateway only if static
+        # Check ipaddr, netmask, gateway only if static
         elif responses["bootproto"] == "none":
             try:
                 if netaddr.valid_ipv4(responses["ipaddr"]):
@@ -194,10 +194,10 @@ class interfaces(urwid.WidgetWrap):
                 errors.append("Not a valid netmask: %s" % responses["netmask"])
             try:
                 if len(responses["gateway"]) > 0:
-                    #Check if gateway is valid
+                    # Check if gateway is valid
                     if netaddr.valid_ipv4(responses["gateway"]) is False:
                         raise BadIPException("Gateway IP address is not valid")
-                    #Check if gateway is in same subnet
+                    # Check if gateway is in same subnet
                     if network.inSameSubnet(responses["ipaddr"],
                                             responses["gateway"],
                                             responses["netmask"]) is False:
@@ -339,10 +339,10 @@ class interfaces(urwid.WidgetWrap):
 
     def radioSelectIface(self, current, state, user_data=None):
         """Update network details and display information."""
-        ### This makes no sense, but urwid returns the previous object.
-        ### The previous object has True state, which is wrong.
-        ### Somewhere in current.group a RadioButton is set to True.
-        ### Our quest is to find it.
+        # This makes no sense, but urwid returns the previous object.
+        # The previous object has True state, which is wrong.
+        # Somewhere in current.group a RadioButton is set to True.
+        # Our quest is to find it.
         for rb in current.group:
             if rb.get_label() == current.get_label():
                 continue
@@ -354,10 +354,10 @@ class interfaces(urwid.WidgetWrap):
 
     def radioSelect(self, current, state, user_data=None):
         """Update network details and display information."""
-        ### This makes no sense, but urwid returns the previous object.
-        ### The previous object has True state, which is wrong.
-        ### Somewhere in current.group a RadioButton is set to True.
-        ### Our quest is to find it.
+        # This makes no sense, but urwid returns the previous object.
+        # The previous object has True state, which is wrong.
+        # Somewhere in current.group a RadioButton is set to True.
+        # Our quest is to find it.
         for rb in current.group:
             if rb.get_label() == current.get_label():
                 continue
@@ -376,7 +376,7 @@ class interfaces(urwid.WidgetWrap):
         self.net_text3.set_text("Netmask: %-15s  Gateway: %s" % (
             self.netsettings[self.activeiface]['netmask'],
             self.gateway))
-        #Set text fields to current netsettings
+        # Set text fields to current netsettings
         for index, fieldname in enumerate(self.fields):
             if fieldname == "ifname":
                 self.edits[index].base_widget.set_edit_text(self.activeiface)
@@ -398,7 +398,7 @@ class interfaces(urwid.WidgetWrap):
                         rb_group[0].set_state(True)
                         rb_group[1].set_state(False)
                 else:
-                    #onboot should only be no if the interface is also down
+                    # onboot should only be no if the interface is also down
                     if self.netsettings[self.activeiface]['addr'] == "":
                         rb_group[0].set_state(False)
                         rb_group[1].set_state(True)
@@ -413,7 +413,7 @@ class interfaces(urwid.WidgetWrap):
                 self.edits[index].set_edit_text(self.netsettings[
                     self.activeiface]['netmask'])
             elif fieldname == "gateway":
-                #Gateway is for this iface only if gateway is matches subnet
+                # Gateway is for this iface only if gateway is matches subnet
                 if network.inSameSubnet(
                         self.netsettings[self.activeiface]['addr'],
                         self.gateway,

@@ -43,7 +43,7 @@ class dnsandhostname(urwid.WidgetWrap):
         self.extdhcp = True
         self.parent = parent
 
-        #UI Text
+        # UI Text
         self.header_content = ["DNS and hostname setup", "Note: Leave "
                                "External DNS blank if you do not have "
                                "Internet access."]
@@ -78,7 +78,7 @@ is accessible"}
         self.fixEtcHosts()
 
     def fixEtcHosts(self):
-        #replace ip for env variable HOSTNAME in /etc/hosts
+        # replace ip for env variable HOSTNAME in /etc/hosts
         if self.netsettings[self.parent.managediface]["addr"] != "":
             managediface_ip = self.netsettings[
                 self.parent.managediface]["addr"]
@@ -102,7 +102,7 @@ is accessible"}
         """Validate that all fields have valid values through sanity checks."""
         self.parent.footer.set_text("Checking data...")
         self.parent.refreshScreen()
-        #Get field information
+        # Get field information
         responses = dict()
 
         for index, fieldname in enumerate(self.fields):
@@ -111,38 +111,38 @@ is accessible"}
             else:
                 responses[fieldname] = self.edits[index].get_edit_text()
 
-        ###Validate each field
+        # Validate each field
         errors = []
 
-        #hostname must be under 60 chars
+        # hostname must be under 60 chars
         if len(responses["HOSTNAME"]) >= 60:
             errors.append("Hostname must be under 60 chars.")
 
-        #hostname must not be empty
+        # hostname must not be empty
         if len(responses["HOSTNAME"]) == 0:
             errors.append("Hostname must not be empty.")
 
-        #hostname needs to have valid chars
+        # hostname needs to have valid chars
         if re.search('[^a-z0-9-]', responses["HOSTNAME"]):
             errors.append(
                 "Hostname must contain only alphanumeric and hyphen.")
 
-        #domain must be under 180 chars
+        # domain must be under 180 chars
         if len(responses["DNS_DOMAIN"]) >= 180:
             errors.append("Domain must be under 180 chars.")
 
-        #domain must not be empty
+        # domain must not be empty
         if len(responses["DNS_DOMAIN"]) == 0:
             errors.append("Domain must not be empty.")
 
-        #domain needs to have valid chars
+        # domain needs to have valid chars
         if re.match('[^a-z0-9-.]', responses["DNS_DOMAIN"]):
             errors.append(
                 "Domain must contain only alphanumeric, period and hyphen.")
-        #ensure external DNS is valid
+        # ensure external DNS is valid
         if len(responses["DNS_UPSTREAM"]) == 0:
-            #We will allow empty if user doesn't need external networking
-            #and present a strongly worded warning
+            # We will allow empty if user doesn't need external networking
+            # and present a strongly worded warning
             msg = "If you continue without DNS, you may not be able to access"\
                   + " external data necessary for installation needed for " \
                   + "some OpenStack Releases."
@@ -153,8 +153,8 @@ is accessible"}
         else:
             upstream_nameservers = responses["DNS_UPSTREAM"].split(',')
 
-            #external DNS must contain only numbers, periods, and commas
-            #Needs more serious ip address checking
+            # external DNS must contain only numbers, periods, and commas
+            # Needs more serious ip address checking
             if re.match('[^0-9.,]', responses["DNS_UPSTREAM"]):
                 errors.append(
                     "External DNS must contain only IP addresses and commas.")
@@ -170,18 +170,18 @@ is accessible"}
                 errors.append(
                     "Unable to specify more than 3 External DNS addresses.")
 
-            #ensure test DNS name isn't empty
+            # ensure test DNS name isn't empty
             if len(responses["TEST_DNS"]) == 0:
                 errors.append("Test DNS must not be empty.")
-            #Validate first IP address
+            # Validate first IP address
             for nameserver in upstream_nameservers:
                 if not netaddr.valid_ipv4(nameserver):
                     errors.append("Not a valid IP address for DNS server:"
                                   " {0}".format(nameserver))
 
-            #Try to resolve with first address
+            # Try to resolve with first address
             if not self.checkDNS(upstream_nameservers[0]):
-                #Warn user that DNS resolution failed, but continue
+                # Warn user that DNS resolution failed, but continue
                 msg = "Unable to resolve %s.\n\n" % responses['TEST_DNS']\
                       + "Possible causes for DNS failure include:\n"\
                       + "* Invalid DNS server\n"\
@@ -240,7 +240,7 @@ is accessible"}
                     etchosts.write(line)
             etchosts.close()
 
-        #append hostname and ip address to /etc/hosts
+        # append hostname and ip address to /etc/hosts
         with open("/etc/hosts", "a") as etchosts:
             if self.netsettings[self.parent.managediface]["addr"] != "":
                 managediface_ip = self.netsettings[
@@ -284,7 +284,7 @@ is accessible"}
         # /etc/resolv.conf
         oldsettings = ModuleHelper.load(self, ignoredparams=['TEST_DNS'])
 
-        #Read hostname from uname
+        # Read hostname from uname
         try:
             hostname, sep, domain = os.uname()[1].partition('.')
             oldsettings["HOSTNAME"] = hostname
@@ -341,34 +341,34 @@ is accessible"}
         return searches, domain, ",".join(nameservers)
 
     def save(self, responses):
-        ## Generic settings start ##
+        # Generic settings start
         newsettings = dict()
         for setting in responses.keys():
             if "/" in setting:
                 part1, part2 = setting.split("/")
                 if part1 not in newsettings:
-                #We may not touch all settings, so copy oldsettings first
+                    # We may not touch all settings, so copy oldsettings first
                     newsettings[part1] = self.oldsettings[part1]
                 newsettings[part1][part2] = responses[setting]
             else:
                 newsettings[setting] = responses[setting]
-        ## Generic settings end ##
+        # Generic settings end
 
-        #log.debug(str(newsettings))
+        # log.debug(str(newsettings))
         Settings().write(newsettings,
                          defaultsfile=self.parent.defaultsettingsfile,
                          outfn=self.parent.settingsfile)
 
-        #Set oldsettings to reflect new settings
+        # Set oldsettings to reflect new settings
         self.oldsettings = newsettings
-        #Update self.defaults
+        # Update self.defaults
         for index, fieldname in enumerate(self.fields):
             if fieldname != "blank":
                 self.defaults[fieldname]['value'] = newsettings[fieldname]
 
     def checkDNS(self, server):
-        #Note: Python's internal resolver caches negative answers.
-        #Therefore, we should call dig externally to be sure.
+        # Note: Python's internal resolver caches negative answers.
+        # Therefore, we should call dig externally to be sure.
 
         command = ["dig", "+short", "+time=3", "+retries=1",
                    self.defaults["TEST_DNS"]['value'], "@{0}".format(server)]
