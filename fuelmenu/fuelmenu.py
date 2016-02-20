@@ -319,6 +319,11 @@ class FuelSetup(object):
         self.settings.write(outfn=consts.SETTINGS_FILE)
         return True, None
 
+    def reinit_modules(self):
+        for i, child in enumerate(self.children):
+            cls = child.__class__
+            self.children[i] = cls(self)
+
 
 def setup():
     urwid.web_display.set_preferences("Fuel Setup")
