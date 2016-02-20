@@ -76,10 +76,7 @@ class restore(urwid.WidgetWrap):
         self.header_content = ["Load settings from a file",
                                "(Use 'Shell Login' if you want fetch "
                                "settings manually from a remote host and then "
-                               "return to this menu to restore them.)",
-                               "NOTE: After restoring settings in this "
-                               "section, please exit from the menu without "
-                               "saving changes."]
+                               "return to this menu to restore them.)"]
         self.fields = ["PATH"]
         self.defaults = {
             "PATH": {
@@ -176,7 +173,8 @@ class restore(urwid.WidgetWrap):
             return False
         self.parent.footer.set_text("Applying changes...")
         self.save(responses)
-        self.parent.footer.set_text("Changes saved successfully.")
+        self.parent.reinit_modules()
+        self.parent.footer.set_text("Setings restored successfully.")
         return True
 
     def load(self):
