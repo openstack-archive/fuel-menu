@@ -160,13 +160,6 @@ class FuelSetup(object):
         size = self.screen.get_cols_rows()
         self.screen.draw_screen(size, self.frame.render(size))
 
-    def refreshChildScreen(self, name):
-        child = self.children[int(self.choices.index(name))]
-
-        child.screen = child.screenUI()
-
-        self.draw_child_screen(child.screen)
-
     def main(self):
         text_header = (u"Fuel %s setup "
                        u"Use Up/Down/Left/Right to navigate.  F8 exits. "
@@ -319,6 +312,15 @@ class FuelSetup(object):
 
         self.settings.write(outfn=consts.SETTINGS_FILE)
         return True, None
+
+    def reload_modules(self):
+        for child in self.children:
+            if hasattr(child, 'load') and callable(child.load):
+                child.load()
+                child.screen = child.screenUI()
+                self.draw_child_screen(child.screen)
+
+        self.refreshScreen()
 
 
 def setup():
