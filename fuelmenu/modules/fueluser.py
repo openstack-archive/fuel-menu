@@ -44,7 +44,7 @@ class fueluser(urwid.WidgetWrap):
             "Default password: admin",
             "",
             "For the better security please consider using password with "
-            "at least 8 symbols, both upper- and lowercase letters, and "
+            "at least 24 symbols, both upper- and lowercase letters, and "
             "at least one digit and special character like !@#$%^&*()_+."
         ]
         self.fields = ["FUEL_ACCESS/password", "CONFIRM_PASSWORD"]
@@ -95,8 +95,8 @@ class fueluser(urwid.WidgetWrap):
             errors.append("Password contains non-ASCII characters.")
 
         # Passwords should be at least 8 symbols
-        if len(password) < 8:
-            warnings.append("8 symbols")
+        if len(password) < 24:
+            warnings.append("24 symbols")
 
         # Passwords should contain at least one digit
         if re.search(r"\d", password) is None:

@@ -20,6 +20,6 @@ def password(arg=None):
     try:
         length = int(arg)
     except Exception:
-        length = 8
+        length = 24
     chars = string.letters + string.digits
     return ''.join([random.choice(chars) for _ in xrange(length)])

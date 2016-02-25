@@ -25,8 +25,8 @@ class TestPassword(unittest.TestCase):
         chars = string.letters + string.digits
         cases = [
             ('10', 10),
-            (None, 8),
-            ('test', 8)
+            (None, 24),
+            ('test', 24)
         ]
 
         for arg, length in cases:
