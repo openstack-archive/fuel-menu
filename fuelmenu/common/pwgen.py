@@ -15,6 +15,8 @@
 import random
 import string
 
+from six.moves import range
+
 
 def password(arg=None):
     try:
@@ -22,4 +24,4 @@ def password(arg=None):
     except Exception:
         length = 8
     chars = string.letters + string.digits
-    return ''.join([random.choice(chars) for _ in xrange(length)])
+    return ''.join([random.choice(chars) for _ in range(length)])

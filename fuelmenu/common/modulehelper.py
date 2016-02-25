@@ -56,7 +56,8 @@ class WidgetType(object):
 class ModuleHelper(object):
     @classmethod
     def get_setting(cls, settings, key):
-        """Retrieving setting by key
+        """Retrieving setting by key.
+
         :param settings: settings from config file
         :param key: setting name (format: '[{section_name}/]{setting_name}')
         :returns: setting value
@@ -71,7 +72,8 @@ class ModuleHelper(object):
 
     @classmethod
     def set_setting(cls, settings, key, value, default_settings=None):
-        """Sets new setting by key
+        """Sets new setting by key.
+
         :param settings: settings from config file
         :param key: setting name (format: '[{section_name}/]{setting_name}')
         :param value: new value

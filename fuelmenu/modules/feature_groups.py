@@ -32,7 +32,7 @@ class feature_groups(urwid.WidgetWrap):
         self.visible = True
         self.parent = parent
 
-        #UI details
+        # UI details
         self.header_content = [
             "Feature groups",
             "Note: Depending on which feature groups are enabled, "
