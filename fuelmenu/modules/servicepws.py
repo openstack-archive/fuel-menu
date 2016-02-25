@@ -35,7 +35,7 @@ class servicepws(urwid.WidgetWrap):
         self.priority = 99
         self.visible = False
         self.parent = parent
-        #UI text
+        # UI text
         self.header_content = ["Set service passwords", ""]
         self.defaults = \
             {
@@ -120,7 +120,7 @@ class servicepws(urwid.WidgetWrap):
         self.screen = None
 
     def check(self, args):
-        #Get field information
+        # Get field information
         responses = dict()
 
         for index, fieldname in enumerate(self.fields):
@@ -147,13 +147,13 @@ class servicepws(urwid.WidgetWrap):
         return ModuleHelper.load(self)
 
     def save(self, responses):
-        ## Generic settings start ##
+        # Generic settings start
         newsettings = OrderedDict()
         for setting in responses.keys():
             if "/" in setting:
                 part1, part2 = setting.split("/")
                 if part1 not in newsettings:
-                #We may not touch all settings, so copy oldsettings first
+                    # We may not touch all settings, so copy oldsettings first
                     try:
                         newsettings[part1] = self.oldsettings[part1]
                     except Exception:
@@ -168,12 +168,12 @@ class servicepws(urwid.WidgetWrap):
                          defaultsfile=self.parent.defaultsettingsfile,
                          outfn=self.parent.settingsfile)
 
-        ## Generic settings end ##
+        # Generic settings end
         log.debug('done saving servicepws')
 
-        #Set oldsettings to reflect new settings
+        # Set oldsettings to reflect new settings
         self.oldsettings = newsettings
-        #Update defaults
+        # Update defaults
         for index, fieldname in enumerate(self.fields):
             if fieldname != "blank" and fieldname in newsettings:
                 self.defaults[fieldname]['value'] = newsettings[fieldname]

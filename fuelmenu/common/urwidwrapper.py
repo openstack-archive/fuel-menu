@@ -37,7 +37,8 @@ def TextField(keyword, label, width, default_value=None, tooltip=None,
     if disabled:
         wrapped_obj = urwid.WidgetDisable(urwid.AttrWrap(edit_obj,
                                           'important', 'editfc'))
-        #Add get_edit_text and set_edit_text to wrapped_obj so we can use later
+        # Add get_edit_text and set_edit_text to
+        # wrapped_obj so we can use later
         wrapped_obj.set_edit_text = edit_obj.set_edit_text
         wrapped_obj.get_edit_text = edit_obj.get_edit_text
     return wrapped_obj
@@ -54,7 +55,7 @@ def ChoicesGroup(choices, default_value=None, fn=None):
                        user_data=txt),
                        'buttn', 'buttnf')
     wrapped_choices = TabbedGridFlow(rb_group, 13, 3, 0, 'left')
-    #Bundle rb_group so it can be used later easily
+    # Bundle rb_group so it can be used later easily
     wrapped_choices.rb_group = rb_group
     return wrapped_choices
 
@@ -235,15 +236,15 @@ class TabbedListWalker(urwid.ListWalker):
         self.focus = pos
         self._modified()
         try:
-            #Reset focus to first selectable widget in item
+            # Reset focus to first selectable widget in item
             if hasattr(item, 'original_widget'):
                 item.original_widget.set_focus(
                     item.original_widget.first_selectable())
             else:
                 item.set_focus(item.first_selectable())
         except Exception:
-            #Ignore failure. Case only applies to TabbedColumns and
-            #TabbedGridFlow. Other items should fail silently.
+            # Ignore failure. Case only applies to TabbedColumns and
+            # TabbedGridFlow. Other items should fail silently.
             pass
 
     def tab_prev(self):
@@ -266,8 +267,8 @@ class TabbedListWalker(urwid.ListWalker):
             else:
                 item.set_focus(len(item.contents) - 1)
         except Exception:
-            #Ignore failure. Case only applies to TabbedColumns and
-            #TabbedGridFlow. Other items should fail silently.
+            # Ignore failure. Case only applies to TabbedColumns and
+            # TabbedGridFlow. Other items should fail silently.
             pass
 
     def get_focus(self):

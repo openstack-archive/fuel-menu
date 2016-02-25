@@ -57,7 +57,7 @@ def dict_merge(a, b):
             else:
                 result[k] = copy.deepcopy(v)
     except AttributeError:
-        #Non-iterable objects should be just returned
+        # Non-iterable objects should be just returned
         return b
     return result
 

@@ -101,7 +101,7 @@ class rootpw(urwid.WidgetWrap):
     def save(self, password):
         hashed = crypt.crypt(password, utils.gensalt())
         log.info("Changing root password")
-        #clear any locks first
+        # clear any locks first
         rm_command = ["rm", "-f", "/etc/passwd.lock", "/etc/shadow.lock"]
         utils.execute(rm_command)
         usermod_command = ["usermod", "-p", hashed, "root"]

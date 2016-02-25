@@ -87,7 +87,7 @@ class FuelSetup(object):
                                                 "settings.yaml")
         self.settingsfile = consts.SETTINGS_FILE
         self.managediface = network.get_physical_ifaces()[0]
-        #Set to true to move all settings to end
+        # Set to true to move all settings to end
         self.globalsave = True
         self.version = utils.get_fuel_version()
         self.main()
@@ -100,7 +100,7 @@ class FuelSetup(object):
             urwid.connect_signal(button, 'click', self.menu_chosen, c)
             body.append(urwid.AttrMap(button, None, focus_map='reversed'))
         return urwid.ListBox(urwid.SimpleListWalker(body))
-        #return urwid.ListBox(urwid.SimpleFocusListWalker(body))
+        # return urwid.ListBox(urwid.SimpleFocusListWalker(body))
 
     def menu_chosen(self, button, choice):
         size = self.screen.get_cols_rows()
@@ -162,11 +162,11 @@ class FuelSetup(object):
                        % self.version)
         text_footer = (u"Status messages go here.")
 
-        #Top and bottom lines of frame
+        # Top and bottom lines of frame
         self.header = urwid.AttrWrap(urwid.Text(text_header), 'header')
         self.footer = urwid.AttrWrap(urwid.Text(text_footer), 'footer')
 
-        #Prepare submodules
+        # Prepare submodules
         loader = Loader(self)
         moduledir = "%s/modules" % (os.path.dirname(__file__))
         self.children, self.choices = loader.load_modules(module_dir=moduledir)
@@ -174,7 +174,7 @@ class FuelSetup(object):
         if len(self.children) == 0:
             import sys
             sys.exit(1)
-        #Build list of choices excluding visible
+        # Build list of choices excluding visible
         self.visiblechoices = []
         for child, choice in zip(self.children, self.choices):
             if child.visible:
@@ -199,9 +199,9 @@ class FuelSetup(object):
                     urwid.Divider(" ")]))
             ], 1)
         self.listwalker = urwid.SimpleListWalker([self.cols])
-        #self.listwalker = urwid.TreeWalker([self.cols])
+        # self.listwalker = urwid.TreeWalker([self.cols])
         self.listbox = urwid.ListBox(self.listwalker)
-        #listbox = urwid.ListBox(urwid.SimpleListWalker(listbox_content))
+        # listbox = urwid.ListBox(urwid.SimpleListWalker(listbox_content))
 
         self.frame = urwid.Frame(urwid.AttrWrap(self.listbox, 'body'),
                                  header=self.header, footer=self.footer)
@@ -240,7 +240,7 @@ class FuelSetup(object):
 
         self.mainloop = urwid.MainLoop(self.frame, palette, self.screen,
                                        unhandled_input=unhandled)
-        #Initialize each module completely before any events are handled
+        # Initialize each module completely before any events are handled
         for child in reversed(self.children):
             self.setChildScreen(name=child.name)
 
@@ -254,7 +254,7 @@ class FuelSetup(object):
         self.mainloop.run()
 
     def exit_program(self, button):
-        #Fix /etc/hosts before quitting
+        # Fix /etc/hosts before quitting
         dnsobj = self.children[int(self.choices.index("DNS & Hostname"))]
         dnsobj.fixEtcHosts()
 
@@ -280,9 +280,9 @@ class FuelSetup(object):
         self.exit_program(None)
 
     def global_save(self):
-        #Runs save function for every module
+        # Runs save function for every module
         for module, modulename in zip(self.children, self.choices):
-            #Run invisible modules. They may not have screen methods
+            # Run invisible modules. They may not have screen methods
             if not module.visible:
                 try:
                     module.apply(None)
@@ -324,8 +324,8 @@ def save_only(iface, settingsfile=consts.SETTINGS_FILE):
               "Run fuelmenu manually to make changes.")
         sys.exit(0)
 
-    #Calculate and set Static/DHCP pool fields
-    #Max IPs = net size - 2 (master node + bcast)
+    # Calculate and set Static/DHCP pool fields
+    # Max IPs = net size - 2 (master node + bcast)
     try:
         ip = netifaces.ifaddresses(iface)[netifaces.AF_INET][0]['addr']
         netmask = netifaces.ifaddresses(iface)[netifaces.AF_INET][0]['netmask']
@@ -358,7 +358,7 @@ def save_only(iface, settingsfile=consts.SETTINGS_FILE):
     if num_dhcp == 0:
         log.debug("No DHCP servers found")
     else:
-        #Problem exists, but permit user to continue
+        # Problem exists, but permit user to continue
         log.error("%s foreign DHCP server(s) found: %s" %
                   (num_dhcp, dhcp_server_data))
         print("ERROR: %s foreign DHCP server(s) found: %s" %
@@ -417,7 +417,7 @@ def save_only(iface, settingsfile=consts.SETTINGS_FILE):
         if "/" in setting:
             part1, part2 = setting.split("/")
             settings.setdefault(part1, {})
-            #Keep old values for passwords if already set
+            # Keep old values for passwords if already set
             if "password" in setting:
                 settings[part1].setdefault(part2, settings_upd[setting])
             else:
@@ -428,7 +428,7 @@ def save_only(iface, settingsfile=consts.SETTINGS_FILE):
             else:
                 settings[setting] = settings_upd[setting]
 
-    #Write astute.yaml
+    # Write astute.yaml
     Settings().write(settings, defaultsfile=default_settings_file,
                      outfn=settingsfile)
 

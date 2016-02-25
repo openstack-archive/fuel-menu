@@ -33,7 +33,7 @@ class ntpsetup(urwid.WidgetWrap):
         self.visible = True
         self.parent = parent
 
-        #UI details
+        # UI details
         self.header_content = ["NTP Setup", "Note: If you continue without "
                                "NTP, you may have issues with deployment "
                                "due to time synchronization issues. These "
@@ -60,7 +60,7 @@ class ntpsetup(urwid.WidgetWrap):
                          "value": "time-b.nist.gov"},
             }
 
-        #Load info
+        # Load info
         self.gateway = self.get_default_gateway_linux()
 
         self.oldsettings = self.load()
@@ -70,7 +70,7 @@ class ntpsetup(urwid.WidgetWrap):
         """Validate that all fields have valid values and sanity checks."""
         self.parent.footer.set_text("Checking data...")
         self.parent.refreshScreen()
-        #Get field information
+        # Get field information
         responses = dict()
 
         for index, fieldname in enumerate(self.fields):
@@ -85,7 +85,7 @@ class ntpsetup(urwid.WidgetWrap):
             else:
                 responses[fieldname] = self.edits[index].get_edit_text()
 
-        ###Validate each field
+        # Validate each field
         errors = []
         warnings = []
         if responses['ntpenabled'] == "No":
@@ -101,31 +101,31 @@ class ntpsetup(urwid.WidgetWrap):
             return responses
         if all(map(lambda f: (len(responses[f]) == 0), self.fields)):
             pass
-            #We will allow empty if user doesn't need external networking
-            #and present a strongly worded warning
-            #msg = "If you continue without NTP, you may have issues with "\
+            # We will allow empty if user doesn't need external networking
+            # and present a strongly worded warning
+            # msg = "If you continue without NTP, you may have issues with "\
             #      + "deployment due to time synchronization issues. These "\
             #      + "problems are exacerbated in virtualized deployments."
 
-            #dialog.display_dialog(
+            # dialog.display_dialog(
             #    self, widget.TextLabel(msg), "Empty NTP Warning")
         del responses['ntpenabled']
         for ntpfield, ntpvalue in responses.iteritems():
-            #NTP must be under 255 chars
+            # NTP must be under 255 chars
             if len(ntpvalue) >= 255:
                 errors.append("%s must be under 255 chars." %
                               self.defaults[ntpfield]['label'])
 
-            #NTP needs to have valid chars
+            # NTP needs to have valid chars
             if re.search('[^a-zA-Z0-9-.]', ntpvalue):
                 errors.append("%s contains illegal characters." %
                               self.defaults[ntpfield]['label'])
 
-            #ensure external NTP is valid
+            # ensure external NTP is valid
             if len(ntpvalue) > 0:
-                #Validate first NTP address
+                # Validate first NTP address
                 try:
-                    #Try to test NTP via ntpdate
+                    # Try to test NTP via ntpdate
                     if not self.checkNTP(ntpvalue):
                         warnings.append("%s unable to perform NTP."
                                         % self.defaults[ntpfield]['label'])
@@ -158,9 +158,9 @@ class ntpsetup(urwid.WidgetWrap):
             return False
 
         self.save(responses)
-        #Apply NTP now, ignoring errors
+        # Apply NTP now, ignoring errors
         if len(responses['NTP1']) > 0:
-            #Stop ntpd, run ntpdate, start ntpd
+            # Stop ntpd, run ntpdate, start ntpd
             start_command = ["service", "ntpd", "start"]
             stop_command = ["service", "ntpd", "stop"]
             ntpdate_command = ["ntpdate", "-t5", responses['NTP1']]
@@ -179,26 +179,26 @@ class ntpsetup(urwid.WidgetWrap):
         return ModuleHelper.load(self, ignoredparams=['ntpenabled'])
 
     def save(self, responses):
-        ## Generic settings start ##
+        # Generic settings start
         newsettings = dict()
         for setting in responses.keys():
             if "/" in setting:
                 part1, part2 = setting.split("/")
                 if part1 not in newsettings:
-                #We may not touch all settings, so copy oldsettings first
+                    # We may not touch all settings, so copy oldsettings first
                     newsettings[part1] = self.oldsettings[part1]
                 newsettings[part1][part2] = responses[setting]
             else:
                 newsettings[setting] = responses[setting]
-        ## Generic settings end ##
+        # Generic settings end
 
         Settings().write(newsettings,
                          defaultsfile=self.parent.defaultsettingsfile,
                          outfn=self.parent.settingsfile)
 
-        #Set oldsettings to reflect new settings
+        # Set oldsettings to reflect new settings
         self.oldsettings = newsettings
-        #Update defaults
+        # Update defaults
         for index, fieldname in enumerate(self.fields):
             if fieldname != "blank" and fieldname in newsettings:
                 self.defaults[fieldname]['value'] = newsettings[fieldname]
@@ -211,7 +211,7 @@ class ntpsetup(urwid.WidgetWrap):
 
     def refresh(self):
         self.gateway = self.get_default_gateway_linux()
-        #If gateway is empty, disable NTP
+        # If gateway is empty, disable NTP
         if self.gateway is None:
             for index, fieldname in enumerate(self.fields):
                 if fieldname == "ntpenabled":
@@ -222,10 +222,10 @@ class ntpsetup(urwid.WidgetWrap):
 
     def radioSelect(self, current, state, user_data=None):
         """Update network details and display information."""
-        ### This makes no sense, but urwid returns the previous object.
-        ### The previous object has True state, which is wrong.
-        ### Somewhere in current.group a RadioButton is set to True.
-        ### Our quest is to find it.
+        # This makes no sense, but urwid returns the previous object.
+        # The previous object has True state, which is wrong.
+        # Somewhere in current.group a RadioButton is set to True.
+        # Our quest is to find it.
         for rb in current.group:
             if rb.get_label() == current.get_label():
                 continue
