@@ -55,15 +55,15 @@ def getCidrSize(cidr):
 
 
 def getNetwork(ip, netmask, additionalip=None):
-    #Return a list excluding ip and broadcast IPs
+    # Return a list excluding ip and broadcast IPs
     try:
         ipn = netaddr.IPNetwork("%s/%s" % (ip, netmask))
         ipn_list = list(ipn)
-        #Drop broadcast and network ip
+        # Drop broadcast and network ip
         ipn_list = ipn_list[1:-1]
-        #Drop ip
+        # Drop ip
         ipn_list[:] = [value for value in ipn_list if str(value) != ip]
-        #Drop additionalip
+        # Drop additionalip
         if additionalip:
             ipn_list[:] = [value for value in ipn_list if
                            str(value) != additionalip]
@@ -117,7 +117,7 @@ def list_host_ip_addresses(interfaces="all"):
 
 
 def range(startip, endip):
-    #Return a list of IPs between startip and endip
+    # Return a list of IPs between startip and endip
     try:
         return list(netaddr.iter_iprange(startip, endip))
     except netaddr.AddrFormatError:
@@ -125,7 +125,7 @@ def range(startip, endip):
 
 
 def intersects(range1, range2):
-    #Returns true if any IPs in range1 exist in range2
+    # Returns true if any IPs in range1 exist in range2
     return range1 & range2
 
 
@@ -134,7 +134,8 @@ def netmaskToCidr(netmask):
 
 
 def duplicateIPExists(ip, iface, arping_bind=False):
-    """Checks for duplicate IP addresses using arping
+    """Checks for duplicate IP addresses using arping.
+
     Don't use arping_bind unless you know what you are doing.
 
     :param ip: IP to scan for

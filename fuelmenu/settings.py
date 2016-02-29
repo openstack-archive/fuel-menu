@@ -98,7 +98,7 @@ class Settings(object):
         settings = self.read(defaultsfile)
         settings.update(self.read(outfn))
         settings.update(newvalues)
-        outfile = file(outfn, 'w')
-        yaml.dump(settings, outfile, default_style='"',
-                  default_flow_style=False)
+        with open(outfn, 'w') as outfile:
+            yaml.dump(settings, outfile, default_style='"',
+                      default_flow_style=False)
         return True

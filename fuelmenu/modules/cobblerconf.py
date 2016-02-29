@@ -42,10 +42,10 @@ class cobblerconf(urwid.WidgetWrap):
         self.activeiface = sorted(self.netsettings.keys())[0]
         self.parent.managediface = self.activeiface
 
-        #UI text
+        # UI text
         text1 = "Settings for PXE booting of slave nodes."
         text2 = "Select the interface where PXE will run:"
-        #Placeholder for network settings text
+        # Placeholder for network settings text
         self.net_choices = widget.ChoicesGroup(sorted(self.netsettings.keys()),
                                                default_value=self.activeiface,
                                                fn=self.radioSelect)
@@ -87,20 +87,20 @@ to advertise via DHCP to nodes",
         self.parent.footer.set_text("Checking data...")
         self.parent.refreshScreen()
 
-        #Refresh networking to make sure IP matches
+        # Refresh networking to make sure IP matches
         self.getNetwork()
 
-        #Get field information
+        # Get field information
         responses = dict()
 
         for index, fieldname in enumerate(self.fields):
             if fieldname != "blank" and "label" not in fieldname:
                 responses[fieldname] = self.edits[index].get_edit_text()
 
-        ###Validate each field
+        # Validate each field
         errors = []
 
-        #Set internal_{ipaddress,netmask,interface}
+        # Set internal_{ipaddress,netmask,interface}
         responses["ADMIN_NETWORK/interface"] = self.activeiface
         responses["ADMIN_NETWORK/netmask"] = self.netsettings[
             self.activeiface]["netmask"]
@@ -109,7 +109,7 @@ to advertise via DHCP to nodes",
         responses["ADMIN_NETWORK/ipaddress"] = self.netsettings[
             self.activeiface]["addr"]
 
-        #ensure management interface is valid
+        # ensure management interface is valid
         if responses["ADMIN_NETWORK/interface"] not in self.netsettings.keys():
             errors.append("Management interface not valid")
         else:
@@ -129,11 +129,11 @@ Please wait...")
             if num_dhcp == 0:
                 log.debug("No DHCP servers found")
             else:
-                #Problem exists, but permit user to continue
+                # Problem exists, but permit user to continue
                 log.error("%s foreign DHCP server(s) found: %s" %
                           (num_dhcp, dhcp_server_data))
 
-                #Build dialog elements
+                # Build dialog elements
                 dhcp_info = []
                 dhcp_info.append(urwid.Padding(
                                  urwid.Text(("header", "!!! WARNING !!!")),
@@ -154,19 +154,19 @@ else deployment will likely fail."))
                 dialog.display_dialog(self, urwid.Pile(dhcp_info),
                                       "DHCP Servers Found on %s"
                                       % self.activeiface)
-            ###Ensure pool start and end are on the same subnet as mgmt_if
-            #Ensure mgmt_if has an IP first
+            # Ensure pool start and end are on the same subnet as mgmt_if
+            # Ensure mgmt_if has an IP first
             if len(self.netsettings[responses[
                "ADMIN_NETWORK/interface"]]["addr"]) == 0:
                 errors.append("Go to Interfaces to configure management \
 interface first.")
             else:
-                #Ensure ADMIN_NETWORK/interface is not running DHCP
+                # Ensure ADMIN_NETWORK/interface is not running DHCP
                 if self.netsettings[responses[
                         "ADMIN_NETWORK/interface"]]["bootproto"] == "dhcp":
                     errors.append("%s is running DHCP. Change it to static "
                                   "first." % self.activeiface)
-                #Ensure DHCP Pool Start and DHCP Pool are valid IPs
+                # Ensure DHCP Pool Start and DHCP Pool are valid IPs
                 try:
                     if netaddr.valid_ipv4(responses[
                                           "ADMIN_NETWORK/dhcp_pool_start"]):
@@ -202,7 +202,8 @@ interface first.")
                 except Exception:
                     errors.append("Invalid IP address for DHCP Pool end")
 
-                #Ensure pool start and end are in the same subnet of each other
+                # Ensure pool start and end are in the same
+                # subnet of each other
                 netmask = self.netsettings[responses[
                                            "ADMIN_NETWORK/interface"
                                            ]]["netmask"]
@@ -212,7 +213,7 @@ interface first.")
                     errors.append("DHCP Pool start and end are not in the "
                                   "same subnet.")
 
-                #Ensure pool start and end are in the right netmask
+                # Ensure pool start and end are in the right netmask
                 mgmt_if_ipaddr = self.netsettings[responses[
                     "ADMIN_NETWORK/interface"]]["addr"]
                 if network.inSameSubnet(responses[
@@ -292,20 +293,20 @@ interface first.")
         return oldsettings
 
     def save(self, responses):
-        ## Generic settings start ##
+        # Generic settings start ##
         newsettings = ModuleHelper.save(self, responses)
         for setting in responses.keys():
             if "/" in setting:
                 part1, part2 = setting.split("/")
                 if part1 not in newsettings:
-                    #We may not touch all settings, so copy oldsettings first
+                    # We may not touch all settings, so copy oldsettings first
                     newsettings[part1] = self.oldsettings[part1]
                 newsettings[part1][part2] = responses[setting]
             else:
                 newsettings[setting] = responses[setting]
-        ## Generic settings end ##
+        # Generic settings end
 
-        ## Need to calculate and netmask
+        # Need to calculate and netmask
         newsettings['ADMIN_NETWORK']['netmask'] = \
             self.netsettings[newsettings['ADMIN_NETWORK']['interface']][
                 "netmask"]
@@ -314,9 +315,9 @@ interface first.")
                          defaultsfile=self.parent.defaultsettingsfile,
                          outfn=self.parent.settingsfile)
 
-        #Set oldsettings to reflect new settings
+        # Set oldsettings to reflect new settings
         self.oldsettings = newsettings
-        #Update self.defaults
+        # Update self.defaults
         for index, fieldname in enumerate(self.fields):
             if fieldname != "blank" and "label" not in fieldname:
                 self.defaults[fieldname]['value'] = responses[fieldname]
@@ -334,9 +335,9 @@ interface first.")
 
     def radioSelect(self, current, state, user_data=None):
         """Update network details and display information."""
-        ### Urwid returns the previously selected radio button.
-        ### The previous object has True state, which is wrong.
-        ### Somewhere in rb group a RadioButton is set to True.
+        # Urwid returns the previously selected radio button.
+        # The previous object has True state, which is wrong.
+        # Somewhere in rb group a RadioButton is set to True.
         for rb in current.group:
             if rb.get_label() == current.get_label():
                 continue
@@ -370,12 +371,12 @@ interface first.")
             self.net_text4.set_text("WARNING: This interface is DOWN. "
                                     "Configure it first.")
 
-        #If DHCP pool start and matches activeiface network, don't update
-        #This means if you change your pool values, go to another page, then
-        #go back, it will not reset your changes. But what is more likely is
-        #you will change the network settings for admin interface and then come
-        #back to this page to update your DHCP settings. If the inSameSubnet
-        #test fails, just recalculate and set new values.
+        # If DHCP pool start and matches activeiface network, don't update
+        # This means if you change your pool values, go to another page, then
+        # go back, it will not reset your changes. But what is more likely is
+        # you will change the network settings for admin interface and then
+        # come back to this page to update your DHCP settings. If the
+        # inSameSubnet test fails, just recalculate and set new values.
         for index, key in enumerate(self.fields):
             if key == "ADMIN_NETWORK/dhcp_pool_start":
                 dhcp_start = self.edits[index].get_edit_text()
@@ -390,9 +391,9 @@ interface first.")
             log.debug("Existing network settings missing or invalid. "
                       "Updating...")
 
-        #Calculate and set Static/DHCP pool fields
-        #Max IPs = net size - 2 (master node + bcast)
-        #Add gateway so we exclude it
+        # Calculate and set Static/DHCP pool fields
+        # Max IPs = net size - 2 (master node + bcast)
+        # Add gateway so we exclude it
         net_ip_list = network.getNetwork(
             self.netsettings[self.activeiface]['addr'],
             self.netsettings[self.activeiface]['netmask'],
@@ -405,7 +406,7 @@ interface first.")
                 self.net_text4.set_text("This network configuration can "
                                         "support %s nodes." % len(dhcp_pool))
         except Exception:
-            #We don't have valid values, so mark all fields empty
+            # We don't have valid values, so mark all fields empty
             dynamic_start = ""
             dynamic_end = ""
         for index, key in enumerate(self.fields):

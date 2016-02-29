@@ -23,14 +23,14 @@ import urwid.web_display
 blank = urwid.Divider()
 
 
-class saveandquit():
+class saveandquit(object):
     def __init__(self, parent):
         self.name = "Quit Setup"
         self.priority = 99
         self.visible = True
         self.parent = parent
         self.screen = None
-        #UI text
+        # UI text
         saveandcontinue_button = widget.Button("Save and Continue",
                                                self.save_and_continue)
         saveandquit_button = widget.Button("Save and Quit", self.save_and_quit)

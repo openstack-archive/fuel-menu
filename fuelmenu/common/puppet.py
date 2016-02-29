@@ -55,7 +55,7 @@ def puppetApply(classes):
         if cls['type'] == consts.PUPPET_TYPE_LITERAL:
             continue
 
-        #Build params
+        # Build params
         for key, value in six.iteritems(cls["params"]):
             cmd_input.extend([key, "=>", _to_string(value)])
         cmd_input.append('}')
