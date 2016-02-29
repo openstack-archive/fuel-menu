@@ -23,3 +23,7 @@ RELEASE_FILE = "/etc/fuel_release"
 
 PRE_DEPLOYMENT_MODE = "pre"
 POST_DEPLOYMENT_MODE = "post"
+
+PUPPET_TYPE_LITERAL = "literal"
+PUPPET_TYPE_RESOURCE = "resource"
+PUPPET_TYPE_CLASS = "class"
