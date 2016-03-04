@@ -342,7 +342,9 @@ class bootstrapimg(urwid.WidgetWrap):
     def check_url(self, url, proxies):
         try:
             resp = requests.get(url, proxies=proxies, verify=False)
-        except requests.exceptions.RequestException:
+        except (requests.exceptions.RequestException,
+                requests.exceptions.BaseHTTPError) as e:
+            log.error(e)
             return False
         return resp.ok
 
