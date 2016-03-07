@@ -65,5 +65,4 @@ BOOTSTRAP:
     suite: "mos${mos_version}-holdback"
     type: "deb"
 PRODUCTION: docker
-FEATURE_GROUPS:
-  - mirantis
+FEATURE_GROUPS: []
