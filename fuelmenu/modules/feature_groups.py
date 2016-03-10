@@ -118,4 +118,4 @@ class feature_groups(urwid.WidgetWrap):
 
     def screenUI(self):
         return ModuleHelper.screenUI(self, self.header_content, self.fields,
-                                     self.defaults, showallbuttons=True)
+                                     self.defaults, show_all_buttons=True)
