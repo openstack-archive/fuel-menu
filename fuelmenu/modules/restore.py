@@ -189,4 +189,4 @@ class restore(urwid.WidgetWrap):
     def screenUI(self):
         return helper.ModuleHelper.screenUI(
             self, self.header_content, self.fields, self.defaults,
-            showallbuttons=True)
+            show_all_buttons=True)
