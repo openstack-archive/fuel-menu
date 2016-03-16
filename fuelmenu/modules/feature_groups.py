@@ -90,13 +90,14 @@ class feature_groups(urwid.WidgetWrap):
                 log.warning("unexpected error: %s", e.message)
 
     def save(self, responses):
-        settings = self.parent.settings
-        newsettings = ModuleHelper.make_settings_from_responses(responses)
-        settings.merge(newsettings)
-
-        for setting in self.defaults:
+        newsettings = {}
+        for setting in responses:
             part1, part2 = setting.split("/")
-            self.defaults[setting]["value"] = part2 in settings[part1]
+            if part1 not in newsettings:
+                newsettings[part1] = []
+            if responses[setting]:
+                newsettings[part1].append(part2)
+        self.parent.settings.merge(newsettings)
 
     def cancel(self, button):
         ModuleHelper.cancel(self, button)
