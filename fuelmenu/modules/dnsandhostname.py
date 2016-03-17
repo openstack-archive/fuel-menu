@@ -75,7 +75,6 @@ is accessible"}
 
         self.load()
         self.screen = None
-        self.fixEtcHosts()
 
     def fixEtcHosts(self):
         # replace ip for env variable HOSTNAME in /etc/hosts
@@ -202,6 +201,8 @@ is accessible"}
             return responses
 
     def apply(self, args):
+        self.fixEtcHosts()
+
         responses = self.check(args)
         if responses is False:
             log.error("Check failed. Not applying")
