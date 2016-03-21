@@ -231,6 +231,13 @@ class interfaces(urwid.WidgetWrap):
             self.parent.footer.set_text("No errors found.")
             return responses
 
+    def emtpyOtherGateways(self, activeiface):
+        l3ifconfig = {'type': "resource",
+                      'class': "l23network::l3::ifconfig",
+                      'params': {'gateway': None}}
+        return [dict(l3ifconfig, name=name)
+                for name in self.netsettings if name != activeiface]
+
     def apply(self, args):
         responses = self.check(args)
         if responses is False:
@@ -268,11 +275,12 @@ class interfaces(urwid.WidgetWrap):
                       'class': "l23network::l3::ifconfig",
                       'name': self.activeiface}
 
+        additionalclasses = []
         if responses["onboot"].lower() == "no":
             params = {"ipaddr": "none",
                       "gateway": ""}
         elif responses["bootproto"] == "dhcp":
-            self.unset_gateway()
+            additionalclasses = self.emtpyOtherGateways(self.activeiface)
             params = {"ipaddr": "dhcp"}
         else:
             cidr = network.netmaskToCidr(responses["netmask"])
@@ -280,7 +288,7 @@ class interfaces(urwid.WidgetWrap):
                       "check_by_ping": "none"}
             if len(responses["gateway"]) > 1:
                 params["gateway"] = responses["gateway"]
-                self.unset_gateway()
+                additionalclasses = self.emtpyOtherGateways(self.activeiface)
             if network.inSameSubnet(responses["ipaddr"],
                                     self.get_default_gateway_linux(),
                                     responses["netmask"]):
@@ -289,6 +297,7 @@ class interfaces(urwid.WidgetWrap):
 
         l3ifconfig['params'] = params
         puppetclasses.append(l3ifconfig)
+        puppetclasses.extend(additionalclasses)
         self.log.info("Puppet data: %s" % (puppetclasses))
         try:
             self.parent.refreshScreen()
@@ -300,6 +309,8 @@ class interfaces(urwid.WidgetWrap):
             if gateway is None:
                 gateway = ""
             self.fixEtcHosts()
+            if responses['bootproto'] == 'dhcp':
+                self.parent.dns_might_have_changed = True
 
         except Exception as e:
             self.log.error(e)
@@ -325,8 +336,7 @@ class interfaces(urwid.WidgetWrap):
 
     def unset_gateway(self):
         """Unset current gateway."""
-        command = "ip route del default dev $(ip ro | grep default"\
-                  " | awk '{print $5}')"
+        command = "ip route del 0/0"
         if self.get_default_gateway_linux() is None:
             return True
         code, output, errout = utils.execute(command, shell=True)
