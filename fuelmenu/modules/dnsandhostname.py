@@ -279,6 +279,18 @@ is accessible"}
     def cancel(self, button):
         ModuleHelper.cancel(self, button)
 
+    def resolv_conf_settings(self):
+        # Parse /etc/resolv.conf if it contains data
+        settings = {}
+        search, domain, nameservers = self.getDNS()
+        if search:
+            settings["DNS_SEARCH"] = search
+        if domain:
+            settings["DNS_DOMAIN"] = domain
+        if nameservers:
+            settings["DNS_UPSTREAM"] = nameservers
+        return settings
+
     def load(self):
         # Precedence of DNS information:
         # Class defaults, fuelmenu default YAML, astute.yaml, uname,
@@ -294,14 +306,7 @@ is accessible"}
         except Exception:
             log.warning("Unable to look up system hostname")
 
-        # Parse /etc/resolv.conf if it contains data
-        search, domain, nameservers = self.getDNS()
-        if search:
-            oldsettings["DNS_SEARCH"] = search
-        if domain:
-            oldsettings["DNS_DOMAIN"] = domain
-        if nameservers:
-            oldsettings["DNS_UPSTREAM"] = nameservers
+        oldsettings.update(self.resolv_conf_settings())
 
         ModuleHelper.load_to_defaults(oldsettings,
                                       self.defaults,
@@ -361,7 +366,12 @@ is accessible"}
         return ModuleHelper.get_default_gateway_linux()
 
     def refresh(self):
-        pass
+        if self.parent.dns_might_have_changed:
+            settings = self.resolv_conf_settings()
+            for index, fieldname in enumerate(self.fields):
+                if fieldname in settings:
+                    self.edits[index].set_edit_text(settings[fieldname])
+            self.parent.dns_might_have_changed = False
 
     def screenUI(self):
         return ModuleHelper.screenUI(self, self.header_content, self.fields,
