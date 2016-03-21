@@ -165,6 +165,7 @@ def search_external_dhcp(iface, timeout):
     command = ["dhcpcheck", "discover", "--timeout", str(timeout), "-f",
                "json", "--ifaces", iface]
     try:
+        upIface(iface)  # ensure iface is up
         _, output, _ = execute(command)
         data = json.loads(output.strip())
         # FIXME(mattymo): Sometimes dhcpcheck prints json with keys, but no

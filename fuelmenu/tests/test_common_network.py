@@ -109,7 +109,8 @@ class TestUtils(unittest.TestCase):
 
     def make_process_mock(self, return_code=0, retval=('stdout', 'stderr')):
         process_mock = mock.Mock(
-            communicate=mock.Mock(return_value=retval))
+            communicate=mock.Mock(return_value=retval),
+            poll=mock.Mock(return_value=return_code))
         process_mock.stdout = ['Stdout line 1', 'Stdout line 2']
         process_mock.returncode = return_code
 
@@ -125,7 +126,7 @@ class TestUtils(unittest.TestCase):
                                               retval=(output, ''))
         with patch.object(subprocess, 'Popen', return_value=process_mock):
             data = network.search_external_dhcp(interface, timeout)
-            process_mock.communicate.assert_called_once_with(input=None)
+            process_mock.communicate.assert_called_with(input=None)
             self.assertEqual(data, json.loads(output))
 
     def test_search_external_dhcp_nodata(self):
@@ -138,7 +139,7 @@ class TestUtils(unittest.TestCase):
                                               retval=(output, ''))
         with patch.object(subprocess, 'Popen', return_value=process_mock):
             data = network.search_external_dhcp(interface, timeout)
-            process_mock.communicate.assert_called_once_with(input=None)
+            process_mock.communicate.assert_called_with(input=None)
             self.assertEqual(data, [])
 
     def test_search_external_dhcp_raises_exception(self):
