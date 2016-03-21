@@ -30,7 +30,7 @@ if sys.version_info[0:2] == (2, 6):
 
 setuptools.setup(
     name="fuelmenu",
-    version='9.0.0',
+    version='10.0.0',
     description="Console util for pre-configuration of Fuel server",
     author="Matthew Mosesohn",
     author_email="mmosesohn@mirantis.com",
