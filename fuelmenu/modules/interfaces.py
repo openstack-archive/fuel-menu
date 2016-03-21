@@ -28,7 +28,6 @@ from fuelmenu.common import network
 from fuelmenu.common import puppet
 from fuelmenu.common import replace
 import fuelmenu.common.urwidwrapper as widget
-from fuelmenu.common import utils
 
 blank = urwid.Divider()
 
@@ -231,6 +230,15 @@ class interfaces(urwid.WidgetWrap):
             self.parent.footer.set_text("No errors found.")
             return responses
 
+    def clear_gateways_except(self, iface):
+        return [{'type': "resource",
+                 'class': "l23network::l3::ifconfig",
+                 'name': name,
+                 'params': {'ipaddr': network.addr_in_cidr_notation(
+                     self.netsettings[name]['addr'],
+                     self.netsettings[name]['netmask'])}}
+                for name in self.netsettings if name != iface]
+
     def apply(self, args):
         responses = self.check(args)
         if responses is False:
@@ -268,25 +276,24 @@ class interfaces(urwid.WidgetWrap):
                       'class': "l23network::l3::ifconfig",
                       'name': self.activeiface}
 
+        additionalclasses = []
         if responses["onboot"].lower() == "no":
             params = {"ipaddr": "none",
                       "gateway": ""}
         elif responses["bootproto"] == "dhcp":
-            self.unset_gateway()
+            additionalclasses = self.clear_gateways_except(self.activeiface)
             params = {"ipaddr": "dhcp"}
         else:
-            cidr = network.netmaskToCidr(responses["netmask"])
-            params = {"ipaddr": "{0}/{1}".format(responses["ipaddr"], cidr),
+            cidr = network.addr_in_cidr_notation(responses["ipaddr"],
+                                                 responses["netmask"])
+            params = {"ipaddr": cidr,
                       "check_by_ping": "none"}
             if len(responses["gateway"]) > 1:
                 params["gateway"] = responses["gateway"]
-                self.unset_gateway()
-            if network.inSameSubnet(responses["ipaddr"],
-                                    self.get_default_gateway_linux(),
-                                    responses["netmask"]):
-                # Unset if clearing currently set gateway on same subnet
-                self.unset_gateway()
+                additionalclasses = self.clear_gateways_except(
+                    self.activeiface)
 
+        puppetclasses.extend(additionalclasses)
         l3ifconfig['params'] = params
         puppetclasses.append(l3ifconfig)
         self.log.info("Puppet data: %s" % (puppetclasses))
@@ -300,6 +307,8 @@ class interfaces(urwid.WidgetWrap):
             if gateway is None:
                 gateway = ""
             self.fixEtcHosts()
+            if responses['bootproto'] == 'dhcp':
+                self.parent.dns_might_have_changed = True
 
         except Exception as e:
             self.log.error(e)
@@ -322,20 +331,6 @@ class interfaces(urwid.WidgetWrap):
 
     def get_default_gateway_linux(self):
         return ModuleHelper.get_default_gateway_linux()
-
-    def unset_gateway(self):
-        """Unset current gateway."""
-        command = "ip route del default dev $(ip ro | grep default"\
-                  " | awk '{print $5}')"
-        if self.get_default_gateway_linux() is None:
-            return True
-        code, output, errout = utils.execute(command, shell=True)
-        if code != 0:
-            self.log.error("Unable to unset gateway")
-            self.log.info("Command was: {0}\nStderr: {1}\nStdout:".format(
-                command, output, errout))
-            self.parent.footer.set_text("Unable to unset gateway.")
-            return False
 
     def radioSelectIface(self, current, state, user_data=None):
         """Update network details and display information."""
