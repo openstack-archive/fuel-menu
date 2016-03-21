@@ -476,6 +476,8 @@ def main(*args, **kwargs):
               "Could not start.".format(options.iface))
         sys.exit(1)
 
+    os.system('systemctl stop NetworkManager')
+
     if options.save_only:
         save_only(options.iface)
     else:

@@ -325,8 +325,7 @@ class interfaces(urwid.WidgetWrap):
 
     def unset_gateway(self):
         """Unset current gateway."""
-        command = "ip route del default dev $(ip ro | grep default"\
-                  " | awk '{print $5}')"
+        command = "ip route del 0/0"
         if self.get_default_gateway_linux() is None:
             return True
         code, output, errout = utils.execute(command, shell=True)
