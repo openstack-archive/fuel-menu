@@ -150,7 +150,7 @@ class ModuleHelper(object):
 
     @classmethod
     def _create_radiobutton_widget(cls, default_data):
-        label = widget.TextLabel(default_data["label"])
+        label = widget.TextLabel(('editlbl', default_data["label"]))
         callback = default_data.get("callback", None)
 
         choices_list = default_data.get("choices")

@@ -256,7 +256,8 @@ class TestModuleHelperCreateRadioButtonWidget(TestModuleHelperBase):
         })
         self._check('_create_radiobutton_widget', m_columns.return_value,
                     self.default_data)
-        m_label.assert_called_once_with(self.default_data['label'])
+        m_label.assert_called_once_with(('editlbl',
+                                         self.default_data['label']))
         m_choices.assert_called_once_with(
             self.default_data['choices'],
             default_value=self.default_data['choices'][0],
@@ -269,7 +270,8 @@ class TestModuleHelperCreateRadioButtonWidget(TestModuleHelperBase):
             self, m_columns, m_choices, m_label):
         self._check('_create_radiobutton_widget', m_columns.return_value,
                     self.default_data)
-        m_label.assert_called_once_with(self.default_data['label'])
+        m_label.assert_called_once_with(('editlbl',
+                                         self.default_data['label']))
         m_choices.assert_called_once_with(
             ['Yes', 'No'],
             default_value='Yes',
