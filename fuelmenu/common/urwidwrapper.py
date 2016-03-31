@@ -82,9 +82,9 @@ def Columns(objects):
 
 
 def Button(text, callback=None):
-    """Returns a wrapped Button with reverse focus attribute."""
-    button = urwid.Button(text, on_press=callback)
-    return urwid.AttrMap(button, None, focus_map='reversed')
+    """Returns a wrapped Button with attributes buttn and buttnf."""
+    button = urwid.Button(text, callback)
+    return urwid.AttrMap(button, 'buttn', 'buttnf')
 
 
 def SimpleListWalker(contents):

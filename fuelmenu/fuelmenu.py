@@ -135,7 +135,7 @@ class FuelSetup(object):
         self.cols = urwid.Columns(
             [
                 ('fixed', 20, urwid.Pile([
-                    urwid.AttrMap(self.menubox, 'bright'),
+                    urwid.AttrMap(self.menubox, 'body'),
                     urwid.Divider(" ")])),
                 ('weight', 3, urwid.Pile([
                     urwid.Divider(" "),
@@ -196,7 +196,7 @@ class FuelSetup(object):
         self.cols = urwid.Columns(
             [
                 ('fixed', 20, urwid.Pile([
-                    urwid.AttrMap(self.menubox, 'bright'),
+                    urwid.AttrMap(self.menubox, 'body'),
                     urwid.Divider(" ")])),
                 ('weight', 3, urwid.Pile([
                     urwid.Divider(" "),
@@ -214,19 +214,17 @@ class FuelSetup(object):
         palette = \
             [
                 ('body', 'black', 'light gray', 'standout'),
-                ('reverse', 'light gray', 'black'),
-                ('header', 'white', 'dark red', 'bold'),
-                ('important', 'dark blue', 'light gray',
+                ('header', 'light red', 'light gray', 'bold'),
+                ('footer', 'light red', 'light gray', 'bold'),
+                ('menu', 'black', 'light gray', 'bold'),
+                ('menuf', 'white', 'dark red', 'bold'),
+                ('important', 'light red', 'light gray',
                     ('standout', 'underline')),
-                ('editfc', 'white', 'dark blue', 'bold'),
-                ('editbx', 'light gray', 'dark blue'),
-                ('editcp', 'black', 'light gray', 'standout'),
-                ('bright', 'dark gray', 'light gray', ('bold', 'standout')),
-                ('buttn', 'black', 'dark cyan'),
-                ('buttnf', 'white', 'dark blue', 'bold'),
-                ('light gray', 'white', 'light gray', 'bold'),
-                ('red', 'dark red', 'light gray', 'bold'),
-                ('black', 'black', 'black', 'bold'),
+                ('editlbl', 'light cyan', 'light gray'),
+                ('editfc', 'dark gray', 'white', 'bold'),
+                ('editbx', 'light gray', 'dark gray'),
+                ('buttn', 'white', 'dark green', 'bold'),
+                ('buttnf', 'light gray', 'dark green', 'bold'),
             ]
 
         # use appropriate Screen class
