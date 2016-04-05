@@ -87,6 +87,7 @@ class FuelSetup(object):
         self.frame = None
         self.screen = None
         self.managediface = network.get_physical_ifaces()[0]
+        self.dns_might_have_changed = False
         # Set to true to move all settings to end
         self.globalsave = True
         self.version = utils.get_fuel_version()
