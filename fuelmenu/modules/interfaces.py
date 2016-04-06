@@ -231,13 +231,19 @@ class interfaces(urwid.WidgetWrap):
             return responses
 
     def clear_gateways_except(self, iface):
+
+        def include_interface(name):
+            return name != iface and \
+                self.netsettings[name].get('addr') and \
+                self.netsettings[name].get('netmask')
+
         return [{'type': "resource",
                  'class': "l23network::l3::ifconfig",
                  'name': name,
                  'params': {'ipaddr': network.addr_in_cidr_notation(
                      self.netsettings[name]['addr'],
                      self.netsettings[name]['netmask'])}}
-                for name in self.netsettings if name != iface]
+                for name in self.netsettings if include_interface(name)]
 
     def apply(self, args):
         responses = self.check(args)

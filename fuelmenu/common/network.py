@@ -134,7 +134,11 @@ def netmaskToCidr(netmask):
 
 
 def addr_in_cidr_notation(ip, netmask):
-    return str(netaddr.IPNetwork("{0}/{1}".format(ip, netmask)))
+    try:
+        return str(netaddr.IPNetwork("{0}/{1}".format(ip, netmask)))
+    except:
+        log.exception('Invalid IP address or netmask, '
+                      'ip: "%s", netmask: "%s"', ip, netmask)
 
 
 def duplicateIPExists(ip, iface, arping_bind=False):
