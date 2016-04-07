@@ -12,28 +12,27 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 import logging
+import os.path
 import random as _random
 import string
 import subprocess
 
 from fuelmenu import consts
 
-
 log = logging.getLogger('fuelmenu.common.utils')
 random = _random.SystemRandom()
 
 
 def get_deployment_mode():
-    """Report if any fuel containers are already created."""
-    command = ['docker', 'ps', '-a']
+    """Report post deployment if fuelclient config exists."""
     try:
-        _, output, _ = execute(command)
-        if "fuel" in output.lower():
+        result = os.path.isfile('/root/.config/fuel/fuel_client.yaml')
+        if result:
             return consts.POST_DEPLOYMENT_MODE
         else:
             return consts.PRE_DEPLOYMENT_MODE
     except OSError:
-        log.warning('Unable to check deployment mode via docker. Assuming'
+        log.warning('Unable to check deployment mode. Assuming'
                     ' pre-deployment stage.')
         return consts.PRE_DEPLOYMENT_MODE
 

@@ -18,7 +18,6 @@ from fuelmenu.common import utils
 
 import mock
 from mock import patch
-import subprocess
 import unittest
 
 
@@ -31,21 +30,17 @@ class TestUtils(unittest.TestCase):
 
         return process_mock
 
-    def test_get_deployment_mode_pre(self):
-        process_mock = self.make_process_mock(return_code=0)
-        with patch.object(subprocess, 'Popen', return_value=process_mock):
-            mode = utils.get_deployment_mode()
-            process_mock.communicate.assert_called_once_with(input=None)
-            self.assertEqual('pre', mode)
+    @mock.patch('fuelmenu.common.utils.os')
+    def test_get_deployment_mode_pre(self, os_mock):
+        os_mock.path.isfile.return_value = False
+        mode = utils.get_deployment_mode()
+        self.assertEqual('post', mode)
 
-    def test_get_deployment_mode_post(self):
-        output = 'fuel-core-8.0-rabbitmq'
-        process_mock = self.make_process_mock(return_code=0,
-                                              retval=(output, ''))
-        with patch.object(subprocess, 'Popen', return_value=process_mock):
-            mode = utils.get_deployment_mode()
-            process_mock.communicate.assert_called_once_with(input=None)
-            self.assertEqual('post', mode)
+    @mock.patch('fuelmenu.common.utils.os')
+    def test_get_deployment_mode_post(self, os_mock):
+        os_mock.path.isfile.return_value = True
+        mode = utils.get_deployment_mode()
+        self.assertEqual('post', mode)
 
     @mock.patch('fuelmenu.common.utils.get_deployment_mode')
     def test_is_pre_deployment(self, utils_mock):
