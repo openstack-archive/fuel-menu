@@ -403,6 +403,7 @@ def save_only(iface, settingsfile=consts.SETTINGS_FILE):
             "ADMIN_NETWORK/dhcp_pool_start": dynamic_start,
             "ADMIN_NETWORK/dhcp_pool_end": dynamic_end,
             "ADMIN_NETWORK/dhcp_gateway": ip,
+            "ADMIN_NETWORK/ssh_network": network.getCidr(ip, netmask),
             "HOSTNAME": hostname,
             "DNS_DOMAIN": domain,
             "DNS_SEARCH": domain,
