@@ -222,7 +222,7 @@ class FuelSetup(object):
                 ('important', 'light red', 'light gray',
                     ('standout', 'underline')),
                 ('editlbl', 'black', 'light gray'),
-                ('editfc', 'dark gray', 'white', 'bold'),
+                ('editfc', 'light gray', 'black', 'bold'),
                 ('editbx', 'light gray', 'dark gray'),
                 ('buttn', 'white', 'dark green', 'bold'),
                 ('buttnf', 'light gray', 'dark green', 'bold'),
