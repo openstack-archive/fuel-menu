@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 import logging
+import os
 import random as _random
 import string
 import subprocess
@@ -24,16 +25,15 @@ random = _random.SystemRandom()
 
 
 def get_deployment_mode():
-    """Report if any fuel containers are already created."""
-    command = ['docker', 'ps', '-a']
+    """Report post deployment if keys directory exists."""
     try:
-        _, output, _ = execute(command)
-        if "fuel" in output.lower():
+        result = os.path.isdir('/var/lib/fuel/keys/master')
+        if result:
             return consts.POST_DEPLOYMENT_MODE
         else:
             return consts.PRE_DEPLOYMENT_MODE
     except OSError:
-        log.warning('Unable to check deployment mode via docker. Assuming'
+        log.warning('Unable to check deployment mode. Assuming'
                     ' pre-deployment stage.')
         return consts.PRE_DEPLOYMENT_MODE
 
