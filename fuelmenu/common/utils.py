@@ -11,11 +11,14 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+from __future__ import print_function
+import fcntl
 import logging
 import os
 import random as _random
 import string
 import subprocess
+import sys
 
 from fuelmenu import consts
 
@@ -86,3 +89,21 @@ def gensalt():
     sha512prefix = "$6$"
     random_letters = ''.join(random.choice(letters) for _ in range(16))
     return sha512prefix + random_letters
+
+
+def lock_running(lock_file):
+    """Tries to acquire app lock
+
+    :param lock_file: a path to a file for locking
+
+    :returns: True in case of success, False, if lock's already held
+    """
+    global lock_file_obj
+    lock_file_obj = open(lock_file, "w")
+    try:
+        fcntl.lockf(lock_file_obj, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        return True
+    except IOError:
+        print("Another copy of fuelmenu is running. "
+              "Please exit it and try again.", file=sys.stderr)
+        return False
