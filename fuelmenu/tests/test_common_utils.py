@@ -14,6 +14,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import os
+import signal
+import tempfile
+import time
+
 from fuelmenu.common import utils
 
 import mock
@@ -73,3 +78,54 @@ class TestUtils(unittest.TestCase):
             mocked_open.side_effect = IOError()
             data = utils.get_fuel_version()
             self.assertEqual("", data)
+
+    def test_lock_running(self):
+        lock_file = tempfile.mktemp()
+        self.assertTrue(utils.lock_running(lock_file))
+
+    def test_lock_running_fail(self):
+
+        def handler(signum, frame):
+            raise Exception("Timeout occured while running unit test "
+                            "test_lock_running_fail")
+
+        # set an alarm, because test may hang
+        signal.signal(signal.SIGALRM, handler)
+        signal.setitimer(signal.ITIMER_REAL, 3)
+
+        lock_file = tempfile.mktemp()
+
+        read_fd1, write_fd1 = os.pipe()
+        read_fd2, write_fd2 = os.pipe()
+        pid = os.fork()
+        if pid == 0:
+            # Run lock_running in child first
+            os.close(read_fd1)
+            os.close(write_fd2)
+            write_f1 = os.fdopen(write_fd1, 'w')
+            read_f2 = os.fdopen(read_fd2, 'r')
+
+            utils.lock_running(lock_file)
+
+            write_f1.write('x')
+            write_f1.close()
+            read_f2.read()
+
+            # exit from child by issuing execve, so that unit
+            # testing framework will not finish in two instances
+            os.execlp('true', 'true')
+        else:
+            # then in parent
+            os.close(write_fd1)
+            os.close(read_fd2)
+            read_f1 = os.fdopen(read_fd1, 'r')
+            write_f2 = os.fdopen(write_fd2, 'w')
+            read_f1.read()
+
+            # child is holding lock at this point
+            self.assertFalse(utils.lock_running(lock_file))
+
+            write_f2.write('x')
+            write_f2.close()
+
+            signal.alarm(0)
