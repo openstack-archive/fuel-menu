@@ -25,6 +25,7 @@ from fuelmenu import consts
 from fuelmenu import settings as settings_module
 
 
+import fcntl
 import logging
 import operator
 from optparse import OptionParser
@@ -451,6 +452,17 @@ def save_only(iface, settingsfile=consts.SETTINGS_FILE):
     settings.write(outfn=settingsfile)
 
 
+def lock_running(lock_file):
+    global lock_file_obj
+    lock_file_obj = open(lock_file, "w")
+    try:
+        fcntl.lockf(lock_file_obj, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except IOError:
+        print("Another copy of fuelmenu is running. "
+              "Please exit it and try again.")
+        sys.exit(1)
+
+
 def main(*args, **kwargs):
     if urwid.VERSION < (1, 1, 0):
         print("This program requires urwid 1.1.0 or greater.")
@@ -469,7 +481,15 @@ def main(*args, **kwargs):
     parser.add_option("-i", "--iface", dest="iface", metavar="IFACE",
                       default=default_iface, help="Set IFACE as primary.")
 
+    default_lock_file = "/var/run/fuelmenu.lock"
+    parser.add_option("-l", "--lock-file",
+                      default=default_lock_file,
+                      help="Path to the process lock file. If unspecified, "
+                           "the default {} is used.".format(default_lock_file))
+
     options, args = parser.parse_args()
+
+    lock_running(options.lock_file)
 
     if not network.is_interface_has_ip(options.iface):
         print("Selected interface '{0}' has no assigned IP. "
