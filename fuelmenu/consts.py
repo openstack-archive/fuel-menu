@@ -21,6 +21,8 @@ PUPPET_LOGFILE = "/var/log/puppet/fuelmenu-puppet.log"
 SETTINGS_FILE = "/etc/fuel/astute.yaml"
 RELEASE_FILE = "/etc/fuel_release"
 
+DEFAULT_LOCK_FILE = "/var/run/fuelmenu.lock"
+
 PRE_DEPLOYMENT_MODE = "pre"
 POST_DEPLOYMENT_MODE = "post"
 
