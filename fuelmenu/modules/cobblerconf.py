@@ -401,8 +401,12 @@ interface first.")
             elif key == "ADMIN_NETWORK/dhcp_pool_end":
                 self.edits[index].set_edit_text(dynamic_end)
             elif key == "ADMIN_NETWORK/dhcp_gateway":
-                self.edits[index].set_edit_text(self.netsettings[
-                    self.activeiface]['addr'])
+                gw = self.get_default_gateway_linux()
+                if network.inSameSubnet(gw, dynamic_start):
+                    dhcp_gateway = gw
+                else:
+                    dhcp_gateway = self.netsettings[self.activeiface]['addr']
+                self.edits[index].set_edit_text(dhcp_gateway)
 
     def refresh(self):
         self.getNetwork()
