@@ -220,6 +220,21 @@ interface first.")
                                         mgmt_if_ipaddr, netmask) is False:
                     errors.append("DHCP Pool start does not match management"
                                   " network.")
+
+                if network.inSameSubnet(responses[
+                                        "ADMIN_NETWORK/dhcp_pool_start"],
+                                        responses[
+                                        "ADMIN_NETWORK/dhcp_gateway"],
+                                        netmask) is False:
+                    errors.append("DHCP gateway does not match ADMIN network.")
+
+                if network.inSameSubnet(responses[
+                                        "ADMIN_NETWORK/dhcp_pool_end"],
+                                        responses[
+                                        "ADMIN_NETWORK/dhcp_gateway"],
+                                        netmask) is False:
+                    errors.append("DHCP gateway does not match ADMIN network.")
+
                 if network.inSameSubnet(responses[
                                         "ADMIN_NETWORK/dhcp_pool_end"],
                                         mgmt_if_ipaddr, netmask) is False:
@@ -401,8 +416,8 @@ interface first.")
             elif key == "ADMIN_NETWORK/dhcp_pool_end":
                 self.edits[index].set_edit_text(dynamic_end)
             elif key == "ADMIN_NETWORK/dhcp_gateway":
-                self.edits[index].set_edit_text(self.netsettings[
-                    self.activeiface]['addr'])
+                self.edits[index].set_edit_text(
+                    self.get_default_gateway_linux())
 
     def refresh(self):
         self.getNetwork()
