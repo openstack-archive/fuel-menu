@@ -135,8 +135,10 @@ class Settings(OrderedDict):
                     infile.read()).safe_substitute(template_kwargs or {}))
 
                 self.merge(settings)
+        except IOError:
+            log.info("Unable to read YAML: %s", settings_file)
         except Exception:
-            log.error("Unable to read YAML: %s", settings_file)
+            log.error("Malformed YAML: %s", settings_file)
 
         return self
 
