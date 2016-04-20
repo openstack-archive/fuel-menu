@@ -136,7 +136,7 @@ class Settings(OrderedDict):
 
                 self.merge(settings)
         except Exception:
-            log.error("Unable to read YAML: %s", settings_file)
+            log.info("Unable to read YAML: %s", settings_file)
 
         return self
 
