@@ -34,6 +34,8 @@ class cobblerconf(urwid.WidgetWrap):
         self.name = "PXE Setup"
         self.priority = 20
         self.visible = True
+        if utils.is_post_deployment():
+            self.visible = False
         self.netsettings = dict()
         self.parent = parent
         self.getNetwork()
