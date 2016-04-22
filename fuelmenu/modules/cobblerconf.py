@@ -34,6 +34,10 @@ class cobblerconf(urwid.WidgetWrap):
         self.name = "PXE Setup"
         self.priority = 20
         self.visible = True
+        # Preventing users from changing Fuel Master IP on PXE network
+        # after deployment.
+        if utils.is_post_deployment():
+            self.visible = False
         self.netsettings = dict()
         self.parent = parent
         self.getNetwork()
