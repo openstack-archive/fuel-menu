@@ -23,6 +23,7 @@ requirements = [
     'netifaces>=0.5',
     'urwid>=1.1.1',
     'requests>=2.5.2,!=2.8.0,!=2.9.0',
+    'python-fuelclient>=9.0.0'
 ]
 
 if sys.version_info[0:2] == (2, 6):

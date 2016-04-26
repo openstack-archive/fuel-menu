@@ -13,18 +13,26 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import logging
+import os
+
+from fuelclient.cli import error
+from fuelclient.objects import NetworkGroup
+import netaddr
+import urwid
+import urwid.raw_display
+import urwid.web_display
+import yaml
+
 from fuelmenu.common import dialog
 from fuelmenu.common.errors import BadIPException
 from fuelmenu.common.modulehelper import ModuleHelper
 from fuelmenu.common.modulehelper import WidgetType
 from fuelmenu.common import network
+from fuelmenu.common import puppet
 import fuelmenu.common.urwidwrapper as widget
 from fuelmenu.common import utils
-import logging
-import netaddr
-import urwid
-import urwid.raw_display
-import urwid.web_display
+from fuelmenu import consts
 log = logging.getLogger('fuelmenu.pxe_setup')
 blank = urwid.Divider()
 
@@ -80,6 +88,10 @@ to advertise via DHCP to nodes",
         self.load()
         self.extdhcp = True
         self.screen = None
+        self.apply_dialog_message = {
+            'title': "Apply failed in module {0}".format(self.name),
+            "message": "Error applying changes. Check logs for details."
+        }
 
     def check(self, args):
         """Validates all fields have valid values and some sanity checks."""
@@ -278,9 +290,109 @@ interface first.")
             log.error("Check failed. Not applying")
             log.error("%s" % (responses))
             return False
-
         self.save(responses)
+        if utils.is_post_deployment():
+            self.parent.apply_tasks.add(self.update_dhcp)
         return True
+
+    def update_dhcp(self):
+        settings = self.parent.settings.get("ADMIN_NETWORK")
+        if not self._update_nailgun(settings):
+            return False
+        if os.path.exists(consts.HIERA_NET_SETTINGS):
+            result, msg = self._update_hiera_dnsmasq(settings)
+        else:
+            result = self._update_dnsmasq(settings)
+        if not result:
+            ModuleHelper.display_dialog(
+                self, error_msg=self.apply_dialog_message["message"],
+                title=self.apply_dialog_message["title"])
+            return False
+        cobbler_sync = ["cobbler", "sync"]
+        code, out, err = utils.execute(cobbler_sync)
+        if code != 0:
+            log.error(err)
+            ModuleHelper.display_dialog(
+                self, error_msg=self.apply_dialog_message["message"],
+                title=self.apply_dialog_message["title"])
+            return False
+        return True
+
+    def _update_nailgun(self, settings):
+        msg = "Apply changes to Nailgun"
+        log.info(msg)
+        self.parent.footer.set_text(msg)
+        self.parent.refreshScreen()
+
+        # TODO(mzhnichkov) this manifest apply twice(here and in feature
+        # groups). Need to combine this calls
+        result, msg = puppet.puppetApplyManifest(consts.PUPPET_NAILGUN)
+        if not result:
+            ModuleHelper.display_dialog(
+                self, error_msg=self.apply_dialog_message["message"],
+                title=self.apply_dialog_message["title"])
+            return False
+
+        data = {
+            "gateway": settings["dhcp_gateway"],
+            "ip_ranges": [
+                [settings["dhcp_pool_start"], settings["dhcp_pool_end"]]
+            ]
+        }
+        try:
+            NetworkGroup(consts.ADMIN_NETWORK_ID).set(data)
+        except error.HTTPError as e:
+            log.error(e.message)
+            ModuleHelper.display_dialog(
+                self, error_msg=self.apply_dialog_message["message"],
+                title=self.apply_dialog_message["title"])
+            return False
+        return True
+
+    def _update_hiera_dnsmasq(self, settings):
+        """Update Hiera and dnsmasq
+
+        PXE related configuration should be written in separate
+        configuration file when you create additional admin
+        network(this behavior was introduced in nailgun's
+        DnsmasqUpdateTask class)
+        """
+
+        msg = "Apply changes to Hiera and Dnsmasq"
+        log.info(msg)
+        self.parent.footer.set_text(msg)
+        self.parent.refreshScreen()
+        with open(consts.HIERA_NET_SETTINGS, "r") as hiera_settings:
+            networks = yaml.safe_load(hiera_settings)
+        net = netaddr.IPNetwork(
+            "{0}/{1}".format(settings["ipaddress"],
+                             settings["netmask"]))
+        for admin_net in networks["admin_networks"]:
+            if str(net.cidr) == admin_net["cidr"]:
+                admin_net["ip_ranges"] = [
+                    [settings["dhcp_pool_start"],
+                     settings["dhcp_pool_end"]]
+                ]
+                admin_net["gateway"] = settings["dhcp_gateway"]
+        with open(consts.HIERA_NET_SETTINGS, "w") as hiera_settings:
+            yaml.safe_dump(networks, hiera_settings)
+        return puppet.puppetApplyManifest(consts.PUPPET_DHCP_RANGES)
+
+    def _update_dnsmasq(self, settings):
+        puppet_classes = [{
+            "type": "resource",
+            "class": "fuel::dnsmasq::dhcp_range",
+            "name": "default",
+            "params": {
+                "dhcp_start_address": settings["dhcp_pool_start"],
+                "dhcp_end_address": settings["dhcp_pool_end"],
+                "dhcp_netmask": settings["netmask"],
+                "dhcp_gateway": settings["dhcp_gateway"],
+                "next_server": settings["ipaddress"]
+            }
+        }]
+        log.debug("Start puppet with data {0}".format(puppet_classes))
+        return puppet.puppetApply(puppet_classes)
 
     def cancel(self, button):
         ModuleHelper.cancel(self, button)

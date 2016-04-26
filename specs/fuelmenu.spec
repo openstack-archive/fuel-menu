@@ -26,6 +26,7 @@ Requires: python-urwid >= 1.1.0
 Requires: PyYAML
 Requires: screen
 Requires: python-six
+Requires: python-fuelclient
 %if 0%{?rhel} == 6
 Requires: python-ordereddict
 %endif
