@@ -18,6 +18,7 @@ from fuelmenu.common.errors import BadIPException
 from fuelmenu.common.modulehelper import ModuleHelper
 from fuelmenu.common.modulehelper import WidgetType
 from fuelmenu.common import network
+from fuelmenu.common import puppet
 import fuelmenu.common.urwidwrapper as widget
 from fuelmenu.common import utils
 import logging
@@ -277,7 +278,28 @@ interface first.")
             log.error("Check failed. Not applying")
             log.error("%s" % (responses))
             return False
-
+        if utils.is_post_deployment():
+            puppetclasses = [{
+                "type": "resource",
+                "class": "fuel::dnsmasq::dhcp_range",
+                "name": "default",
+                "params": {
+                    "dhcp_start_address":
+                        responses["ADMIN_NETWORK/dhcp_pool_start"],
+                    "dhcp_end_address":
+                        responses["ADMIN_NETWORK/dhcp_pool_end"],
+                    "dhcp_netmask": responses["ADMIN_NETWORK/netmask"],
+                    "dhcp_gateway": responses["ADMIN_NETWORK/dhcp_gateway"],
+                    "next_server": responses["ADMIN_NETWORK/ipaddress"]}
+            }]
+            log.info("Start puppet with data {0}".format(puppetclasses))
+            result = puppet.puppetApply(puppetclasses)
+            if not result:
+                return False
+            cobbler_sync = ["cobbler", "sync"]
+            code, out, err = utils.execute(cobbler_sync)
+            if code != 0:
+                return False
         self.save(responses)
         return True
 
