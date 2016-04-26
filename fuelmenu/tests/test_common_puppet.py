@@ -58,7 +58,7 @@ class TestPuppetApply(unittest.TestCase):
         ]
 
     def test_puppet_apply(self, m_execute, m_log):
-        self.assertEqual(puppet.puppetApply(self.classes), None)
+        self.assertEqual(puppet.puppetApply(self.classes), True)
         m_execute.assert_called_once_with(self.command, stdin=self.input)
         m_log.info.assert_called_once_with('Puppet start')
         self.assertFalse(m_log.error.called)
