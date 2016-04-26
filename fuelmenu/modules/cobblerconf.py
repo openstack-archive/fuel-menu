@@ -12,12 +12,13 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-from fuelmenu.common import puppet
+
 from fuelmenu.common import dialog
 from fuelmenu.common.errors import BadIPException
 from fuelmenu.common.modulehelper import ModuleHelper
 from fuelmenu.common.modulehelper import WidgetType
 from fuelmenu.common import network
+from fuelmenu.common import puppet
 import fuelmenu.common.urwidwrapper as widget
 from fuelmenu.common import utils
 import logging
@@ -136,8 +137,8 @@ Please wait...")
                 # Build dialog elements
                 dhcp_info = []
                 dhcp_info.append(urwid.Padding(
-                    urwid.Text(("header", "!!! WARNING !!!")),
-                    "center"))
+                                 urwid.Text(("header", "!!! WARNING !!!")),
+                                 "center"))
                 dhcp_info.append(widget.TextLabel("You have selected an \
 interface that contains one or more DHCP servers. This will impact \
 provisioning. You should disable these DHCP servers before you continue, or \
@@ -145,11 +146,11 @@ else deployment will likely fail."))
                 dhcp_info.append(widget.TextLabel(""))
                 for index, dhcp_server in enumerate(dhcp_server_data):
                     dhcp_info.append(widget.TextLabel("DHCP Server #%s:" %
-                                                      (index + 1)))
+                                     (index + 1)))
                     dhcp_info.append(widget.TextLabel("IP address: %-10s" %
-                                                      dhcp_server['server_ip']))
+                                     dhcp_server['server_ip']))
                     dhcp_info.append(widget.TextLabel("MAC address: %-10s" %
-                                                      dhcp_server['mac']))
+                                     dhcp_server['mac']))
                     dhcp_info.append(widget.TextLabel(""))
                 dialog.display_dialog(self, urwid.Pile(dhcp_info),
                                       "DHCP Servers Found on %s"
@@ -157,19 +158,19 @@ else deployment will likely fail."))
             # Ensure pool start and end are on the same subnet as mgmt_if
             # Ensure mgmt_if has an IP first
             if len(self.netsettings[responses[
-                "ADMIN_NETWORK/interface"]]["addr"]) == 0:
+               "ADMIN_NETWORK/interface"]]["addr"]) == 0:
                 errors.append("Go to Interfaces to configure management \
 interface first.")
             else:
                 # Ensure ADMIN_NETWORK/interface is not running DHCP
                 if self.netsettings[responses[
-                    "ADMIN_NETWORK/interface"]]["bootproto"] == "dhcp":
+                        "ADMIN_NETWORK/interface"]]["bootproto"] == "dhcp":
                     errors.append("%s is running DHCP. Change it to static "
                                   "first." % self.activeiface)
                 # Ensure DHCP Pool Start and DHCP Pool are valid IPs
                 try:
                     if netaddr.valid_ipv4(responses[
-                                              "ADMIN_NETWORK/dhcp_pool_start"]):
+                                          "ADMIN_NETWORK/dhcp_pool_start"]):
                         dhcp_start = netaddr.IPAddress(
                             responses["ADMIN_NETWORK/dhcp_pool_start"])
                         if not dhcp_start:
@@ -180,19 +181,19 @@ interface first.")
                     errors.append("Invalid IP address for DHCP Pool Start")
                 try:
                     if netaddr.valid_ipv4(responses[
-                                              "ADMIN_NETWORK/dhcp_gateway"]):
+                            "ADMIN_NETWORK/dhcp_gateway"]):
                         dhcp_gateway = netaddr.IPAddress(
                             responses["ADMIN_NETWORK/dhcp_gateway"])
                         if not dhcp_gateway:
                             raise BadIPException("Not a valid IP address")
                     else:
-                        raise BadIPException("Not a valid IP address")
+                            raise BadIPException("Not a valid IP address")
                 except Exception:
                     errors.append("Invalid IP address for DHCP Gateway")
 
                 try:
                     if netaddr.valid_ipv4(responses[
-                                              "ADMIN_NETWORK/dhcp_pool_end"]):
+                            "ADMIN_NETWORK/dhcp_pool_end"]):
                         dhcp_end = netaddr.IPAddress(
                             responses["ADMIN_NETWORK/dhcp_pool_end"])
                         if not dhcp_end:
@@ -205,8 +206,8 @@ interface first.")
                 # Ensure pool start and end are in the same
                 # subnet of each other
                 netmask = self.netsettings[responses[
-                    "ADMIN_NETWORK/interface"
-                ]]["netmask"]
+                                           "ADMIN_NETWORK/interface"
+                                           ]]["netmask"]
                 if not network.inSameSubnet(
                         responses["ADMIN_NETWORK/dhcp_pool_start"],
                         responses["ADMIN_NETWORK/dhcp_pool_end"], netmask):
@@ -217,18 +218,18 @@ interface first.")
                 mgmt_if_ipaddr = self.netsettings[responses[
                     "ADMIN_NETWORK/interface"]]["addr"]
                 if network.inSameSubnet(responses[
-                                            "ADMIN_NETWORK/dhcp_pool_start"],
+                                        "ADMIN_NETWORK/dhcp_pool_start"],
                                         mgmt_if_ipaddr, netmask) is False:
                     errors.append("DHCP Pool start does not match management"
                                   " network.")
                 if network.inSameSubnet(responses[
-                                            "ADMIN_NETWORK/dhcp_pool_end"],
+                                        "ADMIN_NETWORK/dhcp_pool_end"],
                                         mgmt_if_ipaddr, netmask) is False:
                     errors.append("DHCP Pool end does not match management "
                                   "network.")
 
                 if network.inSameSubnet(responses[
-                                            "ADMIN_NETWORK/dhcp_gateway"],
+                                        "ADMIN_NETWORK/dhcp_gateway"],
                                         mgmt_if_ipaddr, netmask) is False:
                     errors.append("DHCP Gateway does not match management "
                                   "network.")
@@ -284,7 +285,8 @@ interface first.")
             "class": "fuel::dnsmasq::dhcp_range",
             "name": "default",
             "params": {
-                "dhcp_start_address": responses["ADMIN_NETWORK/dhcp_pool_start"],
+                "dhcp_start_address":
+                    responses["ADMIN_NETWORK/dhcp_pool_start"],
                 "dhcp_end_address": responses["ADMIN_NETWORK/dhcp_pool_end"],
                 "dhcp_netmask": responses["ADMIN_NETWORK/netmask"],
                 "dhcp_gateway": responses["ADMIN_NETWORK/dhcp_gateway"],
@@ -297,7 +299,8 @@ interface first.")
         cobbler_sync = ["cobbler", "sync"]
         code, out, err = utils.execute(cobbler_sync)
         if code != 0:
-            log.error("Cobbler sync failed. Exit code: {0}. Error: {1} Stdout: {2}".format(code, err, out))
+            log.error("Cobbler sync failed. Exit code: {0}. Error: {1}"
+                      " Stdout: {2}".format(code, err, out))
             return False
         self.save(responses)
         return True
@@ -359,10 +362,10 @@ interface first.")
     def setNetworkDetails(self):
         self.net_text1.set_text("Interface: %-13s  Link: %s" % (
             self.activeiface, self.netsettings[self.activeiface]['link'].
-                upper()))
+            upper()))
         self.net_text2.set_text("IP:      %-15s  MAC: %s" % (self.netsettings[
-                                                                 self.activeiface]['addr'],
-                                                             self.netsettings[self.activeiface]['mac']))
+            self.activeiface]['addr'],
+            self.netsettings[self.activeiface]['mac']))
         self.net_text3.set_text("Netmask: %-15s  Gateway: %s" % (
             self.netsettings[self.activeiface]['netmask'],
             self.gateway))
@@ -422,7 +425,7 @@ interface first.")
                 self.edits[index].set_edit_text(dynamic_end)
             elif key == "ADMIN_NETWORK/dhcp_gateway":
                 self.edits[index].set_edit_text(self.netsettings[
-                                                    self.activeiface]['addr'])
+                    self.activeiface]['addr'])
 
     def refresh(self):
         self.getNetwork()
