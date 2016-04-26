@@ -12,7 +12,7 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-
+from fuelmenu.common import puppet
 from fuelmenu.common import dialog
 from fuelmenu.common.errors import BadIPException
 from fuelmenu.common.modulehelper import ModuleHelper
@@ -25,6 +25,7 @@ import netaddr
 import urwid
 import urwid.raw_display
 import urwid.web_display
+import os
 log = logging.getLogger('fuelmenu.pxe_setup')
 blank = urwid.Divider()
 
@@ -278,6 +279,33 @@ interface first.")
             log.error("Check failed. Not applying")
             log.error("%s" % (responses))
             return False
+        puppetclasses = []
+        dnsmasq = { 'type' : "resource",
+                    'class': "fuel::dnsmasq::dhcp_range",
+                    'name' : "default",
+                    'params': {'dhcp_start_address': responses['ADMIN_NETWORK/dhcp_pool_start'],
+                               'dhcp_end_address': responses['ADMIN_NETWORK/dhcp_pool_end'],
+                               'dhcp_netmask' : responses['ADMIN_NETWORK/netmask'],
+                               'dhcp_gateway': responses['ADMIN_NETWORK/dhcp_gateway'],
+                               'next_server': responses["ADMIN_NETWORK/ipaddress"] }
+		  }
+        puppetclasses.append(dnsmasq)
+        log.info("Start puppet with data %s" % (puppetclasses))
+        
+        try:
+            result = puppet.puppetApply(puppetclasses)
+            if result is False:
+                raise Exception("Puppet apply failed")
+        except Exception as e:
+            self.log.error(e)
+        
+        cobbler_sync = ['cobbler', 'sync']
+        code, out, err = utils.execute(cobbler_sync)
+        if code != 0:
+            print ("Exit code: %d. Error: %s Stdout: %s",
+                  code, err, out)
+            return False
+
 
         self.save(responses)
         return True
