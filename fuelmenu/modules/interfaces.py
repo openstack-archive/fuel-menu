@@ -305,7 +305,7 @@ class Interfaces(urwid.WidgetWrap):
         try:
             self.parent.refreshScreen()
             result = puppet.puppetApply(puppetclasses)
-            if result is False:
+            if not result:
                 raise Exception("Puppet apply failed")
             ModuleHelper.getNetwork(self)
             gateway = self.get_default_gateway_linux()
