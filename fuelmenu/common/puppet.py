@@ -68,3 +68,4 @@ def puppetApply(classes):
         log.error("Exit code: %d. Error: %s Stdout: %s",
                   code, err, out)
         return False
+    return True
