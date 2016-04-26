@@ -68,3 +68,20 @@ def puppetApply(classes):
         log.error("Exit code: %d. Error: %s Stdout: %s",
                   code, err, out)
         return False
+    return True
+
+
+def puppetApplyManifest(manifest):
+    log = logging
+    log.info("Start puppet with manifest {0}".format(manifest))
+
+    command = ["puppet", "apply", "-d", "-v", "--logdest",
+               "/var/log/puppet/fuelmenu-puppet.log", manifest]
+
+    log.debug(' '.join(command))
+    code, out, err = utils.execute(command)
+    if code != 0:
+        log.error("Exit code: %d. Error: %s Stdout: %s",
+                  code, err, out)
+        return False
+    return True

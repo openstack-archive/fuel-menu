@@ -13,18 +13,22 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import logging
+import netaddr
+import os
+import urwid
+import urwid.raw_display
+import urwid.web_display
+import yaml
+
 from fuelmenu.common import dialog
 from fuelmenu.common.errors import BadIPException
 from fuelmenu.common.modulehelper import ModuleHelper
 from fuelmenu.common.modulehelper import WidgetType
 from fuelmenu.common import network
+from fuelmenu.common import puppet
 import fuelmenu.common.urwidwrapper as widget
 from fuelmenu.common import utils
-import logging
-import netaddr
-import urwid
-import urwid.raw_display
-import urwid.web_display
 log = logging.getLogger('fuelmenu.pxe_setup')
 blank = urwid.Divider()
 
@@ -277,7 +281,55 @@ interface first.")
             log.error("Check failed. Not applying")
             log.error("%s" % (responses))
             return False
-
+        if utils.is_post_deployment():
+            """
+            Pxe related configuration should be written in separate
+            configuration file when you create additional admin
+            network(this behavior was introduced in nailgun's
+            DnsmasqUpdateTask class)
+            """
+            hiera_netsetting = "/etc/hiera/networks.yaml"
+            if os.path.exists(hiera_netsetting):
+                networks = yaml.load(open(hiera_netsetting, "r"))
+                net = netaddr.IPNetwork(
+                    "{0}/{1}".format(responses["ADMIN_NETWORK/ipaddress"],
+                                     responses["ADMIN_NETWORK/netmask"]))
+                for admin_net in networks["admin_networks"]:
+                    if str(net.cidr) == admin_net["cidr"]:
+                        admin_net["ip_ranges"] = [
+                            [responses["ADMIN_NETWORK/dhcp_pool_start"],
+                             responses["ADMIN_NETWORK/dhcp_pool_end"]]
+                        ]
+                        admin_net["gateway"] = \
+                            responses["ADMIN_NETWORK/dhcp_gateway"]
+                yaml.dump(networks, open(hiera_netsetting, "w"))
+                manifest = "/etc/puppet/modules/fuel/examples/dhcp-ranges.pp"
+                result = puppet.puppetApplyManifest(manifest)
+            else:
+                puppetclasses = [{
+                    "type": "resource",
+                    "class": "fuel::dnsmasq::dhcp_range",
+                    "name": "default",
+                    "params": {
+                        "dhcp_start_address":
+                            responses["ADMIN_NETWORK/dhcp_pool_start"],
+                        "dhcp_end_address":
+                            responses["ADMIN_NETWORK/dhcp_pool_end"],
+                        "dhcp_netmask": responses["ADMIN_NETWORK/netmask"],
+                        "dhcp_gateway":
+                            responses["ADMIN_NETWORK/dhcp_gateway"],
+                        "next_server": responses["ADMIN_NETWORK/ipaddress"]}
+                }]
+                log.info("Start puppet with data {0}".format(puppetclasses))
+                result = puppet.puppetApply(puppetclasses)
+            if not result:
+                return False
+            cobbler_sync = ["cobbler", "sync"]
+            code, out, err = utils.execute(cobbler_sync)
+            if code != 0:
+                ModuleHelper.display_failed_check_dialog(
+                    self, ["Error applying changes. Check logs for details."])
+                return False
         self.save(responses)
         return True
 
