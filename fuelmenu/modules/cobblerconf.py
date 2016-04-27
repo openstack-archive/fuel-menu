@@ -29,10 +29,9 @@ log = logging.getLogger('fuelmenu.pxe_setup')
 blank = urwid.Divider()
 
 
-class cobblerconf(urwid.WidgetWrap):
+class CobblerConfig(urwid.WidgetWrap):
     def __init__(self, parent):
         self.name = "PXE Setup"
-        self.priority = 20
         self.visible = True
         self.netsettings = dict()
         self.parent = parent
