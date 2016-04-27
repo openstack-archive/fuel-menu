@@ -26,10 +26,9 @@ log = logging.getLogger('fuelmenu.security')
 SSH_NETWORK = 'ADMIN_NETWORK/ssh_network'
 
 
-class security(urwid.WidgetWrap):
+class Security(urwid.WidgetWrap):
     def __init__(self, parent):
         self.name = "Security Setup"
-        self.priority = 6
         self.visible = True
         self.parent = parent
         self.screen = None

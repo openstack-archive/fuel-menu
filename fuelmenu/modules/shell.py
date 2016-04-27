@@ -23,10 +23,9 @@ import urwid.web_display
 blank = urwid.Divider()
 
 
-class shell(object):
+class Shell(object):
     def __init__(self, parent):
         self.name = "Shell Login"
-        self.priority = 90
         self.visible = True
         self.parent = parent
         self.screen = None
