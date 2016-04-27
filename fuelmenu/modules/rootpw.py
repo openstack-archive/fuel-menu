@@ -24,10 +24,9 @@ log = logging.getLogger('fuelmenu.rootpw')
 blank = urwid.Divider()
 
 
-class rootpw(urwid.WidgetWrap):
+class Rootpw(urwid.WidgetWrap):
     def __init__(self, parent):
         self.name = "Root Password"
-        self.priority = 60
         self.visible = True
         self.parent = parent
         # UI text
