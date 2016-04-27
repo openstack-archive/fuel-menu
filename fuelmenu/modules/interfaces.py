@@ -28,6 +28,7 @@ from fuelmenu.common import network
 from fuelmenu.common import puppet
 from fuelmenu.common import replace
 import fuelmenu.common.urwidwrapper as widget
+from fuelmenu.common import utils
 
 blank = urwid.Divider()
 
@@ -40,6 +41,10 @@ class interfaces(urwid.WidgetWrap):
         self.name = "Network Setup"
         self.priority = 5
         self.visible = True
+        # Preventing users from changing network network settings
+        # after deployment.
+        if utils.is_post_deployment():
+            self.visible = False
         self.netsettings = dict()
         self.parent = parent
         self.screen = None
