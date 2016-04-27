@@ -64,10 +64,9 @@ KEYS_TO_RESTORE = [
 ]
 
 
-class restore(urwid.WidgetWrap):
+class Restore(urwid.WidgetWrap):
     def __init__(self, parent):
         self.name = "Restore settings"
-        self.priority = 98
         self.visible = True
         self.parent = parent
         self.deployment = "pre"
