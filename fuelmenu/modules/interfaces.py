@@ -36,9 +36,10 @@ blank = urwid.Divider()
 
 
 class interfaces(urwid.WidgetWrap):
+    priority = 5
+
     def __init__(self, parent):
         self.name = "Network Setup"
-        self.priority = 5
         self.visible = True
         self.netsettings = dict()
         self.parent = parent

@@ -24,9 +24,10 @@ blank = urwid.Divider()
 
 
 class shell(object):
+    priority = 90
+
     def __init__(self, parent):
         self.name = "Shell Login"
-        self.priority = 90
         self.visible = True
         self.parent = parent
         self.screen = None

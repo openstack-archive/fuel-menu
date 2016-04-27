@@ -30,9 +30,10 @@ blank = urwid.Divider()
 
 
 class cobblerconf(urwid.WidgetWrap):
+    priority = 20
+
     def __init__(self, parent):
         self.name = "PXE Setup"
-        self.priority = 20
         self.visible = True
         self.netsettings = dict()
         self.parent = parent

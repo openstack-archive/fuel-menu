@@ -33,9 +33,10 @@ blank = urwid.Divider()
 
 
 class dnsandhostname(urwid.WidgetWrap):
+    priority = 50
+
     def __init__(self, parent):
         self.name = "DNS & Hostname"
-        self.priority = 50
         self.visible = True
         self.netsettings = dict()
         self.getNetwork()
