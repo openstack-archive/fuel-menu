@@ -43,9 +43,9 @@ ADD_REPO_BUTTON_KEY = 'add_repo_button'
 
 
 class bootstrapimg(urwid.WidgetWrap):
+    priority = 55
     def __init__(self, parent):
         self.name = "Bootstrap Image"
-        self.priority = 55
         self.visible = True
         self.parent = parent
 

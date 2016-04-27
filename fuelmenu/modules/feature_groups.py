@@ -25,9 +25,10 @@ log = logging.getLogger(__name__)
 
 
 class feature_groups(urwid.WidgetWrap):
+    priority = 70
+
     def __init__(self, parent):
         self.name = "Feature groups"
-        self.priority = 70
         self.visible = True
         self.parent = parent
 

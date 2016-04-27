@@ -24,9 +24,10 @@ blank = urwid.Divider()
 
 
 class servicepws(urwid.WidgetWrap):
+    priority = 99
+
     def __init__(self, parent):
         self.name = "Service Passwords"
-        self.priority = 99
         self.visible = False
         self.parent = parent
         # UI text

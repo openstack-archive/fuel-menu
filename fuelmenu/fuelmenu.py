@@ -59,6 +59,7 @@ class Loader(object):
         modules = [os.path.splitext(f)[0] for f in os.listdir(module_dir)
                    if f.endswith('.py')]
 
+        classes = []
         for module in modules:
             log.info('loading module %s' % module)
             try:
@@ -69,14 +70,14 @@ class Loader(object):
                 continue
 
             clsobj = getattr(imported, module, None)
-            modobj = clsobj(self.parent)
+            classes.append(clsobj)
 
-            # add the module to the list
+        classes.sort(key=operator.attrgetter('priority'))
+        for cls in classes:
+            modobj = cls(self.parent)
             self.modlist.append(modobj)
-        # sort modules
-        self.modlist.sort(key=operator.attrgetter('priority'))
-        for module in self.modlist:
-            self.choices.append(module.name)
+            self.choices.append(modobj.name)
+
         return (self.modlist, self.choices)
 
 
