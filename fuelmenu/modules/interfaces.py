@@ -35,7 +35,7 @@ blank = urwid.Divider()
 # Need to define fields in order so it will render correctly
 
 
-class interfaces(urwid.WidgetWrap):
+class Interfaces(urwid.WidgetWrap):
     def __init__(self, parent):
         self.name = "Network Setup"
         self.priority = 5

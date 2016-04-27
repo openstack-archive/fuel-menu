@@ -23,7 +23,7 @@ log = logging.getLogger('fuelmenu.servicepws')
 blank = urwid.Divider()
 
 
-class servicepws(urwid.WidgetWrap):
+class Servicepws(urwid.WidgetWrap):
     def __init__(self, parent):
         self.name = "Service Passwords"
         self.priority = 99

@@ -24,7 +24,7 @@ log = logging.getLogger('fuelmenu.rootpw')
 blank = urwid.Divider()
 
 
-class fueluser(urwid.WidgetWrap):
+class FuelUser(urwid.WidgetWrap):
     def __init__(self, parent):
         self.name = "Fuel User"
         self.priority = 1

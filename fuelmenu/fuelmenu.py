@@ -22,6 +22,7 @@ from fuelmenu.common import timeout
 from fuelmenu.common import urwidwrapper as widget
 from fuelmenu.common import utils
 from fuelmenu import consts
+from fuelmenu import modules
 from fuelmenu import settings as settings_module
 
 
@@ -43,41 +44,21 @@ log = logging.getLogger('fuelmenu.loader')
 
 
 class Loader(object):
-
     def __init__(self, parent):
-        self.modlist = []
-        self.choices = []
-        self.child = None
-        self.children = []
-        self.childpage = None
         self.parent = parent
 
     def load_modules(self, module_dir):
+        modlist = []
+
         if module_dir not in sys.path:
             sys.path.append(module_dir)
 
-        modules = [os.path.splitext(f)[0] for f in os.listdir(module_dir)
-                   if f.endswith('.py')]
-
-        for module in modules:
-            log.info('loading module %s' % module)
-            try:
-                imported = __import__(module)
-                pass
-            except ImportError as e:
-                log.error('module could not be imported: %s' % e)
-                continue
-
-            clsobj = getattr(imported, module, None)
+        for clsobj in modules.all_modules:
             modobj = clsobj(self.parent)
+            modlist.append(modobj)
 
-            # add the module to the list
-            self.modlist.append(modobj)
-        # sort modules
-        self.modlist.sort(key=operator.attrgetter('priority'))
-        for module in self.modlist:
-            self.choices.append(module.name)
-        return (self.modlist, self.choices)
+        modlist.sort(key=operator.attrgetter('priority'))
+        return (modlist, [m.name for m in modlist])
 
 
 class FuelSetup(object):

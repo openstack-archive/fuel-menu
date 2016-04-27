@@ -42,7 +42,7 @@ BOOTSTRAP_SKIP_BUILD_KEY = "BOOTSTRAP/skip_default_img_build"
 ADD_REPO_BUTTON_KEY = 'add_repo_button'
 
 
-class bootstrapimg(urwid.WidgetWrap):
+class BootstrapImg(urwid.WidgetWrap):
     def __init__(self, parent):
         self.name = "Bootstrap Image"
         self.priority = 55

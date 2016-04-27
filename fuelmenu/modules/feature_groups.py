@@ -24,7 +24,7 @@ from fuelmenu.common.modulehelper import WidgetType
 log = logging.getLogger(__name__)
 
 
-class feature_groups(urwid.WidgetWrap):
+class FeatureGroups(urwid.WidgetWrap):
     def __init__(self, parent):
         self.name = "Feature groups"
         self.priority = 70

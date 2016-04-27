@@ -32,7 +32,7 @@ log = logging.getLogger('fuelmenu.mirrors')
 blank = urwid.Divider()
 
 
-class dnsandhostname(urwid.WidgetWrap):
+class DnsAndHostname(urwid.WidgetWrap):
     def __init__(self, parent):
         self.name = "DNS & Hostname"
         self.priority = 50

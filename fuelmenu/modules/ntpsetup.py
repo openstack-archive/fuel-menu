@@ -25,7 +25,7 @@ log = logging.getLogger('fuelmenu.mirrors')
 blank = urwid.Divider()
 
 
-class ntpsetup(urwid.WidgetWrap):
+class NtpSetup(urwid.WidgetWrap):
     def __init__(self, parent):
         self.name = "Time Sync"
         self.priority = 60
