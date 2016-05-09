@@ -19,6 +19,8 @@ import urwid
 
 from fuelmenu.common.modulehelper import ModuleHelper
 from fuelmenu.common.modulehelper import WidgetType
+from fuelmenu.common import utils
+from fuelmenu import consts
 
 
 log = logging.getLogger(__name__)
@@ -98,6 +100,20 @@ class feature_groups(urwid.WidgetWrap):
             if responses[setting]:
                 newsettings[part1].append(part2)
         self.parent.settings.merge(newsettings)
+
+        if utils.is_post_deployment():
+            # Apply changes to the Nailgun
+            cmd = ["puppet", "apply", "--debug", "--verbose", "--logdest",
+                   consts.PUPPET_LOGFILE,
+                   "/etc/puppet/modules/fuel/examples/nailgun.pp"]
+            err_code, _, errout = utils.execute(cmd)
+            if err_code != 0:
+                log.error("Puppet apply failed with an error: "
+                          "\"{0}\"".format(errout))
+                self.parent.footer.set_text("Puppet apply failed. "
+                                            "Check logs for more details.")
+                return False
+            self.parent.footer.set_text("Changes successfully applied.")
 
     def cancel(self, button):
         ModuleHelper.cancel(self, button)
