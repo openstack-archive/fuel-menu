@@ -68,3 +68,23 @@ def puppetApply(classes):
         log.error("Exit code: %d. Error: %s Stdout: %s",
                   code, err, out)
         return False
+
+
+def puppetApplyManifest(manifest):
+    log = logging
+    log.info("Start puppet apply with manifest {0}".format(manifest))
+
+    cmd = ["puppet", "apply", "--debug", "--verbose", "--logdest",
+           consts.PUPPET_LOGFILE, manifest]
+
+    log.debug(' '.join(cmd))
+    err_code, _, errout = utils.execute(cmd)
+
+    if err_code != 0:
+        msg = "Puppet apply failed. Check logs for more details."
+        log.error(msg)
+        return False, msg
+
+    msg = "Puppet apply successfully executed."
+    log.info(msg)
+    return True, msg
