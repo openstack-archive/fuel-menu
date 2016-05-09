@@ -108,7 +108,8 @@ class fueluser(urwid.WidgetWrap):
         if re.search(r"[a-z]", password) is None:
             warnings.append("one lowercase letter")
 
-        if re.search(r"[!#$%&'()*+,-./[\\\]^_`{|}~" + r'"]', password) is None:
+        if re.search(r"[!#$%&'()*+,-@./[\\\]^_`{|}~" + r'"]', password) \
+                is None:
             warnings.append("one special character")
 
         if len(errors) > 0:
