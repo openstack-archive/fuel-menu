@@ -13,13 +13,19 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from fuelmenu.common.modulehelper import ModuleHelper
-import fuelmenu.common.urwidwrapper as widget
+import logging
 import time
 import urwid
 import urwid.raw_display
 import urwid.web_display
 
+from fuelmenu.common.modulehelper import ModuleHelper
+import fuelmenu.common.urwidwrapper as widget
+from fuelmenu.common import utils
+from fuelmenu import consts
+
+
+log = logging.getLogger(__name__)
 blank = urwid.Divider()
 
 
@@ -50,6 +56,22 @@ class saveandquit(object):
         if self.save():
             self.parent.refreshScreen()
             time.sleep(1.5)
+
+            if utils.is_post_deployment() and \
+                    self.parent.feature_groups_changed:
+                # Apply changes to the Nailgun
+                cmd = ["puppet", "apply", "--debug", "--verbose", "--logdest",
+                       consts.PUPPET_LOGFILE,
+                       "/etc/puppet/modules/fuel/examples/nailgun.pp"]
+                err_code, _, errout = utils.execute(cmd)
+                if err_code != 0:
+                    log.error("Puppet apply failed with an error: "
+                              "\"{0}\"".format(errout))
+                    self.parent.footer.set_text("Puppet apply failed. "
+                                                "Check logs for more details.")
+                    return False
+                self.parent.footer.set_text("Changes successfully applied.")
+
             self.parent.exit_program(None)
 
     def save(self):
