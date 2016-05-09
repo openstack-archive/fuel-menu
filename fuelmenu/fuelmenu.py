@@ -312,6 +312,12 @@ class FuelSetup(object):
         self.settings.write(outfn=consts.SETTINGS_FILE)
         return True, None
 
+    def force_save(self):
+        # Force save setting to the file
+        log.info("Saving %s ..." % consts.SETTINGS_FILE)
+        self.footer.set_text("Saving %s ..." % consts.SETTINGS_FILE)
+        self.settings.write(outfn=consts.SETTINGS_FILE)
+
     def reload_modules(self):
         for child in self.children:
             if hasattr(child, 'load') and callable(child.load):
