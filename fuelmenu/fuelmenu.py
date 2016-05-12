@@ -433,7 +433,16 @@ def main(*args, **kwargs):
     parser.add_option("-i", "--iface", dest="iface", metavar="IFACE",
                       default=default_iface, help="Set IFACE as primary.")
 
+    parser.add_option("-l", "--lock-file",
+                      default=consts.DEFAULT_LOCK_FILE,
+                      help="Path to the process lock file. If unspecified, "
+                           "the default {} is used."
+                           .format(consts.DEFAULT_LOCK_FILE))
+
     options, args = parser.parse_args()
+
+    if not utils.lock_running(options.lock_file):
+        sys.exit(1)
 
     if not network.is_interface_has_ip(options.iface):
         print("Selected interface '{0}' has no assigned IP. "
