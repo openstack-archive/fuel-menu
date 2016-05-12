@@ -52,6 +52,8 @@ class FuelSetup(object):
         self.dns_might_have_changed = False
         # Set to true to move all settings to end
         self.globalsave = True
+        # Tasks to be executed on Apply
+        self.apply_tasks = set()
         self.version = utils.get_fuel_version()
 
         # settings load
@@ -274,6 +276,12 @@ class FuelSetup(object):
                               % (modulename, e))
 
         self.settings.write(outfn=consts.SETTINGS_FILE)
+
+        # Runs tasks for every module, stop on error
+        for apply_task in self.apply_tasks:
+            if not apply_task():
+                return False, None
+
         return True, None
 
     def reload_modules(self):

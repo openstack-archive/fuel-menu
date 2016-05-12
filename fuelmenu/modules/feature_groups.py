@@ -19,6 +19,9 @@ import urwid
 
 from fuelmenu.common.modulehelper import ModuleHelper
 from fuelmenu.common.modulehelper import WidgetType
+from fuelmenu.common import puppet
+from fuelmenu.common import utils
+from fuelmenu import consts
 
 
 log = logging.getLogger(__name__)
@@ -74,7 +77,29 @@ class FeatureGroups(urwid.WidgetWrap):
             log.error("Check failed. Not applying")
             log.error("%s", responses)
             return False
-        self.save(responses)
+        oldsettings = self.parent.settings.get('FEATURE_GROUPS')
+        newsettings = self.save(responses).get('FEATURE_GROUPS')
+
+        if utils.is_post_deployment() and oldsettings != newsettings:
+            self.parent.apply_tasks.add(self.apply_to_nailgun)
+
+        return True
+
+    def apply_to_nailgun(self):
+        """Apply changes to the Nailgun"""
+
+        msg = "Apply settings to Nailgun."
+        log.info(msg)
+        self.parent.footer.set_text(msg)
+        self.parent.refreshScreen()
+
+        result, msg = puppet.puppetApplyManifest(consts.PUPPET_NAILGUN)
+
+        if not result:
+            self.parent.footer.set_text(msg)
+            return False
+
+        self.parent.footer.set_text(msg)
         return True
 
     def load(self):
@@ -97,6 +122,7 @@ class FeatureGroups(urwid.WidgetWrap):
             if responses[setting]:
                 newsettings[part1].append(part2)
         self.parent.settings.merge(newsettings)
+        return newsettings
 
     def cancel(self, button):
         ModuleHelper.cancel(self, button)
