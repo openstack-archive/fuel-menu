@@ -23,10 +23,9 @@ import urwid.web_display
 blank = urwid.Divider()
 
 
-class saveandquit(object):
+class SaveAndQuit(object):
     def __init__(self, parent):
         self.name = "Quit Setup"
-        self.priority = 99
         self.visible = True
         self.parent = parent
         self.screen = None

@@ -22,11 +22,11 @@ from fuelmenu.common import timeout
 from fuelmenu.common import urwidwrapper as widget
 from fuelmenu.common import utils
 from fuelmenu import consts
+from fuelmenu import modules
 from fuelmenu import settings as settings_module
 
 
 import logging
-import operator
 from optparse import OptionParser
 import os
 import signal
@@ -40,44 +40,6 @@ logging.basicConfig(filename=consts.LOGFILE,
                     format="%(asctime)s %(levelname)s %(message)s",
                     level=logging.DEBUG)
 log = logging.getLogger('fuelmenu.loader')
-
-
-class Loader(object):
-
-    def __init__(self, parent):
-        self.modlist = []
-        self.choices = []
-        self.child = None
-        self.children = []
-        self.childpage = None
-        self.parent = parent
-
-    def load_modules(self, module_dir):
-        if module_dir not in sys.path:
-            sys.path.append(module_dir)
-
-        modules = [os.path.splitext(f)[0] for f in os.listdir(module_dir)
-                   if f.endswith('.py')]
-
-        for module in modules:
-            log.info('loading module %s' % module)
-            try:
-                imported = __import__(module)
-                pass
-            except ImportError as e:
-                log.error('module could not be imported: %s' % e)
-                continue
-
-            clsobj = getattr(imported, module, None)
-            modobj = clsobj(self.parent)
-
-            # add the module to the list
-            self.modlist.append(modobj)
-        # sort modules
-        self.modlist.sort(key=operator.attrgetter('priority'))
-        for module in self.modlist:
-            self.choices.append(module.name)
-        return (self.modlist, self.choices)
 
 
 class FuelSetup(object):
@@ -172,10 +134,12 @@ class FuelSetup(object):
         self.header = urwid.AttrWrap(urwid.Text(text_header), 'header')
         self.footer = urwid.AttrWrap(urwid.Text(text_footer), 'footer')
 
-        # Prepare submodules
-        loader = Loader(self)
-        moduledir = "%s/modules" % (os.path.dirname(__file__))
-        self.children, self.choices = loader.load_modules(module_dir=moduledir)
+        self.children = []
+        for clsobj in modules.__all__:
+            modobj = clsobj(self)
+            self.children.append(modobj)
+
+        self.choices = [m.name for m in self.children]
 
         if len(self.children) == 0:
             import sys
