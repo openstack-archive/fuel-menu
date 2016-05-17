@@ -427,11 +427,17 @@ def main(*args, **kwargs):
     if urwid.VERSION < (1, 1, 0):
         print("This program requires urwid 1.1.0 or greater.")
 
-    try:
-        default_iface = network.get_physical_ifaces()[0]
-    except IndexError:
+    network_interfaces = network.get_physical_ifaces()
+    if not network_interfaces:
         print("Unable to detect any network interfaces. Could not start")
         sys.exit(1)
+
+    default_iface = network_interfaces[0]
+
+    for nic in network_interfaces:
+        if network.is_interface_has_ip(nic):
+            default_iface = nic
+            break
 
     parser = OptionParser()
     parser.add_option("-s", "--save-only", dest="save_only",
