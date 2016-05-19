@@ -302,6 +302,7 @@ class Interfaces(urwid.WidgetWrap):
         l3ifconfig['params'] = params
         puppetclasses.append(l3ifconfig)
         self.log.info("Puppet data: %s" % (puppetclasses))
+
         try:
             self.parent.refreshScreen()
             result = puppet.puppetApply(puppetclasses)
