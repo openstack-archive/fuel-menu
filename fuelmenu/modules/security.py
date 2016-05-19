@@ -19,7 +19,10 @@ import urwid
 from fuelmenu.common import dialog
 from fuelmenu.common import modulehelper as helper
 from fuelmenu.common import network
+from fuelmenu.common import puppet
 from fuelmenu.common import urwidwrapper as widget
+from fuelmenu.common import utils
+from fuelmenu import consts
 
 log = logging.getLogger('fuelmenu.security')
 
@@ -91,13 +94,38 @@ class Security(urwid.WidgetWrap):
         if responses is False:
             log.error("Check failed. Not applying")
             return False
+
+        oldsettings = self.parent.settings.get('ADMIN_NETWORK')
+        newsettings = self.save(responses).get('ADMIN_NETWORK')
+
+        if utils.is_post_deployment() and oldsettings != newsettings:
+            self.parent.apply_tasks.add(self.apply_to_master)
+
         self.save(responses)
+        return True
+
+    def apply_to_master(self):
+        """Apply changes to the Fuel master"""
+
+        msg = "Apply settings to Fuel master."
+        log.info(msg)
+        self.parent.footer.set_text(msg)
+        self.parent.refreshScreen()
+
+        result, msg = puppet.puppetApplyManifest(consts.PUPPET_FUEL_MASTER)
+
+        if not result:
+            self.parent.footer.set_text(msg)
+            return False
+
+        self.parent.footer.set_text(msg)
         return True
 
     def save(self, responses):
         newsettings = helper.ModuleHelper.make_settings_from_responses(
             responses)
         self.parent.settings.merge(newsettings)
+        return newsettings
 
     def load(self):
         helper.ModuleHelper.load_to_defaults(
