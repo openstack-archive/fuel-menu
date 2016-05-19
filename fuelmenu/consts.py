@@ -18,6 +18,7 @@ LOGFILE = "/var/log/fuelmenu.log"
 
 PUPPET_LOGFILE = "/var/log/puppet/fuelmenu-puppet.log"
 PUPPET_NAILGUN = "/etc/puppet/modules/fuel/examples/nailgun.pp"
+PUPPET_FUEL_MASTER = "/etc/puppet/modules/fuel/examples/host.pp"
 
 SETTINGS_FILE = "/etc/fuel/astute.yaml"
 RELEASE_FILE = "/etc/fuel_release"
