@@ -37,7 +37,8 @@ class CobblerConfig(urwid.WidgetWrap):
         self.parent = parent
         self.getNetwork()
         self.gateway = self.get_default_gateway_linux()
-        self.activeiface = self.parent.managediface
+        self.activeiface = sorted(self.netsettings.keys())[0]
+        self.parent.managediface = self.activeiface
 
         # UI text
         text1 = "Settings for PXE booting of slave nodes."
@@ -288,7 +289,7 @@ interface first.")
         settings = self.parent.settings
         ModuleHelper.load_to_defaults(settings, self.defaults)
 
-        iface = settings.get("ADMIN_NETWORK", {}).get("interface")
+        iface = settings["ADMIN_NETWORK"]["interface"]
         if iface in self.netsettings.keys():
             self.activeiface = iface
 

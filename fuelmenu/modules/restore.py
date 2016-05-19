@@ -183,9 +183,6 @@ class Restore(urwid.WidgetWrap):
             self.parent.settings, self.defaults, ignoredparams=('PATH',))
 
     def save(self, responses):
-        if self.parent.save_only:
-            return
-
         self.parent.settings.merge(responses)
 
     def screenUI(self):

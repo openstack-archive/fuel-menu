@@ -109,9 +109,6 @@ is accessible"}
             else:
                 responses[fieldname] = self.edits[index].get_edit_text()
 
-        if self.parent.save_only:
-            return responses
-
         # Validate each field
         errors = []
 
@@ -308,8 +305,7 @@ is accessible"}
         except Exception:
             log.warning("Unable to look up system hostname")
 
-        if not self.parent.save_only:
-            oldsettings.update(self.resolv_conf_settings())
+        oldsettings.update(self.resolv_conf_settings())
 
         ModuleHelper.load_to_defaults(oldsettings,
                                       self.defaults,

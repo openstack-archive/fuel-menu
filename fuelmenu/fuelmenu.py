@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 
 from fuelmenu.common import dialog
+from fuelmenu.common import errors
 from fuelmenu.common import network
 from fuelmenu.common import timeout
 from fuelmenu.common import urwidwrapper as widget
@@ -43,13 +44,12 @@ log = logging.getLogger('fuelmenu.loader')
 
 class FuelSetup(object):
 
-    def __init__(self, save_only=False, managed_iface=None):
-        self.save_only = save_only
+    def __init__(self):
         self.footer = None
         self.frame = None
         self.screen = None
+        self.managediface = network.get_physical_ifaces()[0]
         self.dns_might_have_changed = False
-        self.managediface = managed_iface or network.get_physical_ifaces()[0]
         # Set to true to move all settings to end
         self.globalsave = True
         # Tasks to be executed on Apply
@@ -122,8 +122,6 @@ class FuelSetup(object):
         self.draw_child_screen(self.child.screen)
 
     def refreshScreen(self):
-        if self.save_only:
-            return
         size = self.screen.get_cols_rows()
         self.screen.draw_screen(size, self.frame.render(size))
 
@@ -146,8 +144,8 @@ class FuelSetup(object):
         self.choices = [m.name for m in self.children]
 
         if len(self.children) == 0:
+            import sys
             sys.exit(1)
-
         # Build list of choices excluding visible
         self.visiblechoices = []
         for child, choice in zip(self.children, self.choices):
@@ -223,10 +221,7 @@ class FuelSetup(object):
             widget.TextLabel("It is highly recommended to change default "
                              "admin password."),
             "WARNING!")
-        if not self.save_only:
-            self.mainloop.run()
-        else:
-            self._save_only()
+        self.mainloop.run()
 
     def exit_program(self, button):
         # Fix /etc/hosts before quitting
@@ -260,7 +255,7 @@ class FuelSetup(object):
             # Run invisible modules. They may not have screen methods
             if not module.visible:
                 try:
-                    self._save_module(module)
+                    module.apply(None)
                 except Exception as e:
                     log.error("Unable to save module %s: %s" % (modulename, e))
                     continue
@@ -272,7 +267,7 @@ class FuelSetup(object):
                                          % modulename)
                     self.refreshScreen()
                     module.refresh()
-                    if self._save_module(module):
+                    if module.apply(None):
                         log.info("Saving module: %s" % modulename)
                     else:
                         return False, modulename
@@ -289,31 +284,6 @@ class FuelSetup(object):
 
         return True, None
 
-    def _save_module(self, module):
-        if self.save_only:
-            if hasattr(module, 'check') and hasattr(module, 'save'):
-                resp = module.check(None)
-                module.save(resp)
-            return True
-
-        return module.apply(None)
-
-    def _save_only(self):
-        if utils.is_post_deployment():
-            print(
-                "Not updating settings when invoked during post-deployment"
-                ".\nRun fuelmenu manually to make changes."
-            )
-            sys.exit(0)
-
-        success, module_name = self.global_save()
-        if not success:
-            msg = ("Problems with module '{}'."
-                   " Settings have not been saved.".format(module_name))
-            log.error(msg)
-            sys.stderr.write(msg + '\n')
-            sys.exit(1)
-
     def reload_modules(self):
         for child in self.children:
             if hasattr(child, 'load') and callable(child.load):
@@ -324,12 +294,133 @@ class FuelSetup(object):
         self.refreshScreen()
 
 
-def setup(**kwargs):
+def setup():
     urwid.web_display.set_preferences("Fuel Setup")
     # try to handle short web requests quickly
     if urwid.web_display.handle_short_request():
         return
-    FuelSetup(**kwargs)
+    FuelSetup()
+
+
+def save_only(iface, settingsfile=consts.SETTINGS_FILE):
+    from fuelmenu.common import pwgen
+    import netifaces
+
+    if utils.is_post_deployment():
+        print("Not updating settings when invoked during post-deployment.\n"
+              "Run fuelmenu manually to make changes.")
+        sys.exit(0)
+
+    # Calculate and set Static/DHCP pool fields
+    # Max IPs = net size - 2 (master node + bcast)
+    try:
+        ip = netifaces.ifaddresses(iface)[netifaces.AF_INET][0]['addr']
+        netmask = netifaces.ifaddresses(iface)[netifaces.AF_INET][0]['netmask']
+        mac = netifaces.ifaddresses(iface)[netifaces.AF_LINK][0]['addr']
+    except Exception:
+        print("Interface %s is missing either IP address or netmask"
+              % (iface))
+        sys.exit(1)
+    net_ip_list = network.getNetwork(ip, netmask)
+    try:
+        dhcp_pool = net_ip_list[1:]
+        dynamic_start = str(dhcp_pool[0])
+        dynamic_end = str(dhcp_pool[-1])
+    except Exception:
+        print("Unable to define DHCP pools")
+        sys.exit(1)
+    try:
+        hostname, sep, domain = os.uname()[1].partition('.')
+    except Exception:
+        print("Unable to calculate hostname and domain")
+        sys.exit(1)
+    try:
+        dhcptimeout = 5
+        dhcp_server_data = network.search_external_dhcp(iface, dhcptimeout)
+    except errors.NetworkException:
+        log.error("DHCP scan failed")
+        dhcp_server_data = []
+
+    num_dhcp = len(dhcp_server_data)
+    if num_dhcp == 0:
+        log.debug("No DHCP servers found")
+    else:
+        # Problem exists, but permit user to continue
+        log.error("%s foreign DHCP server(s) found: %s" %
+                  (num_dhcp, dhcp_server_data))
+        print("ERROR: %s foreign DHCP server(s) found: %s" %
+              (num_dhcp, dhcp_server_data))
+    if network.duplicateIPExists(ip, iface):
+        log.error("Duplicate host found with IP {0}".format(ip))
+        print("ERROR: Duplicate host found with IP {0}".format(ip))
+
+    default_settings_file = os.path.join(os.path.dirname(__file__),
+                                         "settings.yaml")
+    mos_version = utils.get_fuel_version()
+
+    settings = settings_module.Settings()
+
+    settings.load(
+        default_settings_file,
+        template_kwargs={"mos_version": mos_version})
+
+    settings.load(settingsfile, template_kwargs={"mos_version": mos_version})
+
+    settings_upd = \
+        {
+            "ADMIN_NETWORK/interface": iface,
+            "ADMIN_NETWORK/ipaddress": ip,
+            "ADMIN_NETWORK/netmask": netmask,
+            "ADMIN_NETWORK/mac": mac,
+            "ADMIN_NETWORK/dhcp_pool_start": dynamic_start,
+            "ADMIN_NETWORK/dhcp_pool_end": dynamic_end,
+            "ADMIN_NETWORK/dhcp_gateway": ip,
+            "ADMIN_NETWORK/ssh_network": network.getCidr(ip, netmask),
+            "HOSTNAME": hostname,
+            "DNS_DOMAIN": domain,
+            "DNS_SEARCH": domain,
+            "astute/user": "naily",
+            "astute/password": pwgen.password(),
+            "cobbler/user": "cobbler",
+            "cobbler/password": pwgen.password(),
+            "keystone/admin_token": pwgen.password(),
+            "keystone/ostf_user": "ostf",
+            "keystone/ostf_password": pwgen.password(),
+            "keystone/nailgun_user": "nailgun",
+            "keystone/nailgun_password": pwgen.password(),
+            "keystone/monitord_user": "monitord",
+            "keystone/monitord_password": pwgen.password(),
+            "mcollective/user": "mcollective",
+            "mcollective/password": pwgen.password(),
+            "postgres/keystone_dbname": "keystone",
+            "postgres/keystone_user": "keystone",
+            "postgres/keystone_password": pwgen.password(),
+            "postgres/nailgun_dbname": "nailgun",
+            "postgres/nailgun_user": "nailgun",
+            "postgres/nailgun_password": pwgen.password(),
+            "postgres/ostf_dbname": "ostf",
+            "postgres/ostf_user": "ostf",
+            "postgres/ostf_password": pwgen.password(),
+            "FUEL_ACCESS/user": "admin",
+            "FUEL_ACCESS/password": "admin",
+        }
+    for setting in settings_upd.keys():
+        if "/" in setting:
+            part1, part2 = setting.split("/")
+            settings.setdefault(part1, {})
+            # Keep old values for passwords if already set
+            if "password" in setting:
+                settings[part1].setdefault(part2, settings_upd[setting])
+            else:
+                settings[part1][part2] = settings_upd[setting]
+        else:
+            if "password" in setting:
+                settings.setdefault(setting, settings_upd[setting])
+            else:
+                settings[setting] = settings_upd[setting]
+
+    # Write astute.yaml
+    settings.write(outfn=settingsfile)
 
 
 def main(*args, **kwargs):
@@ -367,8 +458,7 @@ def main(*args, **kwargs):
         sys.exit(1)
 
     if options.save_only:
-        setup(save_only=True,
-              managed_iface=options.iface)
+        save_only(options.iface)
     else:
         setup()
 
