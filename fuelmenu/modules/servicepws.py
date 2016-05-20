@@ -73,11 +73,6 @@ class ServicePasswords(urwid.WidgetWrap):
                     "tooltip": "",
                     "value": pwgen.password(),
                 },
-                "keystone/service_token_off": {
-                    "label": "Master node monitoring password",
-                    "tooltip": "",
-                    "value": True,
-                },
                 "mcollective/user": {"label": "Mcollective user",
                                      "tooltip": "",
                                      "value": "mcollective"},
