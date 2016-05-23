@@ -73,6 +73,11 @@ class ServicePasswords(urwid.WidgetWrap):
                     "tooltip": "",
                     "value": pwgen.password(),
                 },
+                "keystone/service_token_off": {
+                    "label": "Disable keystone service token",
+                    "tooltip": "",
+                    "value": "true",
+                },
                 "mcollective/user": {"label": "Mcollective user",
                                      "tooltip": "",
                                      "value": "mcollective"},
