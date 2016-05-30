@@ -80,6 +80,14 @@ class servicepws(urwid.WidgetWrap):
                     "tooltip": "",
                     "value": pwgen.password(),
                 },
+                "keystone/tuningbox_user": {
+                    "label": "Keystone username for Tuningbox",
+                    "tooltip": "",
+                    "value": "tuningbox"},
+                "keystone/tuningbox_password": {
+                    "label": "Keystone password for Tuningbox",
+                    "tooltip": "",
+                    "value": pwgen.password()},
                 "mcollective/user": {"label": "Mcollective user",
                                      "tooltip": "",
                                      "value": "mcollective"},
@@ -113,6 +121,16 @@ class servicepws(urwid.WidgetWrap):
                 "postgres/ostf_password": {"label": "OSTF DB password",
                                            "tooltip": "",
                                            "value": pwgen.password()},
+                "postgres/tuningbox_dbname": {"label": "Tuningbox DB name",
+                                              "tooltip": "",
+                                              "value": "tuningbox"},
+                "postgres/tuningbox_user": {"label": "Tuningbox DB user",
+                                            "tooltip": "",
+                                            "value": "tuningbox"},
+                "postgres/tuningbox_password": {
+                    "label": "Tuningbox DB password",
+                    "tooltip": "",
+                    "value": pwgen.password()},
             }
         self.fields = self.defaults.keys()
 
