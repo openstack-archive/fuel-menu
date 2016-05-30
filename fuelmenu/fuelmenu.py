@@ -422,6 +422,13 @@ def save_only(iface, settingsfile='/etc/fuel/astute.yaml'):
             "postgres/ostf_password": pwgen.password(),
             "FUEL_ACCESS/user": "admin",
             "FUEL_ACCESS/password": "admin",
+            # Tuning box postgres
+            "postgres/tuningbox_dbname": "tuningbox",
+            "postgres/tuningbox_user": "tuningbox",
+            "postgres/tuningbox_password": pwgen.password(),
+            # Tuning box keystone
+            "keystone/tuningbox_user": "tuningbox",
+            "keystone/tuningbox_password": pwgen.password(),
         }
     for setting in settings_upd.keys():
         if "/" in setting:
