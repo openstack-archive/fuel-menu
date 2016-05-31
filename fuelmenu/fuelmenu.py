@@ -248,23 +248,26 @@ class FuelSetup(object):
         for child in reversed(self.children):
             self.setChildScreen(name=child.name)
 
-        signal.signal(signal.SIGUSR1, self.handle_sigusr1)
+        signal.signal(signal.SIGUSR1, self.sigusr1_handler)
+        msg = "It is recommended to change default administrator password."
 
-        dialog.display_dialog(
-            self.child,
-            widget.TextLabel("It is highly recommended to change default "
-                             "admin password."),
-            "WARNING!")
-        self.mainloop.run()
+        dialog.display_dialog(self.child, widget.TextLabel(msg), "WARNING!")
 
-    def exit_program(self, button):
-        # Fix /etc/hosts before quitting
-        dnsobj = self.children[int(self.choices.index("DNS & Hostname"))]
-        dnsobj.fixEtcHosts()
+        run_delegate = self.mainloop.run
+        run_delegate()
+
+    def exit(self, button):
+        try:
+            dns_choice_num = int(self.choices.index("DNS & Hostname"))
+        except ValueError:
+            log.info("Something bad happened.")
+
+        obj_dns = self.children[dns_choice_num]
+        obj_dns.fixEtcHosts()
 
         raise urwid.ExitMainLoop()
 
-    def handle_sigusr1(self, signum, stack):
+    def sigusr1_handler(self, signum, stack):
         log.info("Received signal: %s" % signum)
         try:
             savetimeout = 60
@@ -281,7 +284,7 @@ class FuelSetup(object):
             log.exception("Save was interrupted by the user.")
         except Exception:
             log.exception("Save failed for unknown reason:")
-        self.exit_program(None)
+        self.exit(None)
 
     def global_save(self):
         # Runs save function for every module
