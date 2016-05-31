@@ -28,11 +28,13 @@ import yaml
 log = logging.getLogger('fuelmenu.settings')
 
 
-def construct_ordered_mapping(self, node, deep=False):
+def make_ordered_mapping(self, node, deep=False):
     if not isinstance(node, yaml.MappingNode):
-        raise yaml.ConstructorError(None, None,
-                                    "expected a mapping node, but found %s" %
-                                    node.id, node.start_mark)
+        msg = 'node has to be an instance of yaml.MappingNode, but it is {0}'
+        raise yaml.ConstructorError(None,
+                                    None,
+                                    msg.format(type(node)),
+                                    node.start_mark)
     mapping = OrderedDict()
     for key_node, value_node in node.value:
         key = self.construct_object(key_node, deep=deep)
@@ -43,7 +45,6 @@ def construct_ordered_mapping(self, node, deep=False):
         value = self.construct_object(value_node, deep=deep)
         mapping[key] = value
     return mapping
-yaml.constructor.BaseConstructor.construct_mapping = construct_ordered_mapping
 
 
 def construct_yaml_map_with_ordered_dict(self, node):
@@ -51,9 +52,6 @@ def construct_yaml_map_with_ordered_dict(self, node):
     yield data
     value = self.construct_mapping(node)
     data.update(value)
-yaml.constructor.Constructor.add_constructor(
-    'tag:yaml.org,2002:map',
-    construct_yaml_map_with_ordered_dict)
 
 
 def represent_ordered_mapping(self, tag, mapping, flow_style=None):
@@ -80,11 +78,6 @@ def represent_ordered_mapping(self, tag, mapping, flow_style=None):
             node.flow_style = best_style
     return node
 
-# Settings object is the instance of OrderedDict, so multi_representer
-# of OrderedDict can handle both types (OrderedDict and Settings)
-yaml.representer.Representer.add_multi_representer(
-    OrderedDict, yaml.representer.SafeRepresenter.represent_dict)
-yaml.representer.BaseRepresenter.represent_mapping = represent_ordered_mapping
 
 
 def dict_merge(a, b):
@@ -152,3 +145,14 @@ class Settings(OrderedDict):
     def merge(self, other):
         """Merge this settings object with other."""
         self.update(dict_merge(self, other))
+
+
+yaml.constructor.BaseConstructor.construct_mapping = make_ordered_mapping
+yaml.constructor.Constructor.add_constructor('tag:yaml.org,2002:map',
+                                             construct_yaml_map_with_ordered_dict)
+
+# Settings object is the instance of OrderedDict, so multi_representer
+# of OrderedDict can handle both types (OrderedDict and Settings)
+yaml.representer.Representer.add_multi_representer(OrderedDict,
+                                                   yaml.representer.SafeRepresenter.represent_dict)
+yaml.representer.BaseRepresenter.represent_mapping = represent_ordered_mapping
