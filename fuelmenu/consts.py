@@ -19,9 +19,11 @@ LOGFILE = "/var/log/fuelmenu.log"
 PUPPET_LOGFILE = "/var/log/puppet/fuelmenu-puppet.log"
 PUPPET_NAILGUN = "/etc/puppet/modules/fuel/examples/nailgun.pp"
 PUPPET_FUEL_MASTER = "/etc/puppet/modules/fuel/examples/host.pp"
+PUPPET_DHCP_RANGES = "/etc/puppet/modules/fuel/examples/dhcp-ranges.pp"
 
 SETTINGS_FILE = "/etc/fuel/astute.yaml"
 RELEASE_FILE = "/etc/fuel_release"
+HIERA_NET_SETTINGS = "/etc/hiera/networks.yaml"
 
 DEFAULT_LOCK_FILE = "/var/run/fuelmenu.lock"
 
@@ -31,3 +33,5 @@ POST_DEPLOYMENT_MODE = "post"
 PUPPET_TYPE_LITERAL = "literal"
 PUPPET_TYPE_RESOURCE = "resource"
 PUPPET_TYPE_CLASS = "class"
+
+ADMIN_NETWORK_ID = 1
