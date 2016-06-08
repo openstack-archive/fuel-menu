@@ -228,10 +228,10 @@ class FuelSetup(object):
         try:
             dns_choice_num = int(self.choices.index("DNS & Hostname"))
         except ValueError:
-            log.info("Something bad happened.")
-
-        obj_dns = self.children[dns_choice_num]
-        obj_dns.fixEtcHosts()
+            log.warning("DNS module wasn't found.")
+        else:
+            obj_dns = self.children[dns_choice_num]
+            obj_dns.fixEtcHosts()
 
         raise urwid.ExitMainLoop()
 

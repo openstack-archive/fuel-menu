@@ -49,7 +49,7 @@ class SaveAndQuit(object):
         if self.save():
             self.parent.refreshScreen()
             time.sleep(1.5)
-            self.parent.exit_program(None)
+            self.parent.exit(None)
 
     def save(self):
         results, modulename = self.parent.global_save()
@@ -60,7 +60,7 @@ class SaveAndQuit(object):
             return False
 
     def quit_without_saving(self, args):
-        self.parent.exit_program(None)
+        self.parent.exit(None)
 
     def refresh(self):
         pass
