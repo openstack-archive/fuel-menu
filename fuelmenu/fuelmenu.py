@@ -421,6 +421,7 @@ def save_only(iface, settingsfile=consts.SETTINGS_FILE):
             "keystone/nailgun_password": pwgen.password(),
             "keystone/monitord_user": "monitord",
             "keystone/monitord_password": pwgen.password(),
+            "keystone/service_token_off": "true",
             "mcollective/user": "mcollective",
             "mcollective/password": pwgen.password(),
             "postgres/keystone_dbname": "keystone",
