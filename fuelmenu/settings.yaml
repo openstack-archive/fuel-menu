@@ -17,19 +17,19 @@ BOOTSTRAP:
     section: "main universe multiverse"
     uri: "http://archive.ubuntu.com/ubuntu"
     priority: null
-    suite: "trusty"
+    suite: "xenial"
     type: "deb"
   - name: "ubuntu-updates"
     section: "main universe multiverse"
     uri: "http://archive.ubuntu.com/ubuntu"
     priority: null
-    suite: "trusty-updates"
+    suite: "xenial-updates"
     type: "deb"
   - name: "ubuntu-security"
     section: "main universe multiverse"
     uri: "http://archive.ubuntu.com/ubuntu"
     priority: null
-    suite: "trusty-security"
+    suite: "xenial-security"
     type: "deb"
   - name: "mos"
     section: "main restricted"
