@@ -57,17 +57,22 @@ class FuelSetup(object):
         # Tasks to be executed on Apply
         self.apply_tasks = set()
         self.version = utils.get_fuel_version()
+        self.codename = 'xenial'
 
         # settings load
         self.settings = settings_module.Settings()
+        template_kwargs={
+            "mos_version": self.version,
+            "codename": self.codename
+        }
 
         self.settings.load(
             os.path.join(os.path.dirname(__file__), "settings.yaml"),
-            template_kwargs={"mos_version": self.version})
+            template_kwargs=template_kwargs)
 
         self.settings.load(
             consts.SETTINGS_FILE,
-            template_kwargs={"mos_version": self.version})
+            template_kwargs=template_kwargs)
 
         self.main()
         self.choices = []
