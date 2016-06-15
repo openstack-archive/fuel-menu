@@ -15,21 +15,21 @@ BOOTSTRAP:
   repos:
   - name: "ubuntu"
     section: "main universe multiverse"
-    uri: "http://archive.ubuntu.com/ubuntu"
+    uri: "http://mirror.yandex.ru/ubuntu"
     priority: null
-    suite: "trusty"
+    suite: "xenial"
     type: "deb"
   - name: "ubuntu-updates"
     section: "main universe multiverse"
-    uri: "http://archive.ubuntu.com/ubuntu"
+    uri: "http://mirror.yandex.ru/ubuntu"
     priority: null
-    suite: "trusty-updates"
+    suite: "xenial-updates"
     type: "deb"
   - name: "ubuntu-security"
     section: "main universe multiverse"
-    uri: "http://archive.ubuntu.com/ubuntu"
+    uri: "http://mirror.yandex.ru/ubuntu"
     priority: null
-    suite: "trusty-security"
+    suite: "xenial-security"
     type: "deb"
   - name: "mos"
     section: "main restricted"
@@ -37,23 +37,23 @@ BOOTSTRAP:
     priority: 1050
     suite: "mos${mos_version}"
     type: "deb"
-  - name: "mos-updates"
-    section: "main restricted"
-    uri: "http://mirror.fuel-infra.org/mos-repos/ubuntu/${mos_version}"
-    priority: 1050
-    suite: "mos${mos_version}-updates"
-    type: "deb"
-  - name: "mos-security"
-    section: "main restricted"
-    uri: "http://mirror.fuel-infra.org/mos-repos/ubuntu/${mos_version}"
-    priority: 1050
-    suite: "mos${mos_version}-security"
-    type: "deb"
-  - name: "mos-holdback"
-    section: "main restricted"
-    uri: "http://mirror.fuel-infra.org/mos-repos/ubuntu/${mos_version}"
-    priority: 1100
-    suite: "mos${mos_version}-holdback"
-    type: "deb"
+#  - name: "mos-updates"
+#    section: "main restricted"
+#    uri: "http://mirror.fuel-infra.org/mos-repos/ubuntu/${mos_version}"
+#    priority: 1050
+#    suite: "mos${mos_version}-updates"
+#    type: "deb"
+#  - name: "mos-security"
+#    section: "main restricted"
+#    uri: "http://mirror.fuel-infra.org/mos-repos/ubuntu/${mos_version}"
+#    priority: 1050
+#    suite: "mos${mos_version}-security"
+#    type: "deb"
+#  - name: "mos-holdback"
+#    section: "main restricted"
+#    uri: "http://mirror.fuel-infra.org/mos-repos/ubuntu/${mos_version}"
+#    priority: 1100
+#    suite: "mos${mos_version}-holdback"
+#    type: "deb"
 PRODUCTION: docker
 FEATURE_GROUPS: []
