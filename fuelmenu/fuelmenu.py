@@ -15,12 +15,19 @@
 
 from __future__ import absolute_import
 
+from fuelmenu import consts
+import logging
+
+# set up logging before other modules will try to get their loggers
+logging.basicConfig(filename=consts.LOGFILE,
+                    format="%(asctime)s %(levelname)s %(message)s",
+                    level=logging.DEBUG)
+
 from fuelmenu.common import dialog
 from fuelmenu.common import network
 from fuelmenu.common import timeout
 from fuelmenu.common import urwidwrapper as widget
 from fuelmenu.common import utils
-from fuelmenu import consts
 from fuelmenu import modules
 from fuelmenu import settings as settings_module
 
@@ -34,10 +41,6 @@ import urwid
 import urwid.raw_display
 import urwid.web_display
 
-# set up logging
-logging.basicConfig(filename=consts.LOGFILE,
-                    format="%(asctime)s %(levelname)s %(message)s",
-                    level=logging.DEBUG)
 log = logging.getLogger('fuelmenu.loader')
 
 
