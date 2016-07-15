@@ -28,6 +28,8 @@ import socket
 import urwid
 import urwid.raw_display
 import urwid.web_display
+from ctypes import cdll
+res_init = cdll.LoadLibrary('libc.so.6').__res_init
 log = logging.getLogger('fuelmenu.mirrors')
 blank = urwid.Divider()
 
@@ -275,6 +277,7 @@ is accessible"}
         # TODO(asheplyakov): puppet does a similar thing, perhaps we can
         # use the corresponding template instead of duplicating it here.
         make_resolv_conf('/etc/resolv.conf')
+        self.reReadResolvconf()
 
         return True
 
@@ -379,3 +382,6 @@ is accessible"}
     def screenUI(self):
         return ModuleHelper.screenUI(self, self.header_content, self.fields,
                                      self.defaults, show_all_buttons=True)
+
+    def reReadResolvconf(self):
+        res_init()
