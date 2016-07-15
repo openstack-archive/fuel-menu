@@ -13,6 +13,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from ctypes import cdll
 from fuelmenu.common import dialog
 from fuelmenu.common.modulehelper import ModuleHelper
 from fuelmenu.common import network
@@ -28,6 +29,7 @@ import socket
 import urwid
 import urwid.raw_display
 import urwid.web_display
+res_init = cdll.LoadLibrary('libc.so.6').__res_init
 log = logging.getLogger('fuelmenu.mirrors')
 blank = urwid.Divider()
 
@@ -275,6 +277,9 @@ is accessible"}
         # TODO(asheplyakov): puppet does a similar thing, perhaps we can
         # use the corresponding template instead of duplicating it here.
         make_resolv_conf('/etc/resolv.conf')
+
+        # Reread resolv.conf
+        res_init()
 
         return True
 
