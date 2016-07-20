@@ -37,23 +37,23 @@ BOOTSTRAP:
     priority: 1050
     suite: "mos${mos_version}"
     type: "deb"
-  - name: "mos-updates"
-    section: "main restricted"
-    uri: "http://mirror.fuel-infra.org/mos-repos/ubuntu/${mos_version}"
-    priority: 1050
-    suite: "mos${mos_version}-updates"
-    type: "deb"
-  - name: "mos-security"
-    section: "main restricted"
-    uri: "http://mirror.fuel-infra.org/mos-repos/ubuntu/${mos_version}"
-    priority: 1050
-    suite: "mos${mos_version}-security"
-    type: "deb"
-  - name: "mos-holdback"
-    section: "main restricted"
-    uri: "http://mirror.fuel-infra.org/mos-repos/ubuntu/${mos_version}"
-    priority: 1100
-    suite: "mos${mos_version}-holdback"
-    type: "deb"
+#  - name: "mos-updates"
+#    section: "main restricted"
+#    uri: "http://mirror.fuel-infra.org/mos-repos/ubuntu/${mos_version}"
+#    priority: 1050
+#    suite: "mos${mos_version}-updates"
+#    type: "deb"
+#  - name: "mos-security"
+#    section: "main restricted"
+#    uri: "http://mirror.fuel-infra.org/mos-repos/ubuntu/${mos_version}"
+#    priority: 1050
+#    suite: "mos${mos_version}-security"
+#    type: "deb"
+#  - name: "mos-holdback"
+#    section: "main restricted"
+#    uri: "http://mirror.fuel-infra.org/mos-repos/ubuntu/${mos_version}"
+#    priority: 1100
+#    suite: "mos${mos_version}-holdback"
+#    type: "deb"
 PRODUCTION: docker
 FEATURE_GROUPS: []
