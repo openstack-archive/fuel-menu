@@ -381,6 +381,10 @@ def main(*args, **kwargs):
         sys.exit(1)
 
     if options.save_only:
+        if not os.isatty(sys.stdin.fileno()):
+            print("Stdin is not a tty, can't run fuelmenu "
+                  "in interactive mode.")
+            sys.exit(1)
         setup(save_only=True,
               managed_iface=options.iface)
     else:
