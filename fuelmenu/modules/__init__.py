@@ -19,6 +19,7 @@ from fuelmenu.modules.cobblerconf import CobblerConfig
 from fuelmenu.modules.dnsandhostname import DnsAndHostname
 from fuelmenu.modules.feature_groups import FeatureGroups
 from fuelmenu.modules.fueluser import FuelUser
+from fuelmenu.modules.grubpw import GrubPassword
 from fuelmenu.modules.interfaces import Interfaces
 from fuelmenu.modules.ntpsetup import NtpSetup
 from fuelmenu.modules.restore import Restore
@@ -40,6 +41,7 @@ __all__ = [
     BootstrapImage,
     NtpSetup,
     RootPassword,
+    GrubPassword,
     FeatureGroups,
     Shell,
     Restore,
