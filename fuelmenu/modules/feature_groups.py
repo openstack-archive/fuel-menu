@@ -17,8 +17,7 @@ import logging
 
 import urwid
 
-from fuelmenu.common.modulehelper import ModuleHelper
-from fuelmenu.common.modulehelper import WidgetType
+from fuelmenu.common import modulehelper
 from fuelmenu.common import puppet
 from fuelmenu.common import utils
 from fuelmenu import consts
@@ -47,12 +46,12 @@ class FeatureGroups(urwid.WidgetWrap):
             "FEATURE_GROUPS/experimental": {
                 "label": "Experimental features",
                 "tooltip": "(not thoroughly tested)",
-                "type": WidgetType.CHECKBOX,
+                "type": modulehelper.WidgetType.CHECKBOX,
             },
             "FEATURE_GROUPS/advanced": {
                 "label": "Advanced features",
                 "tooltip": "",
-                "type": WidgetType.CHECKBOX,
+                "type": modulehelper.WidgetType.CHECKBOX,
             }
         }
         self.load()
@@ -125,11 +124,12 @@ class FeatureGroups(urwid.WidgetWrap):
         return newsettings
 
     def cancel(self, button):
-        ModuleHelper.cancel(self, button)
+        modulehelper.ModuleHelper.cancel(self, button)
 
     def refresh(self):
         pass
 
     def screenUI(self):
-        return ModuleHelper.screenUI(self, self.header_content, self.fields,
-                                     self.defaults, show_all_buttons=True)
+        return modulehelper.ModuleHelper.screenUI(self, self.header_content,
+                                                  self.fields, self.defaults,
+                                                  show_all_buttons=True)

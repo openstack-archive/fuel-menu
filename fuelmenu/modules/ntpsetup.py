@@ -14,8 +14,7 @@
 # under the License.
 
 from fuelmenu.common import dialog
-from fuelmenu.common.modulehelper import ModuleHelper
-from fuelmenu.common.modulehelper import WidgetType
+from fuelmenu.common import modulehelper
 import fuelmenu.common.urwidwrapper as widget
 from fuelmenu.common import utils
 import logging
@@ -45,7 +44,7 @@ class NtpSetup(urwid.WidgetWrap):
             {
                 "ntpenabled": {"label": "Enable NTP:",
                                "tooltip": "",
-                               "type": WidgetType.RADIO,
+                               "type": modulehelper.WidgetType.RADIO,
                                "callback": self.radioSelect},
                 "NTP1": {"label": "NTP Server 1:",
                          "tooltip": "NTP Server for time synchronization",
@@ -124,7 +123,7 @@ class NtpSetup(urwid.WidgetWrap):
                                     % self.defaults[ntpfield]['label'])
         if len(errors) > 0:
             log.error("Errors: %s %s" % (len(errors), errors))
-            ModuleHelper.display_failed_check_dialog(self, errors)
+            modulehelper.ModuleHelper.display_failed_check_dialog(self, errors)
             return False
         else:
             if len(warnings) > 0:
@@ -160,18 +159,19 @@ class NtpSetup(urwid.WidgetWrap):
         return True
 
     def cancel(self, button):
-        ModuleHelper.cancel(self, button)
+        modulehelper.ModuleHelper.cancel(self, button)
 
     def get_default_gateway_linux(self):
-        return ModuleHelper.get_default_gateway_linux()
+        return modulehelper.ModuleHelper.get_default_gateway_linux()
 
     def load(self):
-        ModuleHelper.load_to_defaults(
+        modulehelper.ModuleHelper.load_to_defaults(
             self.parent.settings, self.defaults, ignoredparams=['ntpenabled'])
 
     def save(self, responses):
         settings = self.parent.settings
-        newsettings = ModuleHelper.make_settings_from_responses(responses)
+        newsettings = modulehelper.ModuleHelper.make_settings_from_responses(
+            responses)
         settings.merge(newsettings)
 
         # Update defaults
@@ -210,5 +210,5 @@ class NtpSetup(urwid.WidgetWrap):
                 break
 
     def screenUI(self):
-        return ModuleHelper.screenUI(self, self.header_content, self.fields,
-                                     self.defaults)
+        return modulehelper.ModuleHelper.screenUI(self, self.header_content,
+                                                  self.fields, self.defaults)

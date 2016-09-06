@@ -13,7 +13,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from fuelmenu.common.modulehelper import ModuleHelper
+from fuelmenu.common import modulehelper
 import logging
 import re
 import urwid
@@ -110,7 +110,7 @@ class FuelUser(urwid.WidgetWrap):
 
         if len(errors) > 0:
             log.error("Errors: %s %s" % (len(errors), errors))
-            ModuleHelper.display_failed_check_dialog(self, errors)
+            modulehelper.ModuleHelper.display_failed_check_dialog(self, errors)
             return False
 
         if len(warnings) > 0:
@@ -134,7 +134,8 @@ class FuelUser(urwid.WidgetWrap):
         return True
 
     def save(self, responses):
-        newsettings = ModuleHelper.make_settings_from_responses(responses)
+        newsettings = modulehelper.ModuleHelper.make_settings_from_responses(
+            responses)
         self.parent.settings.merge(newsettings)
 
         self.parent.footer.set_text("Changes applied successfully.")
@@ -142,17 +143,17 @@ class FuelUser(urwid.WidgetWrap):
         self.cancel(None)
 
     def load(self):
-        ModuleHelper.load_to_defaults(
+        modulehelper.ModuleHelper.load_to_defaults(
             self.parent.settings,
             self.defaults,
             ignoredparams=['CONFIRM_PASSWORD'])
 
     def cancel(self, button):
-        ModuleHelper.cancel(self, button)
+        modulehelper.ModuleHelper.cancel(self, button)
 
     def refresh(self):
         pass
 
     def screenUI(self):
-        return ModuleHelper.screenUI(self, self.header_content, self.fields,
-                                     self.defaults)
+        return modulehelper.ModuleHelper.screenUI(self, self.header_content,
+                                                  self.fields, self.defaults)

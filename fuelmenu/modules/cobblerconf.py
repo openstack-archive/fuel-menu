@@ -17,7 +17,7 @@ import logging
 import os
 
 from fuelclient.cli import error
-from fuelclient.objects import NetworkGroup
+from fuelclient import objects
 import netaddr
 import urwid
 import urwid.raw_display
@@ -25,9 +25,8 @@ import urwid.web_display
 import yaml
 
 from fuelmenu.common import dialog
-from fuelmenu.common.errors import BadIPException
-from fuelmenu.common.modulehelper import ModuleHelper
-from fuelmenu.common.modulehelper import WidgetType
+from fuelmenu.common import errors as f_errors
+from fuelmenu.common import modulehelper
 from fuelmenu.common import network
 from fuelmenu.common import puppet
 import fuelmenu.common.urwidwrapper as widget
@@ -80,7 +79,7 @@ to advertise via DHCP to nodes",
                                                "value": "10.0.0.2"},
                 "dynamic_label": {"label": "DHCP pool for node discovery:",
                                   "tooltip": "",
-                                  "type": WidgetType.LABEL},
+                                  "type": modulehelper.WidgetType.LABEL},
             }
 
         self.load()
@@ -182,9 +181,10 @@ interface first.")
                         dhcp_start = netaddr.IPAddress(
                             responses["ADMIN_NETWORK/dhcp_pool_start"])
                         if not dhcp_start:
-                            raise BadIPException("Not a valid IP address")
+                            raise f_errors.BadIPException(
+                                "Not a valid IP address")
                     else:
-                        raise BadIPException("Not a valid IP address")
+                        raise f_errors.BadIPException("Not a valid IP address")
                 except Exception:
                     errors.append("Invalid IP address for DHCP Pool Start")
                 try:
@@ -193,9 +193,11 @@ interface first.")
                         dhcp_gateway = netaddr.IPAddress(
                             responses["ADMIN_NETWORK/dhcp_gateway"])
                         if not dhcp_gateway:
-                            raise BadIPException("Not a valid IP address")
+                            raise f_errors.BadIPException(
+                                "Not a valid IP address")
                     else:
-                            raise BadIPException("Not a valid IP address")
+                            raise f_errors.BadIPException(
+                                "Not a valid IP address")
                 except Exception:
                     errors.append("Invalid IP address for DHCP Gateway")
 
@@ -205,9 +207,11 @@ interface first.")
                         dhcp_end = netaddr.IPAddress(
                             responses["ADMIN_NETWORK/dhcp_pool_end"])
                         if not dhcp_end:
-                            raise BadIPException("Not a valid IP address")
+                            raise f_errors.BadIPException(
+                                "Not a valid IP address")
                     else:
-                        raise BadIPException("Not a valid IP address")
+                        raise f_errors.BadIPException(
+                            "Not a valid IP address")
                 except Exception:
                     errors.append("Invalid IP address for DHCP Pool end")
 
@@ -276,7 +280,7 @@ interface first.")
 
         if len(errors) > 0:
             log.error("Errors: %s %s" % (len(errors), errors))
-            ModuleHelper.display_failed_check_dialog(self, errors)
+            modulehelper.ModuleHelper.display_failed_check_dialog(self, errors)
             return False
         else:
             self.parent.footer.set_text("No errors found.")
@@ -302,7 +306,7 @@ interface first.")
         else:
             result = self._update_dnsmasq(settings)
         if not result:
-            ModuleHelper.display_dialog(
+            modulehelper.ModuleHelper.display_dialog(
                 self, error_msg=self.apply_dialog_message["message"],
                 title=self.apply_dialog_message["title"])
             return False
@@ -310,7 +314,7 @@ interface first.")
         code, out, err = utils.execute(cobbler_sync)
         if code != 0:
             log.error(err)
-            ModuleHelper.display_dialog(
+            modulehelper.ModuleHelper.display_dialog(
                 self, error_msg=self.apply_dialog_message["message"],
                 title=self.apply_dialog_message["title"])
             return False
@@ -326,7 +330,7 @@ interface first.")
         # groups). Need to combine this calls
         result, msg = puppet.puppetApplyManifest(consts.PUPPET_NAILGUN)
         if not result:
-            ModuleHelper.display_dialog(
+            modulehelper.ModuleHelper.display_dialog(
                 self, error_msg=self.apply_dialog_message["message"],
                 title=self.apply_dialog_message["title"])
             return False
@@ -338,10 +342,10 @@ interface first.")
             ]
         }
         try:
-            NetworkGroup(consts.ADMIN_NETWORK_ID).set(data)
+            objects.NetworkGroup(consts.ADMIN_NETWORK_ID).set(data)
         except error.HTTPError as e:
             log.error(e.message)
-            ModuleHelper.display_dialog(
+            modulehelper.ModuleHelper.display_dialog(
                 self, error_msg=self.apply_dialog_message["message"],
                 title=self.apply_dialog_message["title"])
             return False
@@ -393,19 +397,20 @@ interface first.")
         return puppet.puppetApply(puppet_classes)
 
     def cancel(self, button):
-        ModuleHelper.cancel(self, button)
+        modulehelper.ModuleHelper.cancel(self, button)
         self.setNetworkDetails()
 
     def load(self):
         settings = self.parent.settings
-        ModuleHelper.load_to_defaults(settings, self.defaults)
+        modulehelper.ModuleHelper.load_to_defaults(settings, self.defaults)
 
         iface = settings.get("ADMIN_NETWORK", {}).get("interface")
         if iface in self.netsettings.keys():
             self.activeiface = iface
 
     def save(self, responses):
-        newsettings = ModuleHelper.make_settings_from_responses(responses)
+        newsettings = modulehelper.ModuleHelper.make_settings_from_responses(
+            responses)
 
         # Need to calculate and netmask
         newsettings['ADMIN_NETWORK']['netmask'] = \
@@ -421,13 +426,13 @@ interface first.")
         self.parent.footer.set_text("Changes saved successfully.")
 
     def getNetwork(self):
-        ModuleHelper.getNetwork(self)
+        modulehelper.ModuleHelper.getNetwork(self)
 
     def getDHCP(self, iface):
-        return ModuleHelper.getDHCP(iface)
+        return modulehelper.ModuleHelper.getDHCP(iface)
 
     def get_default_gateway_linux(self):
-        return ModuleHelper.get_default_gateway_linux()
+        return modulehelper.ModuleHelper.get_default_gateway_linux()
 
     def radioSelect(self, current, state, user_data=None):
         """Update network details and display information."""
@@ -519,5 +524,5 @@ interface first.")
         self.setNetworkDetails()
 
     def screenUI(self):
-        return ModuleHelper.screenUI(self, self.header_content, self.fields,
-                                     self.defaults)
+        return modulehelper.ModuleHelper.screenUI(self, self.header_content,
+                                                  self.fields, self.defaults)

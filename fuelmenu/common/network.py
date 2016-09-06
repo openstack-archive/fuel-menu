@@ -19,8 +19,7 @@ import os
 import netaddr
 import netifaces
 
-from fuelmenu.common.errors import BadIPException
-from fuelmenu.common.errors import NetworkException
+from fuelmenu.common import errors
 from fuelmenu.common.utils import execute
 
 log = logging.getLogger('fuelmenu.common.network')
@@ -111,8 +110,8 @@ def list_host_ip_addresses(interfaces="all"):
             # Skip if interface has no IP
             continue
         except ValueError:
-            raise NetworkException("Invalid specified interface: "
-                                   "{0}".format(iface))
+            raise errors.NetworkException("Invalid specified interface: "
+                                          "{0}".format(iface))
     return ips
 
 
@@ -121,7 +120,7 @@ def range(startip, endip):
     try:
         return list(netaddr.iter_iprange(startip, endip))
     except netaddr.AddrFormatError:
-        raise BadIPException("Invalid IP address(es) specified.")
+        raise errors.BadIPException("Invalid IP address(es) specified.")
 
 
 def intersects(range1, range2):
@@ -186,13 +185,14 @@ def search_external_dhcp(iface, timeout):
         log.debug('Unable to parse JSON.')
         return []
     except OSError:
-        raise NetworkException('Unable to check DHCP.')
+        raise errors.NetworkException('Unable to check DHCP.')
 
 
 def upIface(iface):
     code, _, _ = execute(["ifconfig", iface, "up"])
     if code != 0:
-        raise NetworkException("Failed to up interface {0}".format(iface))
+        raise errors.NetworkException(
+            "Failed to up interface {0}".format(iface))
 
 
 def get_iface_info(iface, address_family=netifaces.AF_INET):

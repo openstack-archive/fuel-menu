@@ -23,9 +23,7 @@ import urwid
 import urwid.raw_display
 import urwid.web_display
 
-from fuelmenu.common.modulehelper import BLANK_KEY
-from fuelmenu.common.modulehelper import ModuleHelper
-from fuelmenu.common.modulehelper import WidgetType
+from fuelmenu.common import modulehelper
 from fuelmenu.common import utils
 
 log = logging.getLogger('fuelmenu.mirrors')
@@ -52,15 +50,15 @@ class BootstrapImage(urwid.WidgetWrap):
         self.header_content = ["Bootstrap image configuration"]
 
         self._common_fields = (
-            BLANK_KEY,
+            modulehelper.BLANK_KEY,
             BOOTSTRAP_SKIP_BUILD_KEY,
         )
 
         self._repo_related_fields = (
-            BLANK_KEY,
+            modulehelper.BLANK_KEY,
             BOOTSTRAP_HTTP_PROXY_KEY,
             BOOTSTRAP_HTTPS_PROXY_KEY,
-            BLANK_KEY,
+            modulehelper.BLANK_KEY,
             BOOTSTRAP_REPOS_KEY,
             ADD_REPO_BUTTON_KEY
         )
@@ -71,18 +69,18 @@ class BootstrapImage(urwid.WidgetWrap):
 
         self.repo_value_scheme = {
             "name": {
-                "type": WidgetType.TEXT_FIELD,
+                "type": modulehelper.WidgetType.TEXT_FIELD,
                 "label": "Name",
                 "tooltip": "Repository name"
             },
             "uri": {
-                "type": WidgetType.TEXT_FIELD,
+                "type": modulehelper.WidgetType.TEXT_FIELD,
                 "label": "Deb repo",
                 "tooltip": "Repo in format: "
                            "deb uri distribution [component1] [...]"
             },
             "priority": {
-                "type": WidgetType.TEXT_FIELD,
+                "type": modulehelper.WidgetType.TEXT_FIELD,
                 "label": "Priority",
                 "tooltip": "Repository priority"
             }
@@ -92,7 +90,7 @@ class BootstrapImage(urwid.WidgetWrap):
             BOOTSTRAP_SKIP_BUILD_KEY: {
                 "label": "Skip building bootstrap image",
                 "tooltip": "",
-                "type": WidgetType.CHECKBOX,
+                "type": modulehelper.WidgetType.CHECKBOX,
                 "callback": self.skip_build_callback},
             BOOTSTRAP_HTTP_PROXY_KEY: {
                 "label": "HTTP proxy",
@@ -104,13 +102,13 @@ class BootstrapImage(urwid.WidgetWrap):
                 "value": ""},
             BOOTSTRAP_REPOS_KEY: {
                 "label": "List of repositories",
-                "type": WidgetType.LIST,
+                "type": modulehelper.WidgetType.LIST,
                 "value_scheme": self.repo_value_scheme,
                 "value": self.repo_list
             },
             ADD_REPO_BUTTON_KEY: {
                 "label": "Add repository",
-                "type": WidgetType.BUTTON,
+                "type": modulehelper.WidgetType.BUTTON,
                 "callback": self.add_repo
             }
         }
@@ -121,7 +119,8 @@ class BootstrapImage(urwid.WidgetWrap):
     def responses(self):
         ret = dict()
         for index, fieldname in enumerate(self.fields):
-            if fieldname == BLANK_KEY or 'button' in fieldname.lower():
+            if (fieldname == modulehelper.BLANK_KEY or
+                    'button' in fieldname.lower()):
                 pass
             elif fieldname == BOOTSTRAP_REPOS_KEY:
                 ret[fieldname] = \
@@ -147,7 +146,7 @@ class BootstrapImage(urwid.WidgetWrap):
 
         if errors:
             log.error("Errors: %s", errors)
-            ModuleHelper.display_failed_check_dialog(self, errors)
+            modulehelper.ModuleHelper.display_failed_check_dialog(self, errors)
             return False
         else:
             self.parent.footer.set_text("No errors found.")
@@ -202,7 +201,7 @@ class BootstrapImage(urwid.WidgetWrap):
         return True
 
     def cancel(self, button):
-        ModuleHelper.cancel(self, button)
+        modulehelper.ModuleHelper.cancel(self, button)
 
     def _get_repo_list_response(self, list_box):
         # Here we assumed that we get object of WalkerStoredListBox
@@ -315,7 +314,8 @@ class BootstrapImage(urwid.WidgetWrap):
     def _update_defaults(self, defaults, new_settings):
         for setting in defaults:
             try:
-                new_value = ModuleHelper.get_setting(new_settings, setting)
+                new_value = modulehelper.ModuleHelper.get_setting(
+                    new_settings, setting)
                 if BOOTSTRAP_REPOS_KEY == setting:
                     defaults[setting]["value"] = \
                         self._parse_config_repo_list(new_value)
@@ -329,13 +329,14 @@ class BootstrapImage(urwid.WidgetWrap):
 
     def load(self):
         settings = self.parent.settings
-        ModuleHelper.load_to_defaults(settings, self.defaults)
+        modulehelper.ModuleHelper.load_to_defaults(settings, self.defaults)
 
         self._update_defaults(self.defaults, settings)
         self._select_fields_to_show(self.defaults)
 
     def save(self, responses):
-        newsettings = ModuleHelper.make_settings_from_responses(responses)
+        newsettings = modulehelper.ModuleHelper.make_settings_from_responses(
+            responses)
         self.parent.settings.merge(newsettings)
 
         # Update self.defaults
@@ -369,15 +370,16 @@ class BootstrapImage(urwid.WidgetWrap):
         pass
 
     def _generate_screen_by_defaults(self, defaults):
-        screen = ModuleHelper.screenUI(self, self.header_content, self.fields,
-                                       defaults)
+        screen = modulehelper.ModuleHelper.screenUI(self, self.header_content,
+                                                    self.fields, defaults)
         return screen
 
     def _get_fresh_defaults(self):
         defaults = copy.copy(self.defaults)
-        self._update_defaults(defaults,
-                              ModuleHelper.make_settings_from_responses(
-                                  self.responses))
+        self._update_defaults(
+            defaults,
+            modulehelper.ModuleHelper.make_settings_from_responses(
+                self.responses))
         return defaults
 
     def _redraw_screen(self, defaults=None, focus_position=None):

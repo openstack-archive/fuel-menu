@@ -13,7 +13,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from fuelmenu.common.modulehelper import ModuleHelper
+from fuelmenu.common import modulehelper
 from fuelmenu.common import pwgen
 import logging
 import urwid
@@ -142,10 +142,12 @@ class ServicePasswords(urwid.WidgetWrap):
         self.save(responses)
 
     def load(self):
-        ModuleHelper.load_to_defaults(self.parent.settings, self.defaults)
+        modulehelper.ModuleHelper.load_to_defaults(self.parent.settings,
+                                                   self.defaults)
 
     def save(self, responses):
-        newsettings = ModuleHelper.make_settings_from_responses(responses)
+        newsettings = modulehelper.ModuleHelper.make_settings_from_responses(
+            responses)
         self.parent.settings.merge(newsettings)
         log.debug('done saving servicepws')
 
@@ -155,11 +157,11 @@ class ServicePasswords(urwid.WidgetWrap):
                 self.defaults[fieldname]['value'] = newsettings[fieldname]
 
     def cancel(self, button):
-        ModuleHelper.cancel(self, button)
+        modulehelper.ModuleHelper.cancel(self, button)
 
     def refresh(self):
         pass
 
     def screenUI(self):
-        return ModuleHelper.screenUI(self, self.header_content, self.fields,
-                                     self.defaults)
+        return modulehelper.ModuleHelper.screenUI(self, self.header_content,
+                                                  self.fields, self.defaults)

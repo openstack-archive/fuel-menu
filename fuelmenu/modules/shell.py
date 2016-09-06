@@ -13,7 +13,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from fuelmenu.common.modulehelper import ModuleHelper
+from fuelmenu.common import modulehelper
 import fuelmenu.common.urwidwrapper as widget
 import subprocess
 import urwid
@@ -53,5 +53,6 @@ class Shell(object):
         pass
 
     def screenUI(self):
-        return ModuleHelper.screenUI(self, self.header_content, self.fields,
-                                     self.defaults, buttons_visible=False)
+        return modulehelper.ModuleHelper.screenUI(self, self.header_content,
+                                                  self.fields, self.defaults,
+                                                  buttons_visible=False)

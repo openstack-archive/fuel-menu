@@ -15,7 +15,7 @@
 
 from ctypes import cdll
 from fuelmenu.common import dialog
-from fuelmenu.common.modulehelper import ModuleHelper
+from fuelmenu.common import modulehelper
 from fuelmenu.common import network
 from fuelmenu.common import replace
 import fuelmenu.common.urwidwrapper as widget
@@ -198,7 +198,7 @@ is accessible"}
 
         if len(errors) > 0:
             log.error("Errors: %s %s" % (len(errors), errors))
-            ModuleHelper.display_failed_check_dialog(self, errors)
+            modulehelper.ModuleHelper.display_failed_check_dialog(self, errors)
             return False
         else:
             self.parent.footer.set_text("No errors found.")
@@ -284,7 +284,7 @@ is accessible"}
         return True
 
     def cancel(self, button):
-        ModuleHelper.cancel(self, button)
+        modulehelper.ModuleHelper.cancel(self, button)
 
     def resolv_conf_settings(self):
         # Parse /etc/resolv.conf if it contains data
@@ -316,9 +316,9 @@ is accessible"}
         if not self.parent.save_only:
             oldsettings.update(self.resolv_conf_settings())
 
-        ModuleHelper.load_to_defaults(oldsettings,
-                                      self.defaults,
-                                      ignoredparams=['TEST_DNS'])
+        modulehelper.ModuleHelper.load_to_defaults(oldsettings,
+                                                   self.defaults,
+                                                   ignoredparams=['TEST_DNS'])
 
     def getDNS(self, resolver="/etc/resolv.conf"):
         nameservers = []
@@ -347,7 +347,8 @@ is accessible"}
         return searches, domain, ",".join(nameservers)
 
     def save(self, responses):
-        newsettings = ModuleHelper.make_settings_from_responses(responses)
+        newsettings = modulehelper.ModuleHelper.make_settings_from_responses(
+            responses)
         self.parent.settings.merge(newsettings)
 
         # Update self.defaults
@@ -365,13 +366,13 @@ is accessible"}
         return code == 0
 
     def getNetwork(self):
-        ModuleHelper.getNetwork(self)
+        modulehelper.ModuleHelper.getNetwork(self)
 
     def getDHCP(self, iface):
-        return ModuleHelper.getDHCP(iface)
+        return modulehelper.ModuleHelper.getDHCP(iface)
 
     def get_default_gateway_linux(self):
-        return ModuleHelper.get_default_gateway_linux()
+        return modulehelper.ModuleHelper.get_default_gateway_linux()
 
     def refresh(self):
         if self.parent.dns_might_have_changed:
@@ -382,5 +383,6 @@ is accessible"}
             self.parent.dns_might_have_changed = False
 
     def screenUI(self):
-        return ModuleHelper.screenUI(self, self.header_content, self.fields,
-                                     self.defaults, show_all_buttons=True)
+        return modulehelper.ModuleHelper.screenUI(self, self.header_content,
+                                                  self.fields, self.defaults,
+                                                  show_all_buttons=True)

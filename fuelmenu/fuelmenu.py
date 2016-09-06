@@ -32,7 +32,7 @@ from fuelmenu import modules
 from fuelmenu import settings as settings_module
 
 
-from optparse import OptionParser
+import optparse
 import os
 import signal
 import sys
@@ -356,7 +356,7 @@ def main(*args, **kwargs):
             default_iface = nic
             break
 
-    parser = OptionParser()
+    parser = optparse.OptionParser()
     parser.add_option("-s", "--save-only", dest="save_only",
                       action="store_true",
                       help="Save default values and exit.")

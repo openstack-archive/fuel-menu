@@ -20,10 +20,8 @@ import six
 import socket
 import urwid
 
-from fuelmenu.common.errors import BadIPException
-from fuelmenu.common.errors import NetworkException
-from fuelmenu.common.modulehelper import ModuleHelper
-from fuelmenu.common.modulehelper import WidgetType
+from fuelmenu.common import errors as f_errors
+from fuelmenu.common import modulehelper
 from fuelmenu.common import network
 from fuelmenu.common import puppet
 from fuelmenu.common import replace
@@ -68,11 +66,11 @@ class Interfaces(urwid.WidgetWrap):
                            "value": "locked"},
                 "onboot": {"label": "Enable interface:",
                            "tooltip": "",
-                           "type": WidgetType.RADIO,
+                           "type": modulehelper.WidgetType.RADIO,
                            "callback": self.radioSelect},
                 "bootproto": {"label": "Configuration via DHCP:",
                               "tooltip": "",
-                              "type": WidgetType.RADIO,
+                              "type": modulehelper.WidgetType.RADIO,
                               "choices": ["Static", "DHCP"],
                               "callback": self.radioSelect},
                 "ipaddr": {"label": "IP address:",
@@ -175,40 +173,42 @@ class Interfaces(urwid.WidgetWrap):
             try:
                 if netaddr.valid_ipv4(responses["ipaddr"]):
                     if not netaddr.IPAddress(responses["ipaddr"]):
-                        raise BadIPException("Not a valid IP address")
+                        raise f_errors.BadIPException("Not a valid IP address")
                 else:
-                    raise BadIPException("Not a valid IP address")
-            except (BadIPException, Exception):
+                    raise f_errors.BadIPException("Not a valid IP address")
+            except (f_errors.BadIPException, Exception):
                 errors.append("Not a valid IP address: %s" %
                               responses["ipaddr"])
             try:
                 if netaddr.valid_ipv4(responses["netmask"]):
                     netmask = netaddr.IPAddress(responses["netmask"])
                     if netmask.is_netmask is False:
-                        raise BadIPException("Not a valid IP address")
+                        raise f_errors.BadIPException("Not a valid IP address")
                 else:
-                    raise BadIPException("Not a valid IP address")
-            except (BadIPException, Exception):
+                    raise f_errors.BadIPException("Not a valid IP address")
+            except (f_errors.BadIPException, Exception):
                 errors.append("Not a valid netmask: %s" % responses["netmask"])
             try:
                 if len(responses["gateway"]) > 0:
                     # Check if gateway is valid
                     if netaddr.valid_ipv4(responses["gateway"]) is False:
-                        raise BadIPException("Gateway IP address is not valid")
+                        raise f_errors.BadIPException(
+                            "Gateway IP address is not valid")
                     # Check if gateway is in same subnet
                     if network.inSameSubnet(responses["ipaddr"],
                                             responses["gateway"],
                                             responses["netmask"]) is False:
-                        raise BadIPException("Gateway IP is not in same "
-                                             "subnet as IP address")
-            except (BadIPException, Exception) as e:
+                        raise f_errors.BadIPException(
+                            "Gateway IP is not in same "
+                            "subnet as IP address")
+            except (f_errors.BadIPException, Exception) as e:
                 errors.append(e)
             self.parent.footer.set_text("Scanning for duplicate IP address..")
             if len(responses["ipaddr"]) > 0:
                 if self.netsettings[self.activeiface]['link'].upper() != "UP":
                     try:
                         network.upIface(self.activeiface)
-                    except NetworkException as e:
+                    except f_errors.NetworkException as e:
                         errors.append("Cannot activate {0} to check for "
                                       "duplicate IP.".format(self.activeiface))
 
@@ -223,7 +223,7 @@ class Interfaces(urwid.WidgetWrap):
                         responses["ipaddr"]))
         if len(errors) > 0:
             self.log.error("Errors: %s %s" % (len(errors), errors))
-            ModuleHelper.display_failed_check_dialog(self, errors)
+            modulehelper.ModuleHelper.display_failed_check_dialog(self, errors)
             return False
         else:
             self.parent.footer.set_text("No errors found.")
@@ -308,7 +308,7 @@ class Interfaces(urwid.WidgetWrap):
             result = puppet.puppetApply(puppetclasses)
             if not result:
                 raise Exception("Puppet apply failed")
-            ModuleHelper.getNetwork(self)
+            modulehelper.ModuleHelper.getNetwork(self)
             gateway = self.get_default_gateway_linux()
             if gateway is None:
                 gateway = ""
@@ -320,23 +320,23 @@ class Interfaces(urwid.WidgetWrap):
             self.log.error(e)
             self.parent.footer.set_text("Error applying changes. Check logs "
                                         "for details.")
-            ModuleHelper.getNetwork(self)
+            modulehelper.ModuleHelper.getNetwork(self)
             self.setNetworkDetails()
             return False
         self.parent.footer.set_text("Changes successfully applied.")
-        ModuleHelper.getNetwork(self)
+        modulehelper.ModuleHelper.getNetwork(self)
         self.setNetworkDetails()
 
         return True
 
     def getNetwork(self):
-        ModuleHelper.getNetwork(self)
+        modulehelper.ModuleHelper.getNetwork(self)
 
     def getDHCP(self, iface):
-        return ModuleHelper.getDHCP(iface)
+        return modulehelper.ModuleHelper.getDHCP(iface)
 
     def get_default_gateway_linux(self):
-        return ModuleHelper.get_default_gateway_linux()
+        return modulehelper.ModuleHelper.get_default_gateway_linux()
 
     def radioSelectIface(self, current, state, user_data=None):
         """Update network details and display information."""
@@ -350,7 +350,7 @@ class Interfaces(urwid.WidgetWrap):
             if rb.base_widget.state is True:
                 self.activeiface = rb.base_widget.get_label()
                 break
-        ModuleHelper.getNetwork(self)
+        modulehelper.ModuleHelper.getNetwork(self)
         self.setNetworkDetails()
 
     def radioSelect(self, current, state, user_data=None):
@@ -424,13 +424,15 @@ class Interfaces(urwid.WidgetWrap):
                     self.edits[index].set_edit_text("")
 
     def refresh(self):
-        ModuleHelper.getNetwork(self)
+        modulehelper.ModuleHelper.getNetwork(self)
         self.setNetworkDetails()
 
     def cancel(self, button):
-        ModuleHelper.cancel(self, button)
+        modulehelper.ModuleHelper.cancel(self, button)
         self.setNetworkDetails()
 
     def screenUI(self):
-        return ModuleHelper.screenUI(self, self.header_content, self.fields,
-                                     self.defaults, show_all_buttons=True)
+        return modulehelper.ModuleHelper.screenUI(self, self.header_content,
+                                                  self.fields,
+                                                  self.defaults,
+                                                  show_all_buttons=True)

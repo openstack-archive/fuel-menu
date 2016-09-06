@@ -15,7 +15,7 @@
 import collections
 import copy
 import logging
-from string import Template
+import string
 
 try:
     from collections import OrderedDict
@@ -130,7 +130,7 @@ class Settings(OrderedDict):
         """
         try:
             with open(settings_file) as infile:
-                settings = yaml.load(Template(
+                settings = yaml.load(string.Template(
                     infile.read()).safe_substitute(template_kwargs or {}))
 
                 self.merge(settings)
