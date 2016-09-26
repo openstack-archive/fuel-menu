@@ -336,7 +336,7 @@ is accessible"}
                     if line.startswith("nameserver "):
                         nameservers.append(line.split(' ')[1])
         except EnvironmentError:
-            log.warn("Unable to open /etc/resolv.conf")
+            log.warning("Unable to open /etc/resolv.conf")
 
         # Always remove local IPs from nameserver list
         host_ips = network.list_host_ip_addresses()
