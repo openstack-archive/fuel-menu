@@ -359,8 +359,8 @@ class BootstrapImage(urwid.WidgetWrap):
             # repository since it is not created at that moment. Although we
             # still should provide an ability to use it, because in fact
             # it will be created at the end of deployment.
-            log.warn('Accessibility check is skipped for local repository: %s',
-                     release_url)
+            log.warning('Accessibility check is skipped for local '
+                        'repository: %s', release_url)
             return True
 
         return self.check_url(release_url, proxies)
