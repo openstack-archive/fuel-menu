@@ -384,6 +384,10 @@ def main(*args, **kwargs):
         setup(save_only=True,
               managed_iface=options.iface)
     else:
+        if not os.isatty(sys.stdin.fileno()):
+            print("Stdin is not a tty, can't run fuelmenu "
+                  "in interactive mode.")
+            sys.exit(1)
         setup()
 
 if '__main__' == __name__ or urwid.web_display.is_web_request():
