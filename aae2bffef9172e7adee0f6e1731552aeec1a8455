@@ -1,0 +1,8 @@
+Code-Review+2: Fedor Zhadaev <fzhadaev@mirantis.com>
+Workflow+1: Fedor Zhadaev <fzhadaev@mirantis.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Tue, 04 Oct 2016 14:22:36 +0000
+Reviewed-on: https://review.openstack.org/380081
+Project: openstack/fuel-menu
+Branch: refs/heads/master
