@@ -1,0 +1,8 @@
+Code-Review+2: Bulat Gaifullin <gaifullinbf@gmail.com>
+Workflow+1: Alexey Shtokolov <ashtokolov@gmail.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Fri, 14 Oct 2016 14:58:20 +0000
+Reviewed-on: https://review.openstack.org/386598
+Project: openstack/fuel-menu
+Branch: refs/heads/stable/newton
