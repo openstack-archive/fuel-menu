@@ -17,9 +17,11 @@ from ctypes import cdll
 from fuelmenu.common import dialog
 from fuelmenu.common import modulehelper
 from fuelmenu.common import network
+from fuelmenu.common import puppet
 from fuelmenu.common import replace
 import fuelmenu.common.urwidwrapper as widget
 from fuelmenu.common import utils
+from fuelmenu import consts
 
 import logging
 import netaddr
@@ -281,6 +283,9 @@ is accessible"}
         # Reread resolv.conf
         res_init()
 
+        # Reconfigure rabbitmq with new hostname
+        self.configure_rabbitmq(responses["HOSTNAME"])
+
         return True
 
     def cancel(self, button):
@@ -386,3 +391,36 @@ is accessible"}
         return modulehelper.ModuleHelper.screenUI(self, self.header_content,
                                                   self.fields, self.defaults,
                                                   show_all_buttons=True)
+
+    def configure_rabbitmq(self, hostname):
+        new_rabbit_conf = []
+        with open(consts.RABBIT_CONFIG, 'r') as rabbit_conf:
+            lines = rabbit_conf.readlines()
+            separator = '@'
+            for line in lines:
+                if line.startswith('NODENAME'):
+                    line = line.split(separator)[0]
+                    line = separator.join([line, hostname]) + '\n'
+                new_rabbit_conf.append(line)
+        with open(consts.RABBIT_CONFIG, 'w') as rabbit_conf:
+            rabbit_conf.writelines(new_rabbit_conf)
+        self.restrt_service(consts.SERVICES.rabbitmq_server)
+        self.parent.apply_tasks.add(self.apply_rabbit)
+        self.restrt_service(consts.SERVICES.mcollective)
+
+    def restrt_service(self, service):
+        command = ['service', service, 'restart']
+        utils.execute(command)
+
+    def apply_rabbit(self):
+        """Apply rabbit changes"""
+
+        msg = "Apply rabbitmq changes."
+        log.info(msg)
+        self.parent.footer.set_text(msg)
+        self.parent.refreshScreen()
+
+        result, msg = puppet.puppetApplyManifest(consts.PUPPET_RABBIT)
+
+        self.parent.footer.set_text(msg)
+        return result
