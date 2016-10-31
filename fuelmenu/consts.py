@@ -13,6 +13,14 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+from collections import namedtuple
+
+
+def Enum(*values, **kwargs):
+    names = kwargs.get('names')
+    if names:
+        return namedtuple('Enum', names)(*values)
+    return namedtuple('Enum', values)(*values)
 
 LOGFILE = "/var/log/fuelmenu.log"
 
@@ -20,6 +28,7 @@ PUPPET_LOGFILE = "/var/log/puppet/fuelmenu-puppet.log"
 PUPPET_NAILGUN = "/etc/puppet/modules/fuel/examples/nailgun.pp"
 PUPPET_FUEL_MASTER = "/etc/puppet/modules/fuel/examples/host.pp"
 PUPPET_DHCP_RANGES = "/etc/puppet/modules/fuel/examples/dhcp-ranges.pp"
+PUPPET_RABBIT = "/etc/puppet/modules/fuel/examples/rabbitmq.pp"
 
 SETTINGS_FILE = "/etc/fuel/astute.yaml"
 RELEASE_FILE = "/etc/fuel_release"
@@ -35,3 +44,9 @@ PUPPET_TYPE_RESOURCE = "resource"
 PUPPET_TYPE_CLASS = "class"
 
 ADMIN_NETWORK_ID = 1
+RABBIT_CONFIG = '/etc/rabbitmq/rabbitmq-env.conf'
+
+SERVICES = Enum(
+    'mcollective',
+    'rabbitmq_server'
+)
