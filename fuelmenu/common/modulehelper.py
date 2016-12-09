@@ -98,7 +98,7 @@ class ModuleHelper(object):
         """
         # Read in yaml
         types_to_skip = (WidgetType.BUTTON, WidgetType.LABEL)
-        for setting, setting_def in six.iteritems(defaults):
+        for setting, setting_def in defaults.items():
             if (setting_def.get('type') in types_to_skip or
                ignoredparams and setting in ignoredparams):
                     continue

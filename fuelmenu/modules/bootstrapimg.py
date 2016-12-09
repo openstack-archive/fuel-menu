@@ -18,7 +18,6 @@ import re
 import requests
 import types
 
-import six
 import urwid
 import urwid.raw_display
 import urwid.web_display
@@ -212,7 +211,7 @@ class BootstrapImage(urwid.WidgetWrap):
 
         # on UI we have labels, but not keys...
         label_to_key_mapping = dict((v['label'], k) for k, v in
-                                    six.iteritems(self.repo_value_scheme))
+                                    self.repo_value_scheme.items())
         result = []
         for lb in external_lw:
             repo = {}

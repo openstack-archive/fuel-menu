@@ -13,7 +13,6 @@
 # under the License.
 
 import logging
-import six
 
 from fuelmenu.common import utils
 from fuelmenu import consts
@@ -56,7 +55,7 @@ def puppetApply(classes):
             continue
 
         # Build params
-        for key, value in six.iteritems(cls["params"]):
+        for key, value in cls["params"].items():
             cmd_input.extend([key, "=>", _to_string(value)])
         cmd_input.append('}')
 
