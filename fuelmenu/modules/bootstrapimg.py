@@ -17,6 +17,7 @@ import logging
 import re
 import requests
 import types
+import urlparse
 
 import six
 import urwid
@@ -29,7 +30,7 @@ from fuelmenu.common import utils
 log = logging.getLogger('fuelmenu.mirrors')
 blank = urwid.Divider()
 
-local_repo_pattern = re.compile(r'^http[s]?://(127.0.0.1|localhost)([:/].*)?$')
+localhost_pattern = re.compile(r'(127.0.0.1|localhost)')
 
 
 BOOTSTRAP_HTTP_PROXY_KEY = "BOOTSTRAP/http_proxy"
@@ -354,7 +355,8 @@ class BootstrapImage(urwid.WidgetWrap):
     def _check_repo(self, base_url, suite, proxies):
         release_url = '{base_url}/dists/{suite}/Release'.format(
             base_url=base_url, suite=suite)
-        if (local_repo_pattern.search(release_url) and
+        host = urlparse.urlparse(release_url).netloc.split(':')[0]
+        if (localhost_pattern.search(host) and
                 utils.is_pre_deployment()):
             # Due to pre-deployment stage we can't check accessibility of local
             # repository since it is not created at that moment. Although we
