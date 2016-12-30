@@ -169,7 +169,7 @@ def search_external_dhcp(iface, timeout):
     :returns: list of DHCP data
     :raises: errors.NetworkException
     """
-    command = ["dhcpcheck", "discover", "--timeout", str(timeout), "-f",
+    command = ["dhcpcheck", "listservers", "--timeout", str(timeout), "-f",
                "json", "--ifaces", iface]
     try:
         upIface(iface)  # ensure iface is up
