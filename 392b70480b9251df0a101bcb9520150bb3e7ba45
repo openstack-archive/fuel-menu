@@ -1,0 +1,10 @@
+Code-Review+2: Fedor Zhadaev <fzhadaev@mirantis.com>
+Code-Review+1: Anastasia Balobashina <atolochkova@mirantis.com>
+Code-Review+1: Michael Polenchuk <mpolenchuk@mirantis.com>
+Workflow+1: Fedor Zhadaev <fzhadaev@mirantis.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Fri, 30 Dec 2016 07:59:30 +0000
+Reviewed-on: https://review.openstack.org/414996
+Project: openstack/fuel-menu
+Branch: refs/heads/stable/mitaka
