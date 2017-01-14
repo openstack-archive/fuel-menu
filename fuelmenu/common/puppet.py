@@ -12,10 +12,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import logging
+from oslo_log import log as logging
 
 from fuelmenu.common import utils
 from fuelmenu import consts
+
+log = logging.getLogger(__name__)
 
 
 def _to_string(value):
@@ -30,7 +32,6 @@ def puppetApply(classes):
     :param classes: list of {'type': 'name': 'params':}. name must be a string
     :type classes: dict or list of dicts
     """
-    log = logging
     log.info("Puppet start")
 
     command = ["puppet", "apply", "-d", "-v", "--logdest",
@@ -71,7 +72,6 @@ def puppetApply(classes):
 
 
 def puppetApplyManifest(manifest):
-    log = logging
     log.info("Start puppet apply with manifest {0}".format(manifest))
 
     cmd = ["puppet", "apply", "--debug", "--verbose", "--logdest",

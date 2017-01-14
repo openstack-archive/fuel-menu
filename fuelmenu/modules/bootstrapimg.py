@@ -13,12 +13,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 import copy
-import logging
 import re
 import requests
 import types
 import urlparse
 
+from oslo_log import log as logging
 import urwid
 import urwid.raw_display
 import urwid.web_display
@@ -26,7 +26,7 @@ import urwid.web_display
 from fuelmenu.common import modulehelper
 from fuelmenu.common import utils
 
-log = logging.getLogger('fuelmenu.mirrors')
+log = logging.getLogger(__name__)
 blank = urwid.Divider()
 
 localhost_pattern = re.compile(r'(127.0.0.1|localhost)')

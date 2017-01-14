@@ -16,12 +16,7 @@
 from __future__ import absolute_import
 
 from fuelmenu import consts
-import logging
-
-# set up logging before other modules will try to get their loggers
-logging.basicConfig(filename=consts.LOGFILE,
-                    format="%(asctime)s %(levelname)s %(message)s",
-                    level=logging.DEBUG)
+from oslo_log import log as logging
 
 from fuelmenu.common import dialog
 from fuelmenu.common import network
@@ -40,7 +35,7 @@ import urwid
 import urwid.raw_display
 import urwid.web_display
 
-log = logging.getLogger('fuelmenu.loader')
+log = logging.getLogger(__name__)
 
 
 class FuelSetup(object):

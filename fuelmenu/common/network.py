@@ -13,16 +13,16 @@
 # under the License.
 
 import json
-import logging
 import os
 
 import netaddr
 import netifaces
+from oslo_log import log as logging
 
 from fuelmenu.common import errors
 from fuelmenu.common.utils import execute
 
-log = logging.getLogger('fuelmenu.common.network')
+log = logging.getLogger(__name__)
 
 
 def inSameSubnet(ip1, ip2, netmask_or_cidr):

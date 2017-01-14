@@ -13,8 +13,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import logging
 import netaddr
+from oslo_log import log as logging
 import re
 import socket
 import urwid
@@ -27,6 +27,7 @@ from fuelmenu.common import replace
 import fuelmenu.common.urwidwrapper as widget
 
 blank = urwid.Divider()
+log = logging.basicConfig(filename='./fuelmenu.log', level=logging.DEBUG)
 
 
 # Need to define fields in order so it will render correctly
@@ -39,8 +40,6 @@ class Interfaces(urwid.WidgetWrap):
         self.netsettings = dict()
         self.parent = parent
         self.screen = None
-        self.log = logging
-        self.log.basicConfig(filename='./fuelmenu.log', level=logging.DEBUG)
         self.getNetwork()
         self.gateway = self.get_default_gateway_linux()
         self.activeiface = sorted(self.netsettings.keys())[0]
@@ -160,8 +159,8 @@ class Interfaces(urwid.WidgetWrap):
                 dhcp_server_data = network.search_external_dhcp(
                     self.activeiface, dhcptimeout)
             except network.NetworkException:
-                self.log.warning("dhcp_checker failed to check on %s"
-                                 % self.activeiface)
+                log.warning("dhcp_checker failed to check on %s"
+                            % self.activeiface)
                 dhcp_server_data = []
 
             if len(dhcp_server_data) < 1:
@@ -221,7 +220,7 @@ class Interfaces(urwid.WidgetWrap):
                     errors.append("Duplicate host found with IP {0}.".format(
                         responses["ipaddr"]))
         if len(errors) > 0:
-            self.log.error("Errors: %s %s" % (len(errors), errors))
+            log.error("Errors: %s %s" % (len(errors), errors))
             modulehelper.ModuleHelper.display_failed_check_dialog(self, errors)
             return False
         else:
@@ -246,9 +245,9 @@ class Interfaces(urwid.WidgetWrap):
     def apply(self, args):
         responses = self.check(args)
         if responses is False:
-            self.log.error("Check failed. Not applying")
+            log.error("Check failed. Not applying")
             self.parent.footer.set_text("Check failed. Not applying.")
-            self.log.error("%s" % (responses))
+            log.error("%s" % (responses))
             return False
 
         self.parent.footer.set_text("Applying changes... (May take up to 20s)")
@@ -300,7 +299,7 @@ class Interfaces(urwid.WidgetWrap):
         puppetclasses.extend(additionalclasses)
         l3ifconfig['params'] = params
         puppetclasses.append(l3ifconfig)
-        self.log.info("Puppet data: %s" % (puppetclasses))
+        log.info("Puppet data: %s" % (puppetclasses))
 
         try:
             self.parent.refreshScreen()
@@ -316,7 +315,7 @@ class Interfaces(urwid.WidgetWrap):
                 self.parent.dns_might_have_changed = True
 
         except Exception as e:
-            self.log.error(e)
+            log.error(e)
             self.parent.footer.set_text("Error applying changes. Check logs "
                                         "for details.")
             modulehelper.ModuleHelper.getNetwork(self)
