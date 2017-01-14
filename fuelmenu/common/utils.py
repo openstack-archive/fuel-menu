@@ -13,8 +13,8 @@
 # under the License.
 from __future__ import print_function
 import fcntl
-import logging
 import os
+from oslo_log import log as logging
 import random as _random
 import string
 import subprocess

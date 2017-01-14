@@ -13,12 +13,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 import copy
-import logging
 import re
 import requests
 import types
 import urlparse
 
+from oslo_log import log as logging
 import six
 import urwid
 import urwid.raw_display

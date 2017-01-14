@@ -17,7 +17,7 @@ import crypt
 from fuelmenu.common import modulehelper as helper
 from fuelmenu.common import utils
 
-import logging
+from oslo_log import log as logging
 import urwid
 
 log = logging.getLogger('fuelmenu.rootpw')

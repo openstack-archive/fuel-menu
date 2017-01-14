@@ -16,8 +16,8 @@
 
 
 import collections
-import logging
 import netifaces
+from oslo_log import log as logging
 import socket
 import struct
 

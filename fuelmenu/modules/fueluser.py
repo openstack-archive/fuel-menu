@@ -14,7 +14,7 @@
 # under the License.
 
 from fuelmenu.common import modulehelper
-import logging
+from oslo_log import log as logging
 import re
 import urwid
 import urwid.raw_display
