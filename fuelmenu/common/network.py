@@ -13,11 +13,11 @@
 # under the License.
 
 import json
-import logging
 import os
 
 import netaddr
 import netifaces
+from oslo_log import log as logging
 
 from fuelmenu.common import errors
 from fuelmenu.common.utils import execute

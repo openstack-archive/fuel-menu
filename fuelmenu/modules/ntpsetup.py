@@ -17,7 +17,7 @@ from fuelmenu.common import dialog
 from fuelmenu.common import modulehelper
 import fuelmenu.common.urwidwrapper as widget
 from fuelmenu.common import utils
-import logging
+from oslo_log import log as logging
 import re
 import urwid
 log = logging.getLogger('fuelmenu.mirrors')

@@ -14,8 +14,9 @@
 
 import collections
 import copy
-import logging
 import string
+
+from oslo_log import log as logging
 
 try:
     from collections import OrderedDict

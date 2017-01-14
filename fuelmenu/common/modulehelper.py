@@ -16,8 +16,8 @@
 
 
 import collections
-import logging
 import netifaces
+from oslo_log import log as logging
 import socket
 import struct
 
@@ -32,7 +32,7 @@ import fuelmenu.common.urwidwrapper as widget
 from fuelmenu.common import utils
 from fuelmenu import settings as settings_module
 
-log = logging.getLogger('fuelmenu.modulehelper')
+log = logging.getLogger(__name__)
 
 # magic. calculated as 80 (standard terminal width) - 20 (menu size)
 MAX_WIDTH = 60

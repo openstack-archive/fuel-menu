@@ -13,8 +13,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import logging
 import netaddr
+from oslo_log import log as logging
 import re
 import six
 import socket

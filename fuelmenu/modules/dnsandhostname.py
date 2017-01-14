@@ -21,9 +21,9 @@ from fuelmenu.common import replace
 import fuelmenu.common.urwidwrapper as widget
 from fuelmenu.common import utils
 
-import logging
 import netaddr
 import os
+from oslo_log import log as logging
 import re
 import socket
 import urwid
