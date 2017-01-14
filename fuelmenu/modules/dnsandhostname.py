@@ -21,16 +21,16 @@ from fuelmenu.common import replace
 import fuelmenu.common.urwidwrapper as widget
 from fuelmenu.common import utils
 
-import logging
 import netaddr
 import os
+from oslo_log import log as logging
 import re
 import socket
 import urwid
 import urwid.raw_display
 import urwid.web_display
 res_init = cdll.LoadLibrary('libc.so.6').__res_init
-log = logging.getLogger('fuelmenu.mirrors')
+log = logging.getLogger(__name__)
 blank = urwid.Divider()
 
 
