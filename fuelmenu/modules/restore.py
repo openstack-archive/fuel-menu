@@ -13,16 +13,16 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import logging
 import os
 
+from oslo_log import log as logging
 import urwid
 import yaml
 
 from fuelmenu.common import modulehelper as helper
 from fuelmenu import settings as settings_utils
 
-LOG = logging.getLogger('fuelmenu.restore')
+LOG = logging.getLogger(__name__)
 KEYS_TO_RESTORE = [
     ("HOSTNAME", None),
     ("DNS_DOMAIN", None),

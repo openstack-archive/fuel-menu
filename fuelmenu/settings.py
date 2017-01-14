@@ -14,8 +14,9 @@
 
 import collections
 import copy
-import logging
 import string
+
+from oslo_log import log as logging
 
 try:
     from collections import OrderedDict
@@ -25,7 +26,7 @@ except Exception:
 
 import yaml
 
-log = logging.getLogger('fuelmenu.settings')
+log = logging.getLogger(__name__)
 
 
 def make_ordered_mapping(self, node, deep=False):

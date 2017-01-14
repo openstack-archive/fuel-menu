@@ -13,7 +13,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import logging
+from oslo_log import log as logging
 import urwid
 
 from fuelmenu.common import dialog
@@ -24,7 +24,7 @@ from fuelmenu.common import urwidwrapper as widget
 from fuelmenu.common import utils
 from fuelmenu import consts
 
-log = logging.getLogger('fuelmenu.security')
+log = logging.getLogger(__name__)
 
 SSH_NETWORK = 'ADMIN_NETWORK/ssh_network'
 

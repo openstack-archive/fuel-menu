@@ -15,11 +15,11 @@
 
 from fuelmenu.common import modulehelper
 from fuelmenu.common import pwgen
-import logging
+from oslo_log import log as logging
 import urwid
 import urwid.raw_display
 import urwid.web_display
-log = logging.getLogger('fuelmenu.servicepws')
+log = logging.getLogger(__name__)
 blank = urwid.Divider()
 
 

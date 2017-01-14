@@ -130,7 +130,7 @@ class TestModuleHelperLoad(TestModuleHelperBase):
         for _, setting in self.modobj.defaults.items():
             self.assertEqual(setting['value'], setting['should'])
 
-    @mock.patch('logging.Logger.warning')
+    @mock.patch('fuelmenu.common.modulehelper.log.warning')
     def test_load_value_from_settings_failed(
             self, m_warning, m_get_setting, *_):
         m_get_setting.side_effect = KeyError
@@ -170,7 +170,7 @@ class TestModuleHelperCancel(TestModuleHelperBase):
         self.edit.set_edit_text.assert_called_once_with(
             self.modobj.defaults['some_field']['value'])
 
-    @mock.patch('logging.Logger.warning')
+    @mock.patch('fuelmenu.common.modulehelper.log.warning')
     def test_cancel_attribute_error(self, m_warning):
         self.edit.set_edit_text.side_effect = AttributeError
         self._run('cancel', self.modobj)

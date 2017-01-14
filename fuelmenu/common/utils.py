@@ -13,8 +13,8 @@
 # under the License.
 from __future__ import print_function
 import fcntl
-import logging
 import os
+from oslo_log import log as logging
 import random as _random
 import string
 import subprocess
@@ -23,7 +23,7 @@ import sys
 from fuelmenu import consts
 
 
-log = logging.getLogger('fuelmenu.common.utils')
+log = logging.getLogger(__name__)
 random = _random.SystemRandom()
 
 

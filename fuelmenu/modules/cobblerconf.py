@@ -13,12 +13,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import logging
 import os
 
 from fuelclient.cli import error
 from fuelclient import objects
 import netaddr
+from oslo_log import log as logging
 import urwid
 import urwid.raw_display
 import urwid.web_display
@@ -32,7 +32,7 @@ from fuelmenu.common import puppet
 import fuelmenu.common.urwidwrapper as widget
 from fuelmenu.common import utils
 from fuelmenu import consts
-log = logging.getLogger('fuelmenu.pxe_setup')
+log = logging.getLogger(__name__)
 blank = urwid.Divider()
 
 

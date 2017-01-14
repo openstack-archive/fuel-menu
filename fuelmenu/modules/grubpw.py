@@ -13,14 +13,14 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import logging
+from oslo_log import log as logging
 import re
 import urwid
 
 from fuelmenu.common import modulehelper as helper
 from fuelmenu.common import utils
 
-log = logging.getLogger('fuelmenu.grubpw')
+log = logging.getLogger(__name__)
 
 
 class GrubPassword(urwid.WidgetWrap):
