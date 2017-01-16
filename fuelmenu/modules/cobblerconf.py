@@ -344,7 +344,7 @@ interface first.")
         try:
             objects.NetworkGroup(consts.ADMIN_NETWORK_ID).set(data)
         except error.HTTPError as e:
-            log.error(e.message)
+            log.error(str(e))
             modulehelper.ModuleHelper.display_dialog(
                 self, error_msg=self.apply_dialog_message["message"],
                 title=self.apply_dialog_message["title"])

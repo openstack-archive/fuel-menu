@@ -33,7 +33,7 @@ def inSameSubnet(ip1, ip2, netmask_or_cidr):
         cidr2 = netaddr.IPNetwork("%s/%s" % (ip2, netmask_or_cidr))
         return cidr1 == cidr2
     except netaddr.AddrFormatError as e:
-        log.exception(e.message)
+        log.exception(str(e))
         return False
 
 
