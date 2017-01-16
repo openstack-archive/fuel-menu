@@ -110,7 +110,7 @@ class FeatureGroups(urwid.WidgetWrap):
                 part1, part2 = setting.split("/")
                 self.defaults[setting]["value"] = part2 in oldsettings[part1]
             except Exception as e:
-                log.warning("unexpected error: %s", e.message)
+                log.warning("unexpected error: %s", str(e))
 
     def save(self, responses):
         newsettings = {}
