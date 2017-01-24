@@ -229,8 +229,8 @@ is accessible"}
             return False
 
         # remove old hostname from /etc/hosts
-        f = open("/etc/hosts", "r")
-        lines = f.readlines()
+        with open("/etc/hosts", "r") as f:
+            lines = f.readlines()
         f.close()
         with open("/etc/hosts", "w") as etchosts:
             for line in lines:
@@ -243,7 +243,6 @@ is accessible"}
                     continue
                 else:
                     etchosts.write(line)
-            etchosts.close()
 
         # append hostname and ip address to /etc/hosts
         with open("/etc/hosts", "a") as etchosts:
@@ -256,7 +255,6 @@ is accessible"}
                 "%s   %s.%s %s\n" % (managediface_ip, responses["HOSTNAME"],
                                      responses['DNS_DOMAIN'],
                                      responses["HOSTNAME"]))
-            etchosts.close()
 
         def make_resolv_conf(filename):
             if self.netsettings[self.parent.managediface]["addr"] != "":
