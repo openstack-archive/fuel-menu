@@ -14,6 +14,7 @@
 # under the License.
 import copy
 import logging
+import os
 import re
 import requests
 import types
@@ -35,6 +36,7 @@ localhost_pattern = re.compile(r'(127.0.0.1|localhost)')
 
 BOOTSTRAP_HTTP_PROXY_KEY = "BOOTSTRAP/http_proxy"
 BOOTSTRAP_HTTPS_PROXY_KEY = "BOOTSTRAP/https_proxy"
+BOOTSTRAP_NO_PROXY_KEY = "BOOTSTRAP/no_proxy"
 BOOTSTRAP_REPOS_KEY = "BOOTSTRAP/repos"
 BOOTSTRAP_SKIP_BUILD_KEY = "BOOTSTRAP/skip_default_img_build"
 
@@ -59,6 +61,7 @@ class BootstrapImage(urwid.WidgetWrap):
             modulehelper.BLANK_KEY,
             BOOTSTRAP_HTTP_PROXY_KEY,
             BOOTSTRAP_HTTPS_PROXY_KEY,
+            BOOTSTRAP_NO_PROXY_KEY,
             modulehelper.BLANK_KEY,
             BOOTSTRAP_REPOS_KEY,
             ADD_REPO_BUTTON_KEY
@@ -100,6 +103,10 @@ class BootstrapImage(urwid.WidgetWrap):
             BOOTSTRAP_HTTPS_PROXY_KEY: {
                 "label": "HTTPS proxy",
                 "tooltip": "Use this proxy when building the bootstrap image",
+                "value": ""},
+            BOOTSTRAP_NO_PROXY_KEY: {
+                "label": "Bypass proxy for",
+                "tooltip": "Bypass proxy for domains from this list",
                 "value": ""},
             BOOTSTRAP_REPOS_KEY: {
                 "label": "List of repositories",
@@ -158,11 +165,12 @@ class BootstrapImage(urwid.WidgetWrap):
 
         http_proxy = responses[BOOTSTRAP_HTTP_PROXY_KEY].strip()
         https_proxy = responses[BOOTSTRAP_HTTPS_PROXY_KEY].strip()
+        no_proxy = responses[BOOTSTRAP_NO_PROXY_KEY].strip()
 
-        proxies = {
-            'http': http_proxy,
-            'https': https_proxy
-        }
+        # Set up proxy settings
+        os.environ['HTTP_PROXY'] = http_proxy
+        os.environ['HTTPS_PROXY'] = https_proxy
+        os.environ['NO_PROXY'] = no_proxy
 
         repos = responses.get(BOOTSTRAP_REPOS_KEY)
 
@@ -186,7 +194,7 @@ class BootstrapImage(urwid.WidgetWrap):
                               "'deb uri distribution [component1] [...]'."
                               .format(name))
                 continue
-            if not self._check_repo(repo['uri'], repo['suite'], proxies):
+            if not self._check_repo(repo['uri'], repo['suite']):
                 errors.append("URL for repository {0} is not accessible."
                               .format(name))
 
@@ -343,7 +351,7 @@ class BootstrapImage(urwid.WidgetWrap):
         # Update self.defaults
         self._update_defaults(self.defaults, self.parent.settings)
 
-    def check_url(self, url, proxies):
+    def check_url(self, url, proxies=None):
         try:
             resp = requests.get(url, proxies=proxies, verify=False)
         except (requests.exceptions.RequestException,
@@ -352,7 +360,7 @@ class BootstrapImage(urwid.WidgetWrap):
             return False
         return resp.ok
 
-    def _check_repo(self, base_url, suite, proxies):
+    def _check_repo(self, base_url, suite):
         release_url = '{base_url}/dists/{suite}/Release'.format(
             base_url=base_url, suite=suite)
         host = urlparse.urlparse(release_url).netloc.split(':')[0]
@@ -366,7 +374,7 @@ class BootstrapImage(urwid.WidgetWrap):
                         'repository: {}'.format(release_url))
             return True
 
-        return self.check_url(release_url, proxies)
+        return self.check_url(release_url)
 
     def refresh(self):
         pass
