@@ -16,7 +16,6 @@
 import logging
 import netaddr
 import re
-import six
 import socket
 import urwid
 
@@ -134,7 +133,7 @@ class Interfaces(urwid.WidgetWrap):
         errors = []
 
         # Check for the duplicate IP provided
-        for k, v in six.iteritems(self.netsettings):
+        for k, v in self.netsettings.items():
             if (k != self.activeiface and responses["ipaddr"] != ''
                     and responses["ipaddr"] == v.get('addr')):
                 errors.append("The same IP address {0} is assigned for "
