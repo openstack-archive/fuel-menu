@@ -1,0 +1,9 @@
+Code-Review+2: Aleksey Kasatkin <akasatkin@mirantis.com>
+Code-Review+2: Ihor Kalnytskyi <ikalnitsky@mirantis.com>
+Workflow+1: Fedor Zhadaev <fzhadaev@mirantis.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Thu, 16 Mar 2017 11:09:30 +0000
+Reviewed-on: https://review.openstack.org/426808
+Project: openstack/fuel-menu
+Branch: refs/heads/master
